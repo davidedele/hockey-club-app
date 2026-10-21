@@ -46,6 +46,18 @@ Recorded on 21 October 2026. Read together with `SPEC.md` and `SPORTEASY_NOTES.m
 4. A person has no role by default, which means player.
 5. The last board member cannot be removed, so the club cannot lock itself out.
 
+## Assumptions made while building step 2 (to confirm)
+1. Coaches and the board can both create, change and delete events and record attendance, for any group. There is no limit to one coach per team yet.
+2. Players see only their own answers. Coaches and the board see everyone's answers and who has not answered.
+3. A player can change an answer until the event ends. After that the answer is locked.
+4. The banner counts events in the next 14 days with no answer. The events list shows every upcoming event, and marks each one that has no answer.
+5. Event times are always entered and shown in Italian time, whatever the phone's time zone. A weekly repeat keeps the same clock time, also across the change between summer and winter time.
+6. A weekly repeat is chosen when a training is created, up to 53 weeks in total. Changing an event afterwards changes that one event. To change a whole series, delete this event and the following ones and create it again. Groups are also chosen at creation and cannot be changed in the edit form yet.
+7. For a game the opponent is required, with home or away. Staff enter the final score on the event page.
+8. Deleting an event also deletes its answers and recorded attendance. The screen names the event and asks for confirmation first.
+9. Recorded attendance can be entered after the event starts. It stores only the status (on time, late, excused, unexcused, injured, not called up).
+10. Not built yet: reminders by email or push. See the open questions in `PROGRESS.md`.
+
 ## Setup status
 1. GitHub repository: github.com/davidedele/hockey-club-app, private, with the first commit pushed (the planning files).
 2. Claude project "Hockey Club App" on claude.ai holds the instructions and these notes.
