@@ -15,6 +15,7 @@ const CODES = [
   'names_required',
   'email_not_confirmed',
   'forbidden',
+  'last_board_member',
   'over_email_send_rate_limit',
   'email_address_invalid',
   'weak_password',

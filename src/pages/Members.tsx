@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { t, type MessageKey } from '../i18n'
 import { useSession } from '../lib/session'
 import { supabase } from '../lib/supabase'
@@ -50,7 +51,11 @@ export default function Members() {
           return (
             <li key={p.id}>
               <div className="row">
-                <strong>{p.last_name} {p.first_name}</strong>
+                {isStaff ? (
+                  <Link to={`/members/${p.id}`}><strong>{p.last_name} {p.first_name}</strong></Link>
+                ) : (
+                  <strong>{p.last_name} {p.first_name}</strong>
+                )}
                 {p.jersey_number !== null && <span className="badge">#{p.jersey_number}</span>}
               </div>
               <div className="hint">

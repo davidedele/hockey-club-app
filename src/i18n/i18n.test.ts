@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import texts from './it.json'
 import { errorText, t } from './index'
 
 describe('t', () => {
@@ -18,5 +19,26 @@ describe('errorText', () => {
   it('falls back to a generic message', () => {
     expect(errorText({ message: 'boom' })).toContain(t('common.error'))
     expect(errorText(null)).toBe(t('common.error'))
+  })
+})
+
+describe('text file', () => {
+  const keys = Object.keys(texts)
+  const files = import.meta.glob('../**/*.{ts,tsx}', { query: '?raw', import: 'default', eager: true }) as Record<string, string>
+
+  it('has every text key used in the code', () => {
+    const missing: string[] = []
+    for (const [file, code] of Object.entries(files)) {
+      if (file.endsWith('.test.ts')) continue
+      for (const m of code.matchAll(/\bt\('([\w.]+)'/g)) {
+        if (!keys.includes(m[1])) missing.push(`${file}: ${m[1]}`)
+      }
+    }
+    expect(missing).toEqual([])
+  })
+
+  it('has no dashes used as punctuation', () => {
+    const values = texts as Record<string, string>
+    expect(keys.filter((k) => /[\u2013\u2014]/.test(values[k]))).toEqual([])
   })
 })

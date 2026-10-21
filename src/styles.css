@@ -31,3 +31,6 @@ a { color: var(--brand); }
 .tabs { position: fixed; inset: auto 0 0 0; display: flex; background: var(--bg); border-top: 1px solid var(--line); padding-bottom: env(safe-area-inset-bottom); }
 .tabs a { flex: 1; text-align: center; padding: .9rem .5rem; text-decoration: none; color: var(--muted); font-weight: 600; }
 .tabs a.active { color: var(--brand); }
+.chips.wrap { flex-wrap: wrap; overflow-x: visible; }
+button.danger { background: var(--err); color: #fff; }
+.actions { display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; }

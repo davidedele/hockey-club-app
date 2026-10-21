@@ -6,6 +6,7 @@ import ForgotPassword from './pages/ForgotPassword'
 import Invites from './pages/Invites'
 import Join from './pages/Join'
 import Login from './pages/Login'
+import MemberEdit from './pages/MemberEdit'
 import Members from './pages/Members'
 import ProfilePage from './pages/Profile'
 import ResetPassword from './pages/ResetPassword'
@@ -40,6 +41,7 @@ export default function App() {
       <Route path="/join/:token" element={<Join />} />
       <Route element={<Protected />}>
         <Route path="/" element={<Members />} />
+        <Route path="/members/:id" element={<MemberEdit />} />
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="/invites" element={<Invites />} />
       </Route>

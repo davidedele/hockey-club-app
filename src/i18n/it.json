@@ -56,6 +56,15 @@
   "members.filterAll": "Tutti",
   "members.empty": "Nessun membro.",
 
+  "member.groups": "Gruppi",
+  "member.groupsHint": "Tocca un gruppo per aggiungere o togliere la persona.",
+  "member.roles": "Ruoli",
+  "member.rolesHint": "Senza ruoli la persona è un giocatore. Solo il direttivo assegna i ruoli.",
+  "member.remove": "Rimuovi dal club",
+  "member.removeStart": "Rimuovi questo membro",
+  "member.removeConfirm": "Stai per rimuovere {name} dal club. Perde l'accesso e il profilo viene cancellato. Non si può annullare.",
+  "member.removeNow": "Rimuovi {name}",
+
   "profile.title": "Il mio profilo",
   "profile.groups": "I miei gruppi",
   "profile.noGroups": "Non fai ancora parte di nessun gruppo.",
@@ -80,6 +89,7 @@
   "error.weak_password": "La password è troppo debole. Usa almeno 8 caratteri.",
   "error.user_already_exists": "Esiste già un account con questa email. Usa Accedi.",
   "error.signup_disabled": "Le iscrizioni sono disattivate.",
+  "error.last_board_member": "Deve restare almeno una persona nel direttivo.",
   "error.forbidden": "Non hai il permesso per farlo.",
   "error.missingConfig": "Manca la configurazione di Supabase. Vedi il file .env.example."
 }
