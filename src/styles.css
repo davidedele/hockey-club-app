@@ -369,3 +369,58 @@ main:focus { outline: none; }
 /* Labels that sit above a select instead of wrapping it */
 label[for] { margin-bottom: .375rem; }
 label[for] + select { margin-bottom: 1rem; }
+
+/* Computer look: a dark sidebar, a tinted page, denser spacing, and a club banner on the home. */
+@media (min-width: 768px) {
+  :root { --side: #0f2033; --side-ink: #c4d2e1; --side-muted: #8ea2b8; --side-active: rgba(255, 255, 255, .1); }
+  .shell { background: linear-gradient(to right, var(--side) 15.5rem, var(--canvas) 15.5rem); }
+  body { background: var(--canvas); }
+  .side { background: var(--side); border-right: 0; color: var(--side-ink); }
+  .side .club { color: #fff; }
+  .side nav a { color: var(--side-ink); }
+  .side nav a:hover { background: var(--side-active); color: #fff; }
+  .side nav a.active { background: var(--side-active); color: #fff; box-shadow: inset 3px 0 0 var(--team-light); }
+  .side .side-foot { border-top-color: rgba(255, 255, 255, .12); }
+  .side :focus-visible { outline-color: #fff; }
+  .banner { margin: 0; }
+  .page { padding: 1.25rem 1.5rem 2rem; }
+  .page.wide { max-width: 76rem; }
+  h1 { font-size: 1.75rem; }
+
+  .club-banner { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem; padding: 1rem 1.25rem; border-radius: var(--radius); background: var(--team-dark); color: #fff; }
+  .club-banner .crest { width: 56px; height: 52px; }
+  .cb-title { flex: 1 1 12rem; min-width: 0; }
+  .cb-title h1 { margin: 0; color: #fff; font-size: 1.75rem; }
+  .cb-title span { color: rgba(255, 255, 255, .72); font-size: .875rem; }
+  .cb-stats { display: flex; gap: 1.75rem; margin: 0; }
+  .cb-stats dt { font-size: .8125rem; color: rgba(255, 255, 255, .72); }
+  .cb-stats dd { margin: 0; font: 600 1.5rem/1.2 var(--font-display); color: var(--team-light); }
+  a.button.light { background: var(--team-light); color: var(--team-dark); }
+
+  .evgrid.dash { grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 1rem; margin-bottom: 1rem; }
+  .evgrid.dash .next-in { display: flex; flex-direction: column; gap: .5rem; padding: 1rem; }
+  .evgrid.dash .next .big { font-size: 3.5rem; }
+  .evgrid.dash .next .pair { border-top: 1px solid var(--line); padding-top: .5rem; }
+  .evgrid.dash .next.game .pair { border-top-color: rgba(255, 255, 255, .16); }
+  .evgrid.dash .answer { min-height: 48px; font-size: 1.25rem; }
+  .todo { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 1rem; box-shadow: var(--shadow); }
+  .todo h2 { margin: 0 0 .75rem; font-size: 1.25rem; }
+  .todo .evrows { gap: .5rem; }
+  .todo .evrow { background: var(--canvas); }
+
+  .cal-bar { margin: 0 0 .5rem; }
+  .cal-day { min-height: 10rem; padding: .375rem; gap: .375rem; }
+  .cal-ev { padding: .5rem; gap: .375rem; }
+  .cal-ev .t { font-size: 1.25rem; }
+}
+@media (min-width: 768px) and (prefers-color-scheme: dark) {
+  :root { --side: #08111b; }
+}
+@media (min-width: 768px) {
+  .members-table th, .members-table td { padding: .25rem .75rem; }
+  .members-table thead th { padding: .625rem .75rem; }
+}
+/* Sign in pages on computers: a centred card on the page, no app chrome */
+@media (min-width: 768px) {
+  #root > .page.narrow { margin-top: 8vh; padding: 2rem 2.25rem; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: 0 6px 24px rgba(14, 34, 54, .06); }
+}

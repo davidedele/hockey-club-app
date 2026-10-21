@@ -22,7 +22,8 @@ Build step 1 works against the Supabase test project. Step 2 (events with weekly
    12. Club settings and profile moved to the bottom of the sidebar, the week strip became a working calendar, and players can add a profile picture (migration 0007, applied to the test project). 203 database tests, all passing.
    13. Full code and security review, see `docs/SECURITY_REVIEW.md`. Three app fixes and migration 0008 (faster rules, two indexes), applied to the test project.
    14. Settings area (club, groups, invites), group settings for the board with migration 0009, cleaner own picture, and a computer layout with a week calendar and a members table. 220 database tests, all passing.
-   15. `npm run test:db` now also finds Homebrew Postgres, or uses `PG_BIN`. The tests were run on a Linux copy because the shell used this session could not install Postgres in the usual way.
+   15. UX and accessibility audit with fixes (`docs/UX_AUDIT.md`). Neutral sign in pages (migration 0010) and a club dashboard as the computer home with a dark sidebar. 221 database tests, all passing.
+   16. `npm run test:db` now also finds Homebrew Postgres, or uses `PG_BIN`. The tests were run on a Linux copy because the shell used this session could not install Postgres in the usual way.
 2. 21 October 2026, second session (cloud):
    1. Database migration for groups, members, contacts, roles and invites, with row level security. 70 access rule tests on a local Postgres (`npm run test:db`), all passing.
    2. App skeleton in React and TypeScript with the Italian text file: login, join by invite, password reset, members list, own profile, invite creation and revoking for staff.

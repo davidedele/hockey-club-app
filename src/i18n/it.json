@@ -277,5 +277,11 @@
   "members.noMatch": "Nessun membro corrisponde alla ricerca.",
   "groups.countOne": "1 membro",
   "invites.none": "Nessun invito ancora. Scegli un gruppo e crea il primo.",
-  "nav.skip": "Vai al contenuto"
+  "nav.skip": "Vai al contenuto",
+  "dash.members": "Membri",
+  "dash.thisWeek": "Eventi questa settimana",
+  "dash.myAttendance": "Le mie presenze",
+  "dash.ofTotal": "{n} su {total}",
+  "dash.todo": "Da rispondere",
+  "dash.allDone": "Hai risposto a tutti i prossimi eventi."
 }

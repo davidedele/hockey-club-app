@@ -20,10 +20,11 @@ insert into storage.objects (bucket_id, name) values ('other', 'x.png'), ('club'
 
 \echo == club settings
 select test.login_anon();
-select test.rows('anyone can read the club name, also before signing in', $$select * from public.club_settings where name = 'Hockey Club'$$, 1);
+select test.fails('anonymous cannot read the club settings', $$select * from public.club_settings$$, 'permission denied');
 select test.fails('anonymous cannot change it', $$update public.club_settings set name = 'X'$$, 'permission denied');
 select test.logout();
 select test.login('00000000-0000-0000-0000-000000000001');
+select test.rows('a member reads the club name', $$select * from public.club_settings where name = 'Hockey Club'$$, 1);
 select test.affected('a player cannot change the club name', $$update public.club_settings set name = 'X'$$, 0);
 select test.fails('nobody can add a second settings row', $$insert into public.club_settings (id) values (true)$$, 'permission denied');
 select test.fails('nobody can delete the settings', $$delete from public.club_settings$$, 'permission denied');

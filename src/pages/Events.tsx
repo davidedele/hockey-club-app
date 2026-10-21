@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState, type CSSProperties } from 'react'
 import { Link } from 'react-router-dom'
 import { errorText, t } from '../i18n'
+import Crest from '../components/Crest'
 import { useClub } from '../lib/club'
 import { useSession } from '../lib/session'
 import { supabase } from '../lib/supabase'
@@ -26,17 +27,23 @@ export default function Events() {
   const [weekShift, setWeekShift] = useState(0)
   const [picked, setPicked] = useState<string | null>(null)
   const [loaded, setLoaded] = useState(false)
+  const [records, setRecords] = useState<Map<string, string>>(new Map())
+  const [memberCount, setMemberCount] = useState<number | null>(null)
   const [busy, setBusy] = useState('')
   const [error, setError] = useState('')
 
   const load = useCallback(async () => {
     if (!profile) return
-    const [e, g, m, a] = await Promise.all([
+    const [e, g, m, a, r, n] = await Promise.all([
       supabase.from('events').select('*, event_groups(group_id)').order('starts_at').limit(500),
       supabase.from('groups').select('*').order('id'),
       supabase.from('group_members').select('group_id').eq('user_id', profile.id),
       supabase.from('attendance_answers').select('event_id, answer').eq('user_id', profile.id),
+      supabase.from('attendance_records').select('event_id, status').eq('user_id', profile.id),
+      supabase.from('profiles').select('id', { count: 'exact', head: true }),
     ])
+    setRecords(new Map(((r.data ?? []) as { event_id: string; status: string }[]).map((x) => [x.event_id, x.status])))
+    setMemberCount(n.count ?? null)
     const rows = (e.data ?? []) as EventRow[]
     setEvents(rows)
     setGroups((g.data ?? []) as Group[])
@@ -63,6 +70,20 @@ export default function Events() {
   const dayEvents = useMemo(() => (picked ? events.filter((e) => dayKey(e.starts_at) === picked) : []), [events, picked])
   const daysWithEvents = useMemo(() => new Set(events.map((e) => dayKey(e.starts_at))), [events])
   const todayKey = dayKey(new Date().toISOString())
+  const thisWeek = useMemo(() => weekOf(new Date().toISOString()), [])
+  const weekCount = events.filter((e) => { const k = dayKey(e.starts_at); return k >= thisWeek[0].date && k <= thisWeek[6].date }).length
+
+  // Own attendance this season (from 1 September): recorded as on time or late, or else answered present.
+  const season = useMemo(() => {
+    const d = new Date()
+    const start = new Date(Date.UTC(d.getMonth() >= 8 ? d.getFullYear() : d.getFullYear() - 1, 8, 1)).toISOString()
+    const mine = events.filter((e) => e.starts_at >= start && new Date(e.ends_at).getTime() < Date.now() && e.event_groups.some((x) => myGroups.includes(x.group_id)))
+    const came = mine.filter((e) => {
+      const r = records.get(e.id)
+      return r ? r === 'on_time' || r === 'late' : answers.get(e.id) === 'present'
+    }).length
+    return { came, total: mine.length }
+  }, [events, myGroups, records, answers])
 
   const canAnswer = (e: EventRow) => e.event_groups.some((x) => myGroups.includes(x.group_id))
   // A game uses the colours of its first group that has its own; otherwise the club colours.
@@ -86,6 +107,7 @@ export default function Events() {
   }
 
   const next = view === 'upcoming' ? upcoming[0] : undefined
+  const todo = upcoming.slice(1).filter((e) => e.event_groups.some((x) => myGroups.includes(x.group_id)) && !answers.has(e.id)).slice(0, 5)
   const rest = view === 'upcoming' ? upcoming.slice(1) : past
 
   function row(e: EventRow) {
@@ -149,21 +171,26 @@ export default function Events() {
 
   return (
     <div className="page wide">
-      <div className="row">
+      <div className="row phone-only">
         <h1>{formatMonth(`${week[3].date}T12:00:00Z`)}</h1>
         {isStaff && <Link className="button small" to="/events/new">{t('events.new')}</Link>}
       </div>
 
-      <div className="cal-bar desk-only">
-        <button className="icon" aria-label={t('events.prevWeek')} onClick={() => goWeek(weekShift - 1)}>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6" /></svg>
-        </button>
-        <span className="cal-range">{weekRange(week[0].date, week[6].date)}</span>
-        <button className="icon" aria-label={t('events.nextWeek')} onClick={() => goWeek(weekShift + 1)}>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6" /></svg>
-        </button>
-        {weekShift !== 0 && <button className="link" onClick={() => goWeek(0)}>{t('events.backToToday')}</button>}
-      </div>
+      <section className="club-banner desk-only" aria-label={club.name || t('app.name')}>
+        <Crest />
+        <div className="cb-title">
+          <h1>{club.name || t('app.name')}</h1>
+          <span>{formatMonth(new Date().toISOString())}</span>
+        </div>
+        <dl className="cb-stats">
+          <div><dt>{t('dash.members')}</dt><dd>{memberCount ?? ''}</dd></div>
+          <div><dt>{t('dash.thisWeek')}</dt><dd>{weekCount}</dd></div>
+          <div><dt>{t('dash.myAttendance')}</dt><dd>{season.total ? t('dash.ofTotal', { n: String(season.came), total: String(season.total) }) : t('common.none')}</dd></div>
+        </dl>
+        {isStaff && <Link className="button small light" to="/events/new">{t('events.new')}</Link>}
+      </section>
+
+      
 
       <section className="week phone-only" aria-label={t('events.week')}>
         <div className="week-bar">
@@ -215,8 +242,14 @@ export default function Events() {
       {loaded && view === 'upcoming' && upcoming.length === 0 && <p className="hint">{t('events.empty')}</p>}
       {loaded && view === 'past' && past.length === 0 && <p className="hint">{t('events.emptyPast')}</p>}
 
-      <div className="evgrid">
+      <div className="evgrid dash">
         {next && <NextPanel club={club.name || t('app.name')} colours={teamColours(next)} event={next} groups={groupsOf(next)} mine={answers.get(next.id) ?? null} count={counts.get(next.id)} canAnswer={canAnswer(next)} busy={busy === next.id} onAnswer={(v) => void answer(next, v)} />}
+        {view === 'upcoming' && (
+          <section className="todo desk-only" aria-label={t('dash.todo')}>
+            <h2>{t('dash.todo')}{todo.length > 0 ? ` (${todo.length})` : ''}</h2>
+            {todo.length === 0 ? <p className="hint">{t('dash.allDone')}</p> : <ul className="evrows">{todo.map(row)}</ul>}
+          </section>
+        )}
         {rest.length > 0 && (
           <div className={view === 'upcoming' ? 'phone-only' : undefined}>
             {view === 'upcoming' && <div className="nowline"><span>{t('events.then')}</span><i aria-hidden="true" /></div>}
@@ -225,6 +258,17 @@ export default function Events() {
           </div>
         )}
       </div>
+
+      {!picked && view === 'upcoming' && <div className="cal-bar desk-only">
+        <button className="icon" aria-label={t('events.prevWeek')} onClick={() => goWeek(weekShift - 1)}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6" /></svg>
+        </button>
+        <span className="cal-range">{weekRange(week[0].date, week[6].date)}</span>
+        <button className="icon" aria-label={t('events.nextWeek')} onClick={() => goWeek(weekShift + 1)}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6" /></svg>
+        </button>
+        {weekShift !== 0 && <button className="link" onClick={() => goWeek(0)}>{t('events.backToToday')}</button>}
+      </div>}
 
       {view === 'upcoming' && <div className="cal-week desk-only" aria-label={t('events.week')}>
         {week.map((d) => (
