@@ -114,3 +114,12 @@ export function formatMonth(iso: string): string {
   const text = monthFormat.format(new Date(iso))
   return text.charAt(0).toUpperCase() + text.slice(1)
 }
+
+// Seasons start on 1 September. The season of a moment is named by the year it started in.
+export function seasonOf(iso: string): number {
+  const [y, m] = dayKey(iso).split('-').map(Number)
+  return m >= 9 ? y : y - 1
+}
+
+// 2026 to "2026/27".
+export const seasonLabel = (year: number) => `${year}/${pad((year + 1) % 100)}`

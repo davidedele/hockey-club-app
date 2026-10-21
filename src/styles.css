@@ -438,3 +438,37 @@ a.gear.active { color: var(--accent); background: var(--accent-soft); }
 .chip .group-badge.small { margin-left: -.375rem; }
 select.full { width: 100%; max-width: 20rem; }
 button.secondary { background: var(--surface); color: var(--accent); border: 1px solid var(--line-strong); }
+
+/* Statistics: season and group filters, the team's record on the team colours, then the tables */
+.stats-filters { display: flex; flex-wrap: wrap; align-items: flex-end; gap: .5rem 1.5rem; margin: 1rem 0 .5rem; }
+.stats-filters .chips { margin-bottom: 0; }
+.stats-filters label[for] + select { margin-bottom: .5rem; }
+.season-name { align-self: center; margin: 0 0 .5rem; font-weight: 500; }
+.record { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: .75rem 1rem; margin: .5rem 0 0; padding: 1rem 1.25rem; background: var(--team-dark); color: #fff; border-radius: var(--radius); }
+.record dt { font-size: .875rem; color: rgba(255, 255, 255, .72); }
+.record dd { margin: 0; font: 600 2rem/1.1 var(--font-display); color: var(--team-light); font-variant-numeric: tabular-nums; }
+@media (max-width: 767.98px) {
+  .stats-filters { display: block; }
+  .record { grid-template-columns: repeat(3, minmax(0, 1fr)); padding: 1rem; }
+  .record .wide { grid-column: span 2; }
+}
+.stats-table td { font-variant-numeric: tabular-nums; }
+.stats-table td.strong { font-weight: 500; }
+.stats-table .who { display: flex; align-items: center; gap: .625rem; }
+.stats-table .empty-cell { text-align: center; color: var(--muted); padding: 2rem 1rem; white-space: normal; }
+
+/* Game on the event page: MVP podium, the vote form and the staff sheet */
+.podium li { display: flex; align-items: baseline; gap: .75rem; }
+.podium .rank { flex: none; min-width: 2.75rem; font: 600 1.125rem/1.2 var(--font-display); color: var(--muted); }
+.podium .podium-name { flex: 1; font-weight: 500; }
+.podium .podium-votes { color: var(--muted); font-size: .875rem; white-space: nowrap; }
+.podium li.first { border-left: 4px solid var(--team-light); }
+.podium li.first .rank { color: var(--accent); }
+.podium li.first .podium-name { font: 600 1.375rem/1.2 var(--font-display); }
+.vote .list { margin-top: .5rem; }
+.list.rate li { padding-top: .5rem; padding-bottom: .5rem; }
+.stat-edit li { display: flex; flex-direction: column; gap: .5rem; }
+.statgrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .5rem .75rem; }
+@media (min-width: 768px) { .statgrid { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
+.statgrid label { margin: 0; font-size: .875rem; color: var(--muted); }
+.statgrid input { color: var(--ink); font-variant-numeric: tabular-nums; }

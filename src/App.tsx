@@ -13,6 +13,7 @@ import AttendanceSummary from './pages/AttendanceSummary'
 import ClubSettings from './pages/ClubSettings'
 import GroupSettings from './pages/GroupSettings'
 import Settings from './pages/Settings'
+import Stats from './pages/Stats'
 import EventDetail from './pages/EventDetail'
 import EventForm from './pages/EventForm'
 import Events from './pages/Events'
@@ -42,6 +43,7 @@ const ICONS = {
   ),
   invites: <path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3A4 4 0 0 0 11 18.7l1-1" />,
   attendance: <path d="M5 20V11M12 20V5M19 20v-6" />,
+  stats: <path d="M8 4h8v5a4 4 0 0 1-8 0V4zM8 6H5v1a3 3 0 0 0 3 3M16 6h3v1a3 3 0 0 1-3 3M12 13v4M8 20h8M10 17h4v3h-4z" />,
   settings: (
     <>
       <circle cx="12" cy="12" r="3" />
@@ -116,6 +118,7 @@ function Protected() {
     <>
       <NavLink to="/events"><TabIcon name="events" />{t('nav.events')}</NavLink>
       <NavLink to="/" end><TabIcon name="members" />{t('nav.members')}</NavLink>
+      <NavLink to="/stats"><TabIcon name="stats" />{t('nav.stats')}</NavLink>
       {isStaff && <NavLink to="/attendance"><TabIcon name="attendance" />{t('nav.attendance')}</NavLink>}
     </>
   )
@@ -165,6 +168,7 @@ export default function App() {
         <Route path="/events/new" element={<EventForm />} />
         <Route path="/events/unanswered" element={<Unanswered />} />
         <Route path="/attendance" element={<AttendanceSummary />} />
+        <Route path="/stats" element={<Stats />} />
         <Route path="/events/:id" element={<EventDetail />} />
         <Route path="/events/:id/edit" element={<EventForm />} />
         <Route path="/members/:id" element={<MemberEdit />} />

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { addDays, dayKey, endIso, formatTime, isoToItaly, italyToIso, meetupIso, shiftClock, dayParts, weekOf, formatMonth } from './time'
+import { addDays, dayKey, endIso, formatTime, isoToItaly, italyToIso, meetupIso, shiftClock, dayParts, weekOf, formatMonth, seasonOf, seasonLabel } from './time'
 
 describe('Italian time', () => {
   it('converts summer time to UTC', () => {
@@ -55,5 +55,17 @@ describe('weekOf', () => {
 describe('formatMonth', () => {
   it('starts with a capital letter', () => {
     expect(formatMonth('2026-10-21T10:00:00Z')).toBe('Ottobre 2026')
+  })
+})
+
+describe('seasons', () => {
+  it('starts a season on 1 September in Italian time', () => {
+    expect(seasonOf('2026-08-31T21:59:00.000Z')).toBe(2025)
+    expect(seasonOf('2026-08-31T22:00:00.000Z')).toBe(2026)
+    expect(seasonOf('2027-03-01T12:00:00.000Z')).toBe(2026)
+  })
+  it('names a season by both years', () => {
+    expect(seasonLabel(2026)).toBe('2026/27')
+    expect(seasonLabel(2099)).toBe('2099/00')
   })
 })

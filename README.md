@@ -6,7 +6,8 @@ It covers trainings, games, attendance, line-ups, training plans and ratings for
 Status: steps 1 and 2 of the build order work against a test database.
 1. Sign in, invite links, groups, members, roles, profile pictures.
 2. Events with weekly repeat, attendance answers, who said present, coach lists of missing answers and an attendance summary.
-3. Club settings for staff: name, logo and game day colours.
+3. Settings for the board: club name, logo and colours, groups, invites.
+4. Game statistics (goals, assists, penalty minutes, goalie saves), ratings and MVP after each game, and a season statistics page. Written and tested, not yet on the test database.
 
 Next: reminders, then the weekly training limit.
 

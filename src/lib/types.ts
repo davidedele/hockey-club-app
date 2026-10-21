@@ -88,3 +88,48 @@ export interface SummaryRow {
   injured: number
   not_called_up: number
 }
+
+// One person in one game: their numbers and, once visible, the ratings and MVP votes they received.
+export interface GameResultRow {
+  user_id: string
+  first_name: string
+  last_name: string
+  jersey_number: number | null
+  position: Position | null
+  played: boolean
+  goals: number | null
+  assists: number | null
+  penalty_minutes: number | null
+  shots_against: number | null
+  saves: number | null
+  rating_avg: number | null
+  rating_count: number | null
+  mvp_votes: number | null
+  my_rating: number | null
+}
+
+export interface SeasonStatRow {
+  user_id: string
+  first_name: string
+  last_name: string
+  jersey_number: number | null
+  position: Position | null
+  games: number
+  goals: number
+  assists: number
+  points: number
+  penalty_minutes: number
+  shots_against: number | null
+  saves: number | null
+  mvp: number
+  rating_avg: number | null
+}
+
+export interface SeasonRecord {
+  games: number
+  wins: number
+  draws: number
+  losses: number
+  goals_for: number
+  goals_against: number
+}

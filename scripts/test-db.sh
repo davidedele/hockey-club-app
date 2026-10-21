@@ -22,6 +22,7 @@ trap 'run "$bin/pg_ctl" -D "$work/data" -m immediate stop >/dev/null 2>&1; rm -r
 sql -f "$root/supabase/tests/00_shim.sql"
 for f in "$root"/supabase/migrations/*.sql; do sql -f "$f"; done
 sql -f "$root/supabase/tests/01_helpers.sql"
-for f in "$root"/supabase/tests/0[2-9]_*.sql; do
+for f in "$root"/supabase/tests/[0-9][0-9]_*.sql; do
+  case "$(basename "$f")" in 00_*|01_*) continue ;; esac
   sql -o /dev/null -f "$f" 2>&1 | sed -E "s/^psql:[^ ]+ (NOTICE|ERROR): +//"
 done

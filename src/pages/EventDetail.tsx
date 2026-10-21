@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom'
 import { errorText, t, type MessageKey } from '../i18n'
+import EventGame from './EventGame'
 import { useSession } from '../lib/session'
 import { supabase } from '../lib/supabase'
 import { formatDay, formatTime } from '../lib/time'
@@ -170,9 +171,20 @@ export default function EventDetail() {
         {event.venue && (<><dt>{t('event.venue')}</dt><dd>{event.venue}</dd></>)}
         {event.opponent && (<><dt>{t('event.opponent')}</dt><dd>{event.opponent}{event.home_away ? ` · ${t(event.home_away === 'home' ? 'event.home' : 'event.away')}` : ''}</dd></>)}
         {event.score_for !== null && event.score_against !== null && (
-          <><dt>{t('event.scoreTitle')}</dt><dd>{t('event.score', { us: String(event.score_for), them: String(event.score_against) })}</dd></>
+          <><dt>{t('event.scoreTitle')}</dt><dd>{t('event.scoreValue', { us: String(event.score_for), them: String(event.score_against) })}</dd></>
         )}
       </dl>
+
+      {event.type === 'game' && profile && (
+        <EventGame
+          eventId={id}
+          myId={profile.id}
+          isStaff={isStaff}
+          started={started}
+          over={over}
+          reloadKey={rows.map((r) => `${r.user_id}:${r.answer}:${r.status}`).join(',')}
+        />
+      )}
 
       {inMyGroups && (
         <>

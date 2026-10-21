@@ -4,7 +4,7 @@ Update this file at the end of every session, so the next session starts exactly
 Keep entries short and put the newest first.
 
 ## Current state
-Build step 1 works against the Supabase test project. Step 2 (events with weekly repeat, attendance answers, banner, staff attendance view) is written and tested locally, but its database migration has not been applied to the test project yet. Until it is, the new Events tab will show errors in the real app.
+Steps 1 and 2 work against the Supabase test project, with migrations up to 0011 applied. Step 7 (game statistics, ratings and MVP) is written and tested locally; its migration 0012 is not applied to the test project yet, so the Statistiche tab and the game sections show errors there until it is. Step 3 (weekly limit) waits, by Davide's choice.
 
 ## Session log
 1. 21 October 2026, third session (local, Davide away):
@@ -24,6 +24,7 @@ Build step 1 works against the Supabase test project. Step 2 (events with weekly
    14. Settings area (club, groups, invites), group settings for the board with migration 0009, cleaner own picture, and a computer layout with a week calendar and a members table. 220 database tests, all passing.
    15. UX and accessibility audit with fixes (`docs/UX_AUDIT.md`). Neutral sign in pages (migration 0010) and a club dashboard as the computer home with a dark sidebar. 221 database tests, all passing.
    16. `npm run test:db` now also finds Homebrew Postgres, or uses `PG_BIN`. The tests were run on a Linux copy because the shell used this session could not install Postgres in the usual way.
+   17. Game statistics, ratings and MVP (build step 7, brought forward by Davide; the weekly limit waits). Migration `0012_game_stats_ratings.sql` with 64 new tests (288 in total, all passing), and 24 broken rule checks that each made a test fail. Staff enter goals, assists, penalty minutes and goalie numbers on the game page; players who played vote after the game; a Statistiche tab shows the season. Checked at 375 and 1280 pixels, light and dark, with the fake backend: no sideways page scrolling, no contrast failures, tap targets at least 44 pixels. Applying the migration to the test project was cancelled at the approval prompt, so it is not applied yet.
 2. 21 October 2026, second session (cloud):
    1. Database migration for groups, members, contacts, roles and invites, with row level security. 70 access rule tests on a local Postgres (`npm run test:db`), all passing.
    2. App skeleton in React and TypeScript with the Italian text file: login, join by invite, password reset, members list, own profile, invite creation and revoking for staff.
@@ -33,6 +34,7 @@ Build step 1 works against the Supabase test project. Step 2 (events with weekly
 3. 21 October 2026, first session: specification, notes on the current app, decisions and working rules written. Repository created.
 
 ## Next
+0. Apply migration 0012 to the test project (needs Davide's go ahead), then try a real game: record attendance, enter numbers, vote from two accounts, look at Statistiche.
 1. Done by Davide: the step 2 migration is applied in the test project and was tried (events, answers exist). Security advisors checked: row level security is on for every table. The warnings about functions that signed in users can call are intended, since each function checks the caller itself. One setting to switch on in the dashboard: leaked password protection (Authentication, password security), if the plan allows it.
 2. Davide: the Resend domain `mail.onlyai.lol` is verified. Enter the SMTP details in Supabase yourself (the API key stays private, never in the repository), following `docs/SETUP_EMAIL.md`, then switch "Confirm email" on and test a sign up.
 3. Davide: click the "use this invite" button once as a signed in member (open an invite link while logged in).

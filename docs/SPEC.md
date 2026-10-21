@@ -67,9 +67,9 @@ A player cannot rate themself.
 The MVP is the player with the most votes.
 Players see the ratings only after they have voted.
 The overall result shows the average per player.
-Open point: whether board members can see who gave which rating. This is a privacy choice for the club, to be confirmed with the board.
+Open point: whether board members can see who gave which rating. This is a privacy choice for the club, to be confirmed with the board. Until then nobody sees it (decided 21 October).
 There are no training ratings.
-Optional stats (goals, assists, penalties) can come later. The club uses little of this.
+Game statistics (decided 21 October): staff enter goals, assists and penalty minutes per player, and shots against and saves for goalies. The whole club sees them per game and per season.
 
 ## 11. Discussion
 Each event has its own discussion thread, with read receipts, archived after a period without messages.
@@ -81,7 +81,7 @@ Needed first: new event, attendance reminder, change of time or venue, weekly li
 On iPhone, push notifications need the app to be added to the home screen.
 
 ## 13. Data and privacy
-Keep the minimum: name, email, phone (optional), jersey number, position, group membership, weekly plan, profile picture (optional, added by the person, decided 21 October).
+Keep the minimum: name, email, phone (optional), jersey number, position, group membership, weekly plan, profile picture (optional, added by the person, decided 21 October), game numbers, ratings and MVP votes (decided 21 October).
 Not needed: date of birth, height, weight, parent fields.
 Row level security in the database: players see their own groups' events, their own answers and who said present for those events (decided 21 October); ratings follow the rule above; only the board sees plans and warnings.
 The club holds members' data, so the board should agree to the move and members should be told what is stored.
