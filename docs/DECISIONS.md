@@ -37,6 +37,7 @@ Recorded on 21 October 2026. Read together with `SPEC.md` and `SPORTEASY_NOTES.m
 7. Coaches have the same rights as the board for running the roster: editing member profiles, adding or removing group members and creating invites. Only the board assigns roles, edits groups and removes members.
 8. Players edit their own name, jersey number, position and phone. Staff can correct them.
 9. Login uses email confirmation and password reset by email.
+10. An invite is marked used only when someone has actually joined with it. A member who is already signed in must press a button to use an invite, so opening a link by accident uses nothing.
 
 ## Assumptions made while building step 1 (to confirm)
 1. The "manager and president" roles are one role called board.
