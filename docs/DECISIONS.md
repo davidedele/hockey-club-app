@@ -87,9 +87,9 @@ Recorded on 21 October 2026. Read together with `SPEC.md` and `SPORTEASY_NOTES.m
 8. Built on 21 October with Archivo and Archivo Narrow (SIL Open Font License, licence in public/fonts). On computers a left sidebar replaces the floating tab bar, like the SportEasy website. Tabs: Eventi, Membri, Profilo for everyone, plus Presenze and Inviti for staff. The attendance summary moved to its own address, /attendance.
 9. Players see how many people said present for an event and who they are, as in SportEasy (Davide, 21 October). Absent answers and recorded attendance stay visible to staff only. Functions `event_present_counts` (migration 0004) and `event_present_people` (migration 0005).
 10. Nothing about one club is built in (Davide, 21 October). Staff set the club name, the logo and the game day colours in the app (Profilo, Impostazioni del club). They are stored in `club_settings` (one row, readable by everyone because the sign in page shows them, changeable by staff only) and the logo in a public storage bucket `club` (PNG, JPEG or WebP, at most 1 MB, upload and removal by staff only). Migration 0006. Without a logo the app shows a stick and puck.
+11. For now the game day colours are one pair for the whole club, not one per team. Per team colours can come later if the teams want different ones.
 12. On computers, club settings and the own profile sit at the bottom left of the sidebar. On phones they are reached from Profilo.
 13. The week strip on the events home works as a calendar: arrows move by week, tapping a day shows that day's events, tapping it again or Mostra tutti goes back.
-11. For now the game day colours are one pair for the whole club, not one per team. Per team colours can come later if the teams want different ones.
 
 ## Decisions from the coach's suggestions (21 October)
 1. Yearly medical visit: each player has a certificate expiry date and an uploaded photo or PDF of the certificate. Reminder to the player 30 days before expiry. The uploaded file is private. Who sees what: board and coaches see both dates and files (Davide, 21 October). For now staff and board are treated the same.
