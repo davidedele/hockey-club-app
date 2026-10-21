@@ -42,6 +42,7 @@ Build step 1 works against the Supabase test project. Step 2 (events with weekly
 7. Step 3: weekly limit and warnings.
 
 ## Open problems
+0. Before moving the club from SportEasy: decide between single use invites (today) and a team link per group usable by many people for a limited time, revocable by the board. Recommended: team link for the move, single use for individual cases. Davide: not urgent, there is time before the move.
 1. In the Supabase test project, "Confirm email" is switched OFF for testing, because the built in email service allows only a few emails per hour. It must be switched on again and a custom email sender connected before real use. The confirmation email path has therefore not been tested yet.
 2. The app is not yet installable as a real PWA: there is a manifest and icons but no service worker. The service worker comes with push notifications (step 9).
 3. Signing up again with an address that already has an account (from an earlier attempt) sends no new email, and the resend button sends nothing either. The auth log shows a repeated sign up for that address and expired links from the first email. To look at later with Davide: probably the account is already confirmed, so the person should log in or reset the password, and the screen should say so.
