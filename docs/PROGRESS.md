@@ -15,7 +15,8 @@ Build step 1 works against the Supabase test project. Step 2 (events with weekly
    5. Step 2 database migration `0002_events_attendance.sql` with 71 new access rule tests (141 in total, all passing), including a check that weekly repeats keep the clock time across the autumn time change and a check that breaking two rules makes the tests fail.
    6. Step 2 screens: events list, new and edit event form, event page with Present and Absent answers, banner for unanswered events, staff list of who has not answered, recording who actually came, final score for games, deleting one event or this and the following.
    7. Looked at all screens at 375 and 1280 pixels wide with a fake backend: no sideways scrolling, tap targets at least 44 pixels, polish fixes applied. Not tried against the real Supabase project.
-   8. `npm run test:db` now also finds Homebrew Postgres, or uses `PG_BIN`. The tests were run on a Linux copy because the shell used this session could not install Postgres in the usual way.
+   8. Coach screens: "Da contattare" (who has not answered, with phone and email) and "Riepilogo presenze" (per player summary), both reached from the Events tab. Migration `0003_staff_attendance_lists.sql`, 19 more tests (160 in total, all passing). It was applied to the test project through the Supabase connection, after checking it was the only project, `hockey-club-test`.
+   9. `npm run test:db` now also finds Homebrew Postgres, or uses `PG_BIN`. The tests were run on a Linux copy because the shell used this session could not install Postgres in the usual way.
 2. 21 October 2026, second session (cloud):
    1. Database migration for groups, members, contacts, roles and invites, with row level security. 70 access rule tests on a local Postgres (`npm run test:db`), all passing.
    2. App skeleton in React and TypeScript with the Italian text file: login, join by invite, password reset, members list, own profile, invite creation and revoking for staff.
@@ -28,8 +29,8 @@ Build step 1 works against the Supabase test project. Step 2 (events with weekly
 1. Done by Davide: the step 2 migration is applied in the test project and was tried (events, answers exist). Security advisors checked: row level security is on for every table. The warnings about functions that signed in users can call are intended, since each function checks the caller itself. One setting to switch on in the dashboard: leaked password protection (Authentication, password security), if the plan allows it.
 2. Davide: create a Resend account and verify `mail.onlyai.lol`, following `docs/SETUP_EMAIL.md`, then send me the SMTP details to enter in Supabase (the key stays private, never in the repository). Then switch "Confirm email" on.
 3. Davide: click the "use this invite" button once as a signed in member (open an invite link while logged in).
-4. Reminders, as decided on 21 October (see `DECISIONS.md`): push first, one reminder the day before a training, more frequent when time is short, managed by the board and managers, and a daily list of who has not answered for coaches. Push needs the service worker and push subscriptions (build step 9), so build that part together with the reminder rules. A first useful piece that needs no push: the coach list of who has not answered, shown in the app.
-5. Attendance season summary per player and the per event grid (spec section 5), for coaches and the board.
+4. Reminders, as decided on 21 October (see `DECISIONS.md`): push first, one reminder the day before a training, more frequent when time is short, managed by the board and managers, and a daily list of who has not answered for coaches. Push needs the service worker and push subscriptions (build step 9), so build that part together with the reminder rules. The coach list of who has not answered exists as a screen. A daily message with it comes with push.
+5. The per event attendance grid (every player by every date, spec section 5). The per player summary exists.
 6. Edit groups of an existing event, and change a whole series at once.
 7. Step 3: weekly limit and warnings.
 

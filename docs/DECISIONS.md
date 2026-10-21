@@ -63,7 +63,9 @@ Recorded on 21 October 2026. Read together with `SPEC.md` and `SPORTEASY_NOTES.m
 7. For a game the opponent is required, with home or away. Staff enter the final score on the event page.
 8. Deleting an event also deletes its answers and recorded attendance. The screen names the event and asks for confirmation first.
 9. Recorded attendance can be entered after the event starts. It stores only the status (on time, late, excused, unexcused, injured, not called up).
-10. Not built yet: reminders by email or push. See the open questions in `PROGRESS.md`.
+10. Not built yet: reminders by push or email. The rules are in the reminder decisions above.
+11. The coach list "Da contattare" shows people with no answer for events in the next 3, 7 or 14 days (7 by default), with phone and email, most missing first. It is a screen in the app for coaches and the board, not a daily message yet.
+12. The attendance summary counts finished events shown to a player's groups. "Tutta la stagione" means every finished event so far, and there is a last 30 days view. A person in two groups of one event counts it once.
 
 ## Setup status
 1. GitHub repository: github.com/davidedele/hockey-club-app, private, with the first commit pushed (the planning files).
