@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { errorText, t, type MessageKey } from '../i18n'
 import Avatar from '../components/Avatar'
 import { shrinkPhoto, useAvatarUrls } from '../lib/avatars'
-import { useSession } from '../lib/session'
+import { signOut, useSession } from '../lib/session'
 import { supabase } from '../lib/supabase'
 import type { Position } from '../lib/types'
 
@@ -147,7 +147,7 @@ export default function ProfilePage() {
       <p>{myGroups.length ? myGroups.join(', ') : t('profile.noGroups')}</p>
       {roles.length > 0 && <p className="hint">{roles.map((r) => t(`role.${r}` as MessageKey)).join(', ')}</p>}
       {isStaff && <p><Link to="/club">{t('club.title')}</Link></p>}
-      <button className="link" onClick={() => supabase.auth.signOut()}>{t('common.signOut')}</button>
+      <button className="link" onClick={() => void signOut()}>{t('common.signOut')}</button>
     </div>
   )
 }

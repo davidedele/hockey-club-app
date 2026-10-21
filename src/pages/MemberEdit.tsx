@@ -75,6 +75,7 @@ export default function MemberEdit() {
   async function remove() {
     setBusy(true)
     setError('')
+    const photo = person!.avatar_path
     const { error, data } = await supabase.from('profiles').delete().eq('id', id).select()
     if (error || !data || data.length === 0) {
       setError(errorText(error ?? { message: 'forbidden' }))
@@ -82,6 +83,8 @@ export default function MemberEdit() {
       setBusy(false)
       return
     }
+    // A removed member's picture goes too. Only the storage API removes the file itself.
+    if (photo) await supabase.storage.from('avatars').remove([photo])
     navigate('/', { replace: true })
   }
 

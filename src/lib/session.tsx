@@ -1,5 +1,6 @@
 import type { Session } from '@supabase/supabase-js'
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react'
+import { clearPendingInvite } from './invite'
 import { supabase } from './supabase'
 import type { Profile, Role } from './types'
 
@@ -65,4 +66,10 @@ export function useSession(): SessionState {
   const value = useContext(Ctx)
   if (!value) throw new Error('useSession must be used inside SessionProvider')
   return value
+}
+
+// Signing out also forgets a half used invite, so the next person on this device cannot pick it up.
+export async function signOut() {
+  clearPendingInvite()
+  await supabase.auth.signOut()
 }

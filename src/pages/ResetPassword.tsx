@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
-import { t } from '../i18n'
+import { errorText, t } from '../i18n'
 import { supabase } from '../lib/supabase'
 import Brand from '../components/Brand'
 
@@ -12,7 +12,7 @@ export default function ResetPassword() {
   async function submit(e: FormEvent) {
     e.preventDefault()
     const { error } = await supabase.auth.updateUser({ password })
-    if (error) setError(t('common.error'))
+    if (error) setError(errorText(error))
     else setDone(true)
   }
 

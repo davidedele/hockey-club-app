@@ -3,7 +3,7 @@ import { Navigate } from 'react-router-dom'
 import { Link } from 'react-router-dom'
 import { errorText, t } from '../i18n'
 import { getPendingInvite } from '../lib/invite'
-import { useSession } from '../lib/session'
+import { signOut, useSession } from '../lib/session'
 import { supabase } from '../lib/supabase'
 import Brand from '../components/Brand'
 
@@ -46,7 +46,7 @@ export default function Login() {
       <p><Link to="/forgot-password">{t('login.forgot')}</Link></p>
       <p className="hint">{t('login.noInvite')}</p>
       {session && !profile && !loading && (
-        <button className="link" onClick={() => supabase.auth.signOut()}>{t('common.signOut')}</button>
+        <button className="link" onClick={() => void signOut()}>{t('common.signOut')}</button>
       )}
     </div>
   )
