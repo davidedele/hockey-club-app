@@ -44,3 +44,11 @@ Light, dark or system appearance. Language setting. Newsletter and partner offer
 
 ## What SportEasy does not have
 Line-ups, training plans or drills, weekly training limits per player.
+
+## Website and app layout (seen 21 October)
+1. Website: a dark sidebar on the left (team switcher, Calendar, Championships, Members, Attendance, Statistics, Messages, Payments, own profile), breadcrumbs, bell and profile picture top right, yellow page titles.
+2. Phone app: club logo and name at the top with a bell (unread count) and profile picture, large page title, floating rounded tab bar at the bottom (Calendar, Messages, Members, Statistics, Others).
+3. Calendar list on the phone: finished and upcoming sections, Present and Absent buttons right on each event, the number of people present shown next to the venue.
+4. Member profile sections: Identity, Parents, Health, Periods of unavailability, Documents, Sports information, Leave the team.
+5. Attendance summary columns: called up, present (on time, late), absent (waiting list, excused, unexcused), other (injured, not called up).
+6. Club dashboard: team photo, counts (players, seasons, games, goals), last and next event, latest messages.

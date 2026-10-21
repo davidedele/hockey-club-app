@@ -81,9 +81,9 @@ Needed first: new event, attendance reminder, change of time or venue, weekly li
 On iPhone, push notifications need the app to be added to the home screen.
 
 ## 13. Data and privacy
-Keep the minimum: name, email, phone (optional), jersey number, position, group membership, weekly plan.
+Keep the minimum: name, email, phone (optional), jersey number, position, group membership, weekly plan, profile picture (optional, added by the person, decided 21 October).
 Not needed: date of birth, height, weight, parent fields.
-Row level security in the database: players see their own groups' events and their own answers; ratings follow the rule above; only the board sees plans and warnings.
+Row level security in the database: players see their own groups' events, their own answers and who said present for those events (decided 21 October); ratings follow the rule above; only the board sees plans and warnings.
 The club holds members' data, so the board should agree to the move and members should be told what is stored.
 
 ## 14. Technology
