@@ -12,6 +12,9 @@ describe('errorText', () => {
     expect(errorText({ message: 'invite_invalid' })).toBe(t('error.invite_invalid'))
     expect(errorText({ message: 'names_required' })).toBe(t('error.names_required'))
   })
+  it('maps sign in error codes', () => {
+    expect(errorText({ code: 'over_email_send_rate_limit', message: 'x' })).toBe(t('error.over_email_send_rate_limit'))
+  })
   it('falls back to a generic message', () => {
     expect(errorText({ message: 'boom' })).toBe(t('common.error'))
     expect(errorText(null)).toBe(t('common.error'))

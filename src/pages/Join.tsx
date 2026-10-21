@@ -48,7 +48,7 @@ export default function Join() {
         data: { first_name: firstName.trim(), last_name: lastName.trim() },
       },
     })
-    if (error) setError(t('common.error'))
+    if (error) setError(errorText(error))
     else setSent(true)
     setBusy(false)
   }

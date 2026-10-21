@@ -10,11 +10,25 @@ export function t(key: MessageKey, values: Record<string, string> = {}): string 
   return text.replace(/\{(\w+)\}/g, (_, name: string) => values[name] ?? '')
 }
 
-// Database errors carry a short code in their message. Show the matching Italian text.
-export function errorText(error: { message?: string } | null | undefined): string {
-  const message = error?.message ?? ''
-  for (const code of ['invite_invalid', 'names_required', 'email_not_confirmed', 'forbidden']) {
-    if (message.includes(code)) return t(`error.${code}` as MessageKey)
+const CODES = [
+  'invite_invalid',
+  'names_required',
+  'email_not_confirmed',
+  'forbidden',
+  'over_email_send_rate_limit',
+  'email_address_invalid',
+  'weak_password',
+  'user_already_exists',
+  'signup_disabled',
+]
+
+// Database errors carry a short code in their message, and sign in errors in their code.
+// Show the matching Italian text. While developing, an unknown error also shows its raw text.
+export function errorText(error: { message?: string; code?: string } | null | undefined): string {
+  const text = `${error?.code ?? ''} ${error?.message ?? ''}`
+  for (const code of CODES) {
+    if (text.includes(code)) return t(`error.${code}` as MessageKey)
   }
-  return t('common.error')
+  const raw = import.meta.env?.DEV && text.trim() ? ` (${text.trim()})` : ''
+  return t('common.error') + raw
 }

@@ -73,6 +73,11 @@
   "error.invite_invalid": "Questo invito non è valido, è già stato usato o è scaduto. Chiedi un nuovo link.",
   "error.names_required": "Inserisci nome e cognome.",
   "error.email_not_confirmed": "Conferma prima il tuo indirizzo email.",
+  "error.over_email_send_rate_limit": "Sono state inviate troppe email in poco tempo. Aspetta un po' e riprova.",
+  "error.email_address_invalid": "Questo indirizzo email non è accettato.",
+  "error.weak_password": "La password è troppo debole. Usa almeno 8 caratteri.",
+  "error.user_already_exists": "Esiste già un account con questa email. Usa Accedi.",
+  "error.signup_disabled": "Le iscrizioni sono disattivate.",
   "error.forbidden": "Non hai il permesso per farlo.",
   "error.missingConfig": "Manca la configurazione di Supabase. Vedi il file .env.example."
 }
