@@ -13,6 +13,7 @@ export interface Profile {
   last_name: string
   jersey_number: number | null
   position: Position | null
+  avatar_path: string | null
 }
 
 export interface Contact {

@@ -116,7 +116,7 @@ button.danger { background: var(--danger); color: var(--on-danger); }
 .score label { flex: 1; }
 
 /* Members */
-.member { display: grid; grid-template-columns: 3rem 1fr; align-items: center; gap: .5rem; }
+.member { display: grid; grid-template-columns: 40px 1fr auto; align-items: center; gap: .75rem; }
 .jersey { font: 600 1.75rem/1 var(--font-display); color: var(--muted); text-align: center; }
 .member-name { font-weight: 500; }
 .contacts { display: flex; gap: 1rem; flex-wrap: wrap; margin-top: .25rem; font-size: .875rem; }
@@ -159,7 +159,12 @@ main { padding-bottom: 7.5rem; }
 .crest img { width: 100%; height: 100%; object-fit: contain; }
 .club-name { font: 600 1.25rem/1.1 var(--font-display); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .avatar { flex: none; display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; background: var(--surface-2); color: var(--ink); font-weight: 500; font-size: .9375rem; text-decoration: none; }
-.avatar.active { background: var(--accent); color: var(--on-accent); }
+.avatar img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
+.avatar.small { width: 28px; height: 28px; font-size: .75rem; }
+.avatar.medium { width: 40px; height: 40px; font-size: .875rem; }
+.avatar.large { width: 96px; height: 96px; font-size: 1.75rem; }
+a.me { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; text-decoration: none; }
+a.me.active .avatar { box-shadow: 0 0 0 2px var(--accent); }
 
 .tabs { position: fixed; z-index: 3; left: 50%; bottom: calc(.75rem + env(safe-area-inset-bottom)); transform: translateX(-50%); width: calc(100% - 1.5rem); max-width: 30rem; display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: .25rem; padding: .375rem; background: var(--surface); border: 1px solid var(--line); border-radius: 28px; box-shadow: 0 6px 24px rgba(14, 34, 54, .07); }
 .tabs a { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .125rem; min-height: 52px; border-radius: 22px; color: var(--muted); font-size: .8125rem; font-weight: 500; text-decoration: none; }
@@ -174,8 +179,7 @@ main { padding-bottom: 7.5rem; }
   .side nav a { display: flex; align-items: center; gap: .75rem; min-height: 44px; padding: 0 .75rem; border-radius: var(--radius-control); color: var(--ink); font-weight: 500; text-decoration: none; }
   .side nav a.active { background: var(--accent-soft); color: var(--accent); }
   .side .side-foot { margin-top: auto; padding-top: .75rem; border-top: 1px solid var(--line); }
-  .avatar.small { width: 28px; height: 28px; font-size: .75rem; }
-  .side-foot a.active .avatar.small { background: var(--accent); color: var(--on-accent); }
+  .side-foot a.active .avatar.small { box-shadow: 0 0 0 2px var(--accent); }
   .top { justify-content: flex-end; background: transparent; border-bottom: 0; padding: 1rem 1.5rem 0; }
   .top .club { display: none; }
   .tabs { display: none; }

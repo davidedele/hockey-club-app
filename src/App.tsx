@@ -2,7 +2,9 @@ import { useCallback, useEffect, useState } from 'react'
 import { Link, NavLink, Navigate, Outlet, Route, Routes, useLocation } from 'react-router-dom'
 import { t } from './i18n'
 import { isConfigured } from './lib/supabase'
+import Avatar from './components/Avatar'
 import Crest from './components/Crest'
+import { useAvatarUrls } from './lib/avatars'
 import { useClub } from './lib/club'
 import { getPendingInvite } from './lib/invite'
 import { useSession } from './lib/session'
@@ -99,13 +101,14 @@ function PendingBanner() {
 function Protected() {
   const { loading, session, profile, isStaff } = useSession()
   const club = useClub()
+  const mine = useAvatarUrls([profile?.avatar_path])
   if (loading) return <p className="center">{t('common.loading')}</p>
   if (!session) return <Navigate to="/login" replace />
   if (!profile) {
     const pending = getPendingInvite()
     return <Navigate to={pending ? `/join/${pending}` : '/login'} replace />
   }
-  const initials = `${profile.first_name.charAt(0)}${profile.last_name.charAt(0)}`.toUpperCase()
+  const photo = profile.avatar_path ? mine.get(profile.avatar_path) : null
   const fullName = `${profile.first_name} ${profile.last_name}`
   const main = (
     <>
@@ -122,13 +125,13 @@ function Protected() {
         <nav aria-label={t('nav.main')}>{main}</nav>
         <nav className="side-foot" aria-label={t('nav.account')}>
           {isStaff && <NavLink to="/club"><TabIcon name="settings" />{t('club.title')}</NavLink>}
-          <NavLink to="/profile"><span className="avatar small" aria-hidden="true">{initials}</span>{fullName}</NavLink>
+          <NavLink to="/profile"><Avatar first={profile.first_name} last={profile.last_name} url={photo} size="small" />{fullName}</NavLink>
         </nav>
       </aside>
       <div className="body">
         <header className="top">
           <Link className="club" to="/events"><Crest /><span className="club-name">{club.name || t('app.name')}</span></Link>
-          <NavLink className="avatar" to="/profile" aria-label={t('nav.profileOf', { name: fullName })}>{initials}</NavLink>
+          <NavLink className="me" to="/profile" aria-label={t('nav.profileOf', { name: fullName })}><Avatar first={profile.first_name} last={profile.last_name} url={photo} /></NavLink>
         </header>
         <PendingBanner />
         <main>

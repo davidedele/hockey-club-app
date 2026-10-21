@@ -90,6 +90,7 @@ Recorded on 21 October 2026. Read together with `SPEC.md` and `SPORTEASY_NOTES.m
 11. For now the game day colours are one pair for the whole club, not one per team. Per team colours can come later if the teams want different ones.
 12. On computers, club settings and the own profile sit at the bottom left of the sidebar. On phones they are reached from Profilo.
 13. The week strip on the events home works as a calendar: arrows move by week, tapping a day shows that day's events, tapping it again or Mostra tutti goes back.
+14. Profile pictures (Davide, 21 October): optional, each person adds or removes their own on Profilo. Only club members can see them: private storage bucket `avatars`, shown through links that expire after an hour. The app crops the photo to a square, shrinks it to 256 pixels and saves it as JPEG, which also drops metadata such as location. Each person can only write in their own folder; the board can remove any picture. Migration 0007.
 
 ## Decisions from the coach's suggestions (21 October)
 1. Yearly medical visit: each player has a certificate expiry date and an uploaded photo or PDF of the certificate. Reminder to the player 30 days before expiry. The uploaded file is private. Who sees what: board and coaches see both dates and files (Davide, 21 October). For now staff and board are treated the same.

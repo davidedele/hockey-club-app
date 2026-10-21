@@ -234,5 +234,10 @@
   "events.thisWeek": "Questa settimana",
   "events.backToToday": "Torna a oggi",
   "events.showAll": "Mostra tutti",
-  "events.dayEmpty": "Nessun evento in questo giorno."
+  "events.dayEmpty": "Nessun evento in questo giorno.",
+  "profile.photoAdd": "Aggiungi una foto",
+  "profile.photoChange": "Cambia foto",
+  "profile.photoRemove": "Togli la foto",
+  "profile.photoHint": "La vedono solo i membri del club. Viene ritagliata a quadrato e ridotta.",
+  "profile.photoUnreadable": "Questa immagine non si apre. Prova con una foto JPEG o PNG."
 }

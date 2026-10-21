@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { t, type MessageKey } from '../i18n'
+import Avatar from '../components/Avatar'
+import { useAvatarUrls } from '../lib/avatars'
 import { useSession } from '../lib/session'
 import { supabase } from '../lib/supabase'
 import type { Contact, Group, Profile } from '../lib/types'
@@ -30,6 +32,7 @@ export default function Members() {
 
   const codeById = useMemo(() => new Map(groups.map((g) => [g.id, g.name])), [groups])
   const contactById = useMemo(() => new Map(contacts.map((c) => [c.user_id, c])), [contacts])
+  const photos = useAvatarUrls(profiles.map((p) => p.avatar_path))
   const visible = profiles.filter(
     (p) => filter === null || memberships.some((m) => m.user_id === p.id && m.group_id === filter),
   )
@@ -50,9 +53,7 @@ export default function Members() {
           const contact = contactById.get(p.id)
           return (
             <li key={p.id} className="member">
-              <span className="jersey" aria-label={p.jersey_number !== null ? `${t('common.jersey')} ${p.jersey_number}` : undefined}>
-                {p.jersey_number !== null ? p.jersey_number : '\u00b7'}
-              </span>
+              <Avatar first={p.first_name} last={p.last_name} url={p.avatar_path ? photos.get(p.avatar_path) : null} size="medium" />
               <div>
                 {isStaff ? (
                   <Link className="member-name" to={`/members/${p.id}`}>{p.last_name} {p.first_name}</Link>
@@ -66,6 +67,9 @@ export default function Members() {
                   <div className="hint">{[contact.email, contact.phone].filter(Boolean).join(' · ')}</div>
                 )}
               </div>
+              <span className="jersey" aria-label={p.jersey_number !== null ? `${t('common.jersey')} ${p.jersey_number}` : undefined}>
+                {p.jersey_number !== null ? p.jersey_number : ''}
+              </span>
             </li>
           )
         })}
