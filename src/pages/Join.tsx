@@ -66,9 +66,11 @@ export default function Join() {
     return (
       <div className="page narrow">
         <h1>{t('join.title')}</h1>
-        {profile && !busy && <p>{t('join.existing')}</p>}
-        {profile && !busy && !error && <button onClick={redeem}>{t('join.useInvite')}</button>}
-        {error ? <p className="error">{error}</p> : (!profile || busy) && <p>{t('join.working')}</p>}
+        {loading && <p>{t('common.loading')}</p>}
+        {!loading && profile && !busy && !error && <p>{t('join.existing')}</p>}
+        {!loading && profile && !busy && !error && <button onClick={redeem}>{t('join.useInvite')}</button>}
+        {!loading && error && <p className="error">{error}</p>}
+        {!loading && !error && (!profile || busy) && <p>{t('join.working')}</p>}
         {error && <p><Link to="/">{t('nav.members')}</Link></p>}
       </div>
     )
