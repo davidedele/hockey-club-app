@@ -83,7 +83,9 @@ Recorded on 21 October 2026. Read together with `SPEC.md` and `SPORTEASY_NOTES.m
 4. Sizes: body text 16px, secondary 14px, tap targets at least 44px, visible focus outline, reduced motion respected.
 5. The members list has a number column on the left of each name, and the tab bar uses simple line icons.
 6. Update after comparing with SportEasy (21 October): light ice blue look with a red "now" line, a week strip at the top, the next event as a big panel with large Presente and Assente buttons, the following events as rows with one tap tick and cross. Header with club logo, notifications bell with a count and profile picture. A floating rounded tab bar at the bottom (Eventi, Messaggi, Squadra, Presenze), done properly on both phone and computer.
-7. Game day: the next game gets its own panel in two team colours chosen by staff (for the A team black and yellow). Assumption: colours are set per team, so staff set them once.
+7. Game day: the next game gets its own panel in two team colours chosen by staff (for the A team black and yellow). Assumption: colours are set per team, so staff set them once. For now every team uses black and yellow; the staff setting comes in a later step.
+8. Built on 21 October with Archivo and Archivo Narrow (SIL Open Font License, licence in public/fonts). On computers a left sidebar replaces the floating tab bar, like the SportEasy website. Tabs: Eventi, Membri, Profilo for everyone, plus Presenze and Inviti for staff. The attendance summary moved to its own address, /attendance.
+9. Assumption: players see how many people said present for an event (the number only, never who), as in SportEasy. Function `event_present_counts`, migration 0004.
 
 ## Decisions from the coach's suggestions (21 October)
 1. Yearly medical visit: each player has a certificate expiry date and an uploaded photo or PDF of the certificate. Reminder to the player 30 days before expiry. The uploaded file is private. Who sees what: board and coaches see both dates and files (Davide, 21 October). For now staff and board are treated the same.

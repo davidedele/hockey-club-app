@@ -91,3 +91,26 @@ export function dayParts(iso: string): { num: string; dow: string; mon: string }
 }
 
 export const isToday = (iso: string) => dayKey(iso) === dayKey(new Date().toISOString())
+
+const narrowDayFormat = new Intl.DateTimeFormat('it-IT', { timeZone: 'UTC', weekday: 'narrow' })
+
+// The seven days, Monday to Sunday, of the week that holds the given moment, in Italian time.
+export function weekOf(iso: string): { date: string; dow: string; num: string }[] {
+  const today = dayKey(iso)
+  const [y, m, d] = today.split('-').map(Number)
+  const fromMonday = (new Date(Date.UTC(y, m - 1, d)).getUTCDay() + 6) % 7
+  const monday = addDays(today, -fromMonday)
+  return Array.from({ length: 7 }, (_, i) => {
+    const date = addDays(monday, i)
+    const [yy, mm, dd] = date.split('-').map(Number)
+    return { date, dow: narrowDayFormat.format(new Date(Date.UTC(yy, mm - 1, dd, 12))), num: String(dd) }
+  })
+}
+
+const monthFormat = new Intl.DateTimeFormat('it-IT', { timeZone: TZ, month: 'long', year: 'numeric' })
+
+// "Ottobre 2026", for the heading of the events home.
+export function formatMonth(iso: string): string {
+  const text = monthFormat.format(new Date(iso))
+  return text.charAt(0).toUpperCase() + text.slice(1)
+}

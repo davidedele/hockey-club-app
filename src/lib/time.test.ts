@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { addDays, dayKey, endIso, formatTime, isoToItaly, italyToIso, meetupIso, shiftClock, dayParts } from './time'
+import { addDays, dayKey, endIso, formatTime, isoToItaly, italyToIso, meetupIso, shiftClock, dayParts, weekOf, formatMonth } from './time'
 
 describe('Italian time', () => {
   it('converts summer time to UTC', () => {
@@ -37,5 +37,23 @@ describe('Italian time', () => {
   it('gives the date column of a day in Italian time', () => {
     expect(dayParts('2026-10-22T20:30:00.000Z')).toEqual({ num: '22', dow: 'gio', mon: 'ott' })
     expect(dayParts('2026-10-22T22:30:00.000Z')).toEqual({ num: '23', dow: 'ven', mon: 'ott' })
+  })
+})
+
+describe('weekOf', () => {
+  it('gives Monday to Sunday of the week in Italian time', () => {
+    const week = weekOf('2026-10-21T10:00:00Z')
+    expect(week.map((d) => d.date)).toEqual(['2026-10-19', '2026-10-20', '2026-10-21', '2026-10-22', '2026-10-23', '2026-10-24', '2026-10-25'])
+    expect(week.map((d) => d.dow).join('')).toBe('LMMGVSD')
+    expect(week[2].num).toBe('21')
+  })
+  it('uses the Italian day when UTC is still the day before', () => {
+    expect(weekOf('2026-10-25T23:30:00Z')[0].date).toBe('2026-10-26')
+  })
+})
+
+describe('formatMonth', () => {
+  it('starts with a capital letter', () => {
+    expect(formatMonth('2026-10-21T10:00:00Z')).toBe('Ottobre 2026')
   })
 })

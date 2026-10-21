@@ -34,6 +34,7 @@ const ICONS = {
     </>
   ),
   invites: <path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3A4 4 0 0 0 11 18.7l1-1" />,
+  attendance: <path d="M5 20V11M12 20V5M19 20v-6" />,
 }
 
 function TabIcon({ name }: { name: keyof typeof ICONS }) {
@@ -76,7 +77,7 @@ function PendingBanner() {
     return () => window.removeEventListener('attendance-changed', load)
   }, [load])
 
-  if (count === 0) return null
+  if (count === 0 || location.pathname === '/events') return null
   return (
     <div className="banner" role="status">
       <span>{count === 1 ? t('banner.one') : t('banner.many', { n: String(count) })}</span>
@@ -94,19 +95,46 @@ function Protected() {
     const pending = getPendingInvite()
     return <Navigate to={pending ? `/join/${pending}` : '/login'} replace />
   }
+  const initials = `${profile.first_name.charAt(0)}${profile.last_name.charAt(0)}`.toUpperCase()
+  const links = (
+    <>
+      <NavLink to="/events"><TabIcon name="events" />{t('nav.events')}</NavLink>
+      <NavLink to="/" end><TabIcon name="members" />{t('nav.members')}</NavLink>
+      {isStaff && <NavLink to="/attendance"><TabIcon name="attendance" />{t('nav.attendance')}</NavLink>}
+      {isStaff && <NavLink to="/invites"><TabIcon name="invites" />{t('nav.invites')}</NavLink>}
+      <NavLink to="/profile"><TabIcon name="profile" />{t('nav.profile')}</NavLink>
+    </>
+  )
   return (
     <div className="shell">
-      <PendingBanner />
-      <main>
-        <Outlet />
-      </main>
-      <nav className="tabs">
-        <NavLink to="/events"><TabIcon name="events" />{t('nav.events')}</NavLink>
-        <NavLink to="/"><TabIcon name="members" />{t('nav.members')}</NavLink>
-        <NavLink to="/profile"><TabIcon name="profile" />{t('nav.profile')}</NavLink>
-        {isStaff && <NavLink to="/invites"><TabIcon name="invites" />{t('nav.invites')}</NavLink>}
-      </nav>
+      <aside className="side">
+        <Link className="club" to="/events"><Crest /><span className="club-name">{t('app.club')}</span></Link>
+        <nav aria-label={t('nav.main')}>{links}</nav>
+      </aside>
+      <div className="body">
+        <header className="top">
+          <Link className="club" to="/events"><Crest /><span className="club-name">{t('app.club')}</span></Link>
+          <NavLink className="avatar" to="/profile" aria-label={t('nav.profileOf', { name: `${profile.first_name} ${profile.last_name}` })}>{initials}</NavLink>
+        </header>
+        <PendingBanner />
+        <main>
+          <Outlet />
+        </main>
+      </div>
+      <nav className="tabs" aria-label={t('nav.main')}>{links}</nav>
     </div>
+  )
+}
+
+// The club crest. Until the club logo is added, a stick and puck in the team colours.
+function Crest() {
+  return (
+    <span className="crest" aria-hidden="true">
+      <svg width="24" height="24" viewBox="0 0 28 28" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M6 3 13 20H23" />
+        <ellipse cx="21" cy="12.5" rx="4" ry="1.8" />
+      </svg>
+    </span>
   )
 }
 
@@ -123,7 +151,7 @@ export default function App() {
         <Route path="/events" element={<Events />} />
         <Route path="/events/new" element={<EventForm />} />
         <Route path="/events/unanswered" element={<Unanswered />} />
-        <Route path="/events/summary" element={<AttendanceSummary />} />
+        <Route path="/attendance" element={<AttendanceSummary />} />
         <Route path="/events/:id" element={<EventDetail />} />
         <Route path="/events/:id/edit" element={<EventForm />} />
         <Route path="/members/:id" element={<MemberEdit />} />
