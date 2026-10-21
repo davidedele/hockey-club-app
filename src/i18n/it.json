@@ -212,5 +212,6 @@
   "events.notYet": "Non hai ancora risposto.",
   "events.presentOne": "1 presente",
   "events.presentMany": "{n} presenti",
-  "events.details": "Dettagli e presenze"
+  "events.details": "Dettagli e presenze",
+  "event.nobodyYet": "Nessuno ha ancora detto di esserci."
 }

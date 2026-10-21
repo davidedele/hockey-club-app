@@ -155,8 +155,8 @@ main { padding-bottom: 7.5rem; }
 
 .top { display: flex; align-items: center; justify-content: space-between; gap: .75rem; padding: .75rem 1rem; background: var(--surface); border-bottom: 1px solid var(--line); }
 .club { display: flex; align-items: center; gap: .75rem; min-width: 0; color: var(--ink); text-decoration: none; }
-.crest { flex: none; display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; background: var(--team-light); border: 2px solid var(--team-dark); color: var(--team-dark); }
-.crest img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
+.crest { flex: none; display: grid; place-items: center; width: 48px; height: 44px; }
+.crest img { width: 100%; height: 100%; object-fit: contain; }
 .club-name { font: 600 1.25rem/1.1 var(--font-display); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .avatar { flex: none; display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; background: var(--surface-2); color: var(--ink); font-weight: 500; font-size: .9375rem; text-decoration: none; }
 .avatar.active { background: var(--accent); color: var(--on-accent); }
@@ -246,3 +246,6 @@ a.evlink { flex: 1; min-width: 0; display: grid; grid-template-columns: 4.25rem 
 .more a, .more button.link { display: inline-flex; align-items: center; min-height: 44px; font-weight: 500; }
 a.button.small, button.small { min-height: 44px; padding: .5rem 1rem; }
 .banner a, .list li > a, .list .member a { display: inline-flex; align-items: center; min-height: 44px; }
+.hero .when { margin-top: 1rem; font: 600 3.5rem/1 var(--font-display); color: var(--accent); font-variant-numeric: tabular-nums; }
+.hero .when small { margin-left: .75rem; font: 400 .875rem/1.3 var(--font-body); color: var(--muted); }
+.slot-meta { font-size: .875rem; color: var(--muted); }

@@ -126,14 +126,11 @@ function Protected() {
   )
 }
 
-// The club crest. Until the club logo is added, a stick and puck in the team colours.
+// The club crest.
 function Crest() {
   return (
     <span className="crest" aria-hidden="true">
-      <svg width="24" height="24" viewBox="0 0 28 28" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M6 3 13 20H23" />
-        <ellipse cx="21" cy="12.5" rx="4" ry="1.8" />
-      </svg>
+      <img src="/club-logo.png" alt="" width="44" height="44" />
     </span>
   )
 }

@@ -18,6 +18,7 @@ export default function EventDetail() {
   const [myGroupIds, setMyGroupIds] = useState<number[]>([])
   const [mine, setMine] = useState<Answer | null>(null)
   const [rows, setRows] = useState<AttendanceRow[]>([])
+  const [going, setGoing] = useState<{ user_id: string; first_name: string; last_name: string }[]>([])
   const [scoreUs, setScoreUs] = useState('')
   const [scoreThem, setScoreThem] = useState('')
   const [confirming, setConfirming] = useState(false)
@@ -44,6 +45,9 @@ export default function EventDetail() {
     if (row && isStaff) {
       const r = await supabase.rpc('event_attendance', { p_event_id: id })
       setRows((r.data ?? []) as AttendanceRow[])
+    } else if (row) {
+      const r = await supabase.rpc('event_present_people', { p_event_id: id })
+      setGoing((r.data ?? []) as { user_id: string; first_name: string; last_name: string }[])
     }
     setLoaded(true)
   }, [id, profile, isStaff])
@@ -190,6 +194,17 @@ export default function EventDetail() {
         </>
       )}
       {!inMyGroups && isStaff && <p className="hint">{t('event.notYours')}</p>}
+
+      {!isStaff && (
+        <>
+          <h2>{t('event.presentList', { n: String(going.length) })}</h2>
+          {going.length === 0 ? (
+            <p className="hint">{t('event.nobodyYet')}</p>
+          ) : (
+            <ul className="list">{going.map((p) => <li key={p.user_id}>{p.last_name} {p.first_name}</li>)}</ul>
+          )}
+        </>
+      )}
 
       {isStaff && (
         <>
