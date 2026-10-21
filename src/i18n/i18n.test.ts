@@ -1,0 +1,19 @@
+import { describe, expect, it } from 'vitest'
+import { errorText, t } from './index'
+
+describe('t', () => {
+  it('fills in values', () => {
+    expect(t('invites.status.open', { date: '1/1' })).toBe('Valido fino al 1/1')
+  })
+})
+
+describe('errorText', () => {
+  it('maps database error codes to Italian text', () => {
+    expect(errorText({ message: 'invite_invalid' })).toBe(t('error.invite_invalid'))
+    expect(errorText({ message: 'names_required' })).toBe(t('error.names_required'))
+  })
+  it('falls back to a generic message', () => {
+    expect(errorText({ message: 'boom' })).toBe(t('common.error'))
+    expect(errorText(null)).toBe(t('common.error'))
+  })
+})

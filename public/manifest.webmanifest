@@ -1,0 +1,10 @@
+{
+  "name": "Hockey Club",
+  "short_name": "Hockey Club",
+  "lang": "it",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0b3d63",
+  "icons": []
+}
