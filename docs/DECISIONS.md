@@ -83,6 +83,13 @@ Recorded on 21 October 2026. Read together with `SPEC.md` and `SPORTEASY_NOTES.m
 4. Sizes: body text 16px, secondary 14px, tap targets at least 44px, visible focus outline, reduced motion respected.
 5. The members list has a number column on the left of each name, and the tab bar uses simple line icons.
 
+## Decisions from the coach's suggestions (21 October)
+1. Yearly medical visit: each player has a certificate expiry date and an uploaded photo or PDF of the certificate. Reminder to the player 30 days before expiry. The uploaded file is private. Who sees what: proposed board sees dates and files, coaches see only valid or expired. To confirm with Davide.
+2. Storing medical certificates needs the club's agreement first (Davide: yes). It is not built until the board agrees and members are told what is stored.
+3. Fewer steps is a rule for every screen: the most frequent actions (answer an event, see the next training, see the line-up) take one tap from the home screen.
+4. Training plans are on paper today. Upload stays in build step 6. Wanted later: an interactive plan builder and a drill library, possibly with an AI helper. Not specified yet, to discuss with the coach.
+5. Staff can send a push notification on demand (short message, choice of team). Built with step 9. On iPhone the app must be on the home screen.
+
 ## Still to do (Davide)
 1. Answer the open questions in `SPEC.md` with the coach and the board.
 2. Create a free Supabase test project.
