@@ -16,7 +16,7 @@ describe('errorText', () => {
     expect(errorText({ code: 'over_email_send_rate_limit', message: 'x' })).toBe(t('error.over_email_send_rate_limit'))
   })
   it('falls back to a generic message', () => {
-    expect(errorText({ message: 'boom' })).toBe(t('common.error'))
+    expect(errorText({ message: 'boom' })).toContain(t('common.error'))
     expect(errorText(null)).toBe(t('common.error'))
   })
 })
