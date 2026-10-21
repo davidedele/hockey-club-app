@@ -16,7 +16,8 @@ Build step 1 works against the Supabase test project. Step 2 (events with weekly
    6. Step 2 screens: events list, new and edit event form, event page with Present and Absent answers, banner for unanswered events, staff list of who has not answered, recording who actually came, final score for games, deleting one event or this and the following.
    7. Looked at all screens at 375 and 1280 pixels wide with a fake backend: no sideways scrolling, tap targets at least 44 pixels, polish fixes applied. Not tried against the real Supabase project.
    8. Coach screens: "Da contattare" (who has not answered, with phone and email) and "Riepilogo presenze" (per player summary), both reached from the Events tab. Migration `0003_staff_attendance_lists.sql`, 19 more tests (160 in total, all passing). It was applied to the test project through the Supabase connection, after checking it was the only project, `hockey-club-test`.
-   9. `npm run test:db` now also finds Homebrew Postgres, or uses `PG_BIN`. The tests were run on a Linux copy because the shell used this session could not install Postgres in the usual way.
+   9. Visual redesign after Davide found the first look too plain: rink schedule board style with Barlow fonts bundled in the app, a date column per day, an accent rule on events that need an answer, tab icons and a matching dark mode. Checked at 375 and 1280 pixels in light and dark with the fake backend. Choices are in `DECISIONS.md`.
+   10. `npm run test:db` now also finds Homebrew Postgres, or uses `PG_BIN`. The tests were run on a Linux copy because the shell used this session could not install Postgres in the usual way.
 2. 21 October 2026, second session (cloud):
    1. Database migration for groups, members, contacts, roles and invites, with row level security. 70 access rule tests on a local Postgres (`npm run test:db`), all passing.
    2. App skeleton in React and TypeScript with the Italian text file: login, join by invite, password reset, members list, own profile, invite creation and revoking for staff.
@@ -27,7 +28,7 @@ Build step 1 works against the Supabase test project. Step 2 (events with weekly
 
 ## Next
 1. Done by Davide: the step 2 migration is applied in the test project and was tried (events, answers exist). Security advisors checked: row level security is on for every table. The warnings about functions that signed in users can call are intended, since each function checks the caller itself. One setting to switch on in the dashboard: leaked password protection (Authentication, password security), if the plan allows it.
-2. Davide: create a Resend account and verify `mail.onlyai.lol`, following `docs/SETUP_EMAIL.md`, then send me the SMTP details to enter in Supabase (the key stays private, never in the repository). Then switch "Confirm email" on.
+2. Davide: the Resend domain `mail.onlyai.lol` is verified. Enter the SMTP details in Supabase yourself (the API key stays private, never in the repository), following `docs/SETUP_EMAIL.md`, then switch "Confirm email" on and test a sign up.
 3. Davide: click the "use this invite" button once as a signed in member (open an invite link while logged in).
 4. Reminders, as decided on 21 October (see `DECISIONS.md`): push first, one reminder the day before a training, more frequent when time is short, managed by the board and managers, and a daily list of who has not answered for coaches. Push needs the service worker and push subscriptions (build step 9), so build that part together with the reminder rules. The coach list of who has not answered exists as a screen. A daily message with it comes with push.
 5. The per event attendance grid (every player by every date, spec section 5). The per player summary exists.
@@ -36,7 +37,7 @@ Build step 1 works against the Supabase test project. Step 2 (events with weekly
 
 ## Open problems
 1. In the Supabase test project, "Confirm email" is switched OFF for testing, because the built in email service allows only a few emails per hour. It must be switched on again and a custom email sender connected before real use. The confirmation email path has therefore not been tested yet.
-2. The app is not yet installable as a real PWA: there is a manifest but no icons and no service worker. The service worker comes with push notifications (step 9).
+2. The app is not yet installable as a real PWA: there is a manifest and icons but no service worker. The service worker comes with push notifications (step 9).
 3. Invite details (single use, 7 days) may be revisited. Davide prefers to refine them later.
 4. A deleted member keeps their sign in account. Only the profile is removed, which blocks all access. Full account removal needs a server side step.
 5. The contact email is copied from the account at joining and does not follow later changes.

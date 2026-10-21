@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { addDays, dayKey, endIso, formatTime, isoToItaly, italyToIso, meetupIso, shiftClock } from './time'
+import { addDays, dayKey, endIso, formatTime, isoToItaly, italyToIso, meetupIso, shiftClock, dayParts } from './time'
 
 describe('Italian time', () => {
   it('converts summer time to UTC', () => {
@@ -33,5 +33,9 @@ describe('Italian time', () => {
     expect(shiftClock('22:30', 90)).toBe('00:00')
     expect(shiftClock('22:30', -60)).toBe('21:30')
     expect(shiftClock('00:30', -60)).toBe('23:30')
+  })
+  it('gives the date column of a day in Italian time', () => {
+    expect(dayParts('2026-10-22T20:30:00.000Z')).toEqual({ num: '22', dow: 'gio', mon: 'ott' })
+    expect(dayParts('2026-10-22T22:30:00.000Z')).toEqual({ num: '23', dow: 'ven', mon: 'ott' })
   })
 })

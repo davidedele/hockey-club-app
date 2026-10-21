@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { t } from '../i18n'
 import { supabase } from '../lib/supabase'
+import Brand from '../components/Brand'
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState('')
@@ -16,6 +17,7 @@ export default function ForgotPassword() {
 
   return (
     <div className="page narrow">
+      <Brand />
       <h1>{t('reset.title')}</h1>
       {sent ? (
         <p>{t('reset.sent')}</p>

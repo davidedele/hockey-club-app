@@ -80,3 +80,14 @@ export function shiftClock(time: string, minutes: number): string {
   const total = (((h * 60 + m + minutes) % 1440) + 1440) % 1440
   return `${pad(Math.floor(total / 60))}:${pad(total % 60)}`
 }
+
+const dayPartsFormat = new Intl.DateTimeFormat('it-IT', { timeZone: TZ, weekday: 'short', day: 'numeric', month: 'short' })
+
+// The day of the month, the short weekday and the short month, for the date column of the events list.
+export function dayParts(iso: string): { num: string; dow: string; mon: string } {
+  const p = dayPartsFormat.formatToParts(new Date(iso))
+  const get = (type: string) => p.find((x) => x.type === type)?.value ?? ''
+  return { num: get('day'), dow: get('weekday').replace('.', ''), mon: get('month').replace('.', '') }
+}
+
+export const isToday = (iso: string) => dayKey(iso) === dayKey(new Date().toISOString())

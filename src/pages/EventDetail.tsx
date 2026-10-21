@@ -148,19 +148,22 @@ export default function EventDetail() {
   return (
     <div className="page">
       <p><Link to="/events">{t('event.back')}</Link></p>
-      <h1>{event.title}</h1>
-      {event.title !== t(`eventType.${event.type}` as MessageKey) && (
-        <p className="hint">{t(`eventType.${event.type}` as MessageKey)}</p>
-      )}
+      <div className="hero">
+        <h1>{event.title}</h1>
+        <div className="slot-meta">
+          {[event.title === t(`eventType.${event.type}` as MessageKey) ? null : t(`eventType.${event.type}` as MessageKey), groupNames].filter(Boolean).join(' · ')}
+        </div>
+        <div className="day-text">{dayLabel}</div>
+        <div className="when">
+          {formatTime(event.starts_at)}
+          <small>{t('event.until', { end: formatTime(event.ends_at) })}</small>
+        </div>
+      </div>
       {error && <p className="error" role="alert">{error}</p>}
 
       <dl className="facts">
-        <dt>{t('event.when')}</dt>
-        <dd>{dayLabel}, {t('events.range', { start: formatTime(event.starts_at), end: formatTime(event.ends_at) })}</dd>
         {event.meetup_at && (<><dt>{t('event.meetup')}</dt><dd>{formatTime(event.meetup_at)}</dd></>)}
         {event.venue && (<><dt>{t('event.venue')}</dt><dd>{event.venue}</dd></>)}
-        <dt>{t('event.groups')}</dt>
-        <dd>{groupNames}</dd>
         {event.opponent && (<><dt>{t('event.opponent')}</dt><dd>{event.opponent}{event.home_away ? ` · ${t(event.home_away === 'home' ? 'event.home' : 'event.away')}` : ''}</dd></>)}
         {event.score_for !== null && event.score_against !== null && (
           <><dt>{t('event.scoreTitle')}</dt><dd>{t('event.score', { us: String(event.score_for), them: String(event.score_against) })}</dd></>

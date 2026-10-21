@@ -49,21 +49,23 @@ export default function Members() {
           const mine = memberships.filter((m) => m.user_id === p.id).map((m) => codeById.get(m.group_id))
           const contact = contactById.get(p.id)
           return (
-            <li key={p.id}>
-              <div className="row">
+            <li key={p.id} className="member">
+              <span className="jersey" aria-label={p.jersey_number !== null ? `${t('common.jersey')} ${p.jersey_number}` : undefined}>
+                {p.jersey_number !== null ? p.jersey_number : '\u00b7'}
+              </span>
+              <div>
                 {isStaff ? (
-                  <Link to={`/members/${p.id}`}><strong>{p.last_name} {p.first_name}</strong></Link>
+                  <Link className="member-name" to={`/members/${p.id}`}>{p.last_name} {p.first_name}</Link>
                 ) : (
-                  <strong>{p.last_name} {p.first_name}</strong>
+                  <div className="member-name">{p.last_name} {p.first_name}</div>
                 )}
-                {p.jersey_number !== null && <span className="badge">#{p.jersey_number}</span>}
+                <div className="hint">
+                  {[p.position ? t(`position.${p.position}` as MessageKey) : null, mine.join(', ')].filter(Boolean).join(' · ')}
+                </div>
+                {isStaff && contact && (
+                  <div className="hint">{[contact.email, contact.phone].filter(Boolean).join(' · ')}</div>
+                )}
               </div>
-              <div className="hint">
-                {[p.position ? t(`position.${p.position}` as MessageKey) : null, mine.join(', ')].filter(Boolean).join(' · ')}
-              </div>
-              {isStaff && contact && (
-                <div className="hint">{[contact.email, contact.phone].filter(Boolean).join(' · ')}</div>
-              )}
             </li>
           )
         })}

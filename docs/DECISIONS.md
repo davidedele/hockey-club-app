@@ -76,6 +76,13 @@ Recorded on 21 October 2026. Read together with `SPEC.md` and `SPORTEASY_NOTES.m
 6. Plugins: the official Supabase plugin. Optional extras: Superpowers (plan before code), security-guidance, Context7 (current library docs) and cc-safety-net (blocks destructive commands). Ponytail only with care, and not for security or limit logic. Skip claude-mem, caveman and rtk, since independent tests found their savings small or absent.
 7. Safety rule: use a separate Supabase test project for building and never connect the build to the club's live data.
 
+## Decisions about the look
+1. Direction: a rink schedule board. Events are grouped per day with a date column, the time is the strongest element in each row, and events still waiting for an answer carry an accent rule on the left.
+2. Type: Barlow Condensed 600 for titles and times, Barlow 400 and 500 for text. Both are under the SIL Open Font License (licence file in public/fonts), self hosted as woff2 so no outside request is made and the app works offline. Only three weights are used.
+3. Colour: one rink blue accent. Red is used only for danger and errors. Lists sit on bordered surfaces. Light and dark follow the phone setting.
+4. Sizes: body text 16px, secondary 14px, tap targets at least 44px, visible focus outline, reduced motion respected.
+5. The members list has a number column on the left of each name, and the tab bar uses simple line icons.
+
 ## Still to do (Davide)
 1. Answer the open questions in `SPEC.md` with the coach and the board.
 2. Create a free Supabase test project.

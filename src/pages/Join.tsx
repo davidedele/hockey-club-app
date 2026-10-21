@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { errorText, t } from '../i18n'
 import { useSession } from '../lib/session'
 import { supabase } from '../lib/supabase'
+import Brand from '../components/Brand'
 
 export default function Join() {
   const { token = '' } = useParams()
@@ -65,6 +66,7 @@ export default function Join() {
   if (loading || session) {
     return (
       <div className="page narrow">
+      <Brand />
         <h1>{t('join.title')}</h1>
         {loading && <p>{t('common.loading')}</p>}
         {!loading && profile && !busy && !error && <p>{t('join.existing')}</p>}
@@ -79,6 +81,7 @@ export default function Join() {
   if (sent) {
     return (
       <div className="page narrow">
+      <Brand />
         <h1>{t('join.title')}</h1>
         <p>{t('join.checkEmail')}</p>
       </div>
@@ -87,6 +90,7 @@ export default function Join() {
 
   return (
     <div className="page narrow">
+      <Brand />
       <h1>{t('join.title')}</h1>
       <p>{t('join.intro')}</p>
       <form onSubmit={submit}>

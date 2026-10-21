@@ -89,7 +89,8 @@
   "events.new": "Nuovo evento",
   "events.empty": "Nessun evento in programma.",
   "events.emptyPast": "Nessun evento passato.",
-  "events.meetup": "Ritrovo {time}",
+  "events.meetup": "ritrovo {time}",
+  "events.today": "oggi",
   "events.range": "dalle {start} alle {end}",
 
   "events.unanswered": "Da contattare",
@@ -140,7 +141,7 @@
   "banner.action": "Rispondi",
 
   "event.back": "Eventi",
-  "event.when": "Quando",
+  "event.until": "fino alle {end}",
   "event.meetup": "Ritrovo",
   "event.venue": "Luogo",
   "event.groups": "Gruppi",

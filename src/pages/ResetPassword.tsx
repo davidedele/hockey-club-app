@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { t } from '../i18n'
 import { supabase } from '../lib/supabase'
+import Brand from '../components/Brand'
 
 export default function ResetPassword() {
   const [password, setPassword] = useState('')
@@ -17,6 +18,7 @@ export default function ResetPassword() {
 
   return (
     <div className="page narrow">
+      <Brand />
       <h1>{t('reset.newTitle')}</h1>
       {done ? (
         <p>{t('reset.done')} <Link to="/">{t('nav.members')}</Link></p>

@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom'
 import { t } from '../i18n'
 import { useSession } from '../lib/session'
 import { supabase } from '../lib/supabase'
+import Brand from '../components/Brand'
 
 export default function Login() {
   const { loading, session, profile } = useSession()
@@ -25,6 +26,7 @@ export default function Login() {
 
   return (
     <div className="page narrow">
+      <Brand />
       <h1>{t('login.title')}</h1>
       <form onSubmit={submit}>
         <label>
