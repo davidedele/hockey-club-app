@@ -58,7 +58,8 @@ export default function GroupSettings() {
             <button className="group-head" aria-expanded={open === g.id} onClick={() => setOpen(open === g.id ? null : g.id)}>
               <GroupBadge group={g} />
               <span className="group-name">{g.name}</span>
-              <span className="hint">{t('groups.count', { n: String(members.get(g.id) ?? 0) })}</span>
+              <span className="hint">{(members.get(g.id) ?? 0) === 1 ? t('groups.countOne') : t('groups.count', { n: String(members.get(g.id) ?? 0) })}</span>
+              <svg className="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6" /></svg>
             </button>
             {open === g.id && <GroupEditor group={g} count={members.get(g.id) ?? 0} onDone={async () => { setOpen(null); await load() }} onChange={load} />}
           </li>

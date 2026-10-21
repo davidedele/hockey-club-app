@@ -159,7 +159,7 @@ export default function EventDetail() {
         </div>
         <div className="day-text">{dayLabel}</div>
         <div className="when">
-          {formatTime(event.starts_at)}
+          {formatTime(event.starts_at)}{' '}
           <small>{t('event.until', { end: formatTime(event.ends_at) })}</small>
         </div>
       </div>

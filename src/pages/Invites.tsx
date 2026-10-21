@@ -69,11 +69,11 @@ export default function Invites() {
       <p><Link to="/settings">{t('settings.title')}</Link></p>
       <h1>{t('invites.title')}</h1>
       <p className="hint">{t('invites.intro')}</p>
-      <label>{t('common.group')}
-        <select value={groupId} onChange={(e) => setGroupId(Number(e.target.value))}>
+      <label htmlFor="invite-group">{t('common.group')}</label>
+        <select id="invite-group" value={groupId} onChange={(e) => setGroupId(Number(e.target.value))}>
           {groups.map((g) => <option key={g.id} value={g.id}>{g.name}</option>)}
         </select>
-      </label>
+      
       <button onClick={create}>{t('invites.create')}</button>
       {error && <p className="error">{error}</p>}
       {link && (
@@ -85,6 +85,7 @@ export default function Invites() {
         </div>
       )}
       <h2>{t('invites.list')}</h2>
+      {invites.length === 0 && <p className="hint">{t('invites.none')}</p>}
       <ul className="list">
         {invites.map((i) => (
           <li key={i.id}>

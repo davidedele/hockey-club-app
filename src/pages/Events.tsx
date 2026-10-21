@@ -276,7 +276,7 @@ function NextPanel(props: { club: string; colours: CSSProperties | undefined; ev
         {game && e.opponent && <div className="vs">{t('events.vs', { club: props.club, opponent: e.opponent })}</div>}
         <div className="day-line">{formatDay(e.starts_at)}</div>
         <div className="time">
-          <span className="big">{formatTime(e.starts_at)}</span>
+          <span className="big">{formatTime(e.starts_at)}</span>{' '}
           <span className="until">{t('events.until', { time: formatTime(e.ends_at) })}</span>
         </div>
         <dl className="pair">

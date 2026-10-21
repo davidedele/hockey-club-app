@@ -247,7 +247,7 @@
   "settings.groupsHint": "Nomi, colori, immagini e limite settimanale delle squadre.",
   "settings.invites": "Inviti",
   "settings.invitesHint": "Crea i link per far entrare nuovi membri.",
-  "groups.intro": "Tocca un gruppo per cambiarlo. Solo il consiglio direttivo può modificare i gruppi.",
+  "groups.intro": "Tocca un gruppo per cambiarlo. Solo il direttivo può modificare i gruppi.",
   "groups.count": "{n} membri",
   "groups.name": "Nome",
   "groups.code": "Sigla",
@@ -274,5 +274,8 @@
   "members.colGroups": "Gruppi",
   "members.colEmail": "Email",
   "members.colPhone": "Telefono",
-  "members.noMatch": "Nessun membro corrisponde alla ricerca."
+  "members.noMatch": "Nessun membro corrisponde alla ricerca.",
+  "groups.countOne": "1 membro",
+  "invites.none": "Nessun invito ancora. Scegli un gruppo e crea il primo.",
+  "nav.skip": "Vai al contenuto"
 }

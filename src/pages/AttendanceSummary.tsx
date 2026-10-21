@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link, Navigate } from 'react-router-dom'
+import { Navigate } from 'react-router-dom'
 import { errorText, t, type MessageKey } from '../i18n'
 import { useSession } from '../lib/session'
 import { supabase } from '../lib/supabase'
@@ -34,7 +34,6 @@ export default function AttendanceSummary() {
 
   return (
     <div className="page wide">
-      <p><Link to="/events">{t('event.back')}</Link></p>
       <h1>{t('summary.title')}</h1>
       <p className="hint">{t('summary.intro')}</p>
       <div className="chips">

@@ -129,14 +129,14 @@ export default function ProfilePage() {
         <label>{t('common.jersey')}
           <input type="number" inputMode="numeric" min={0} max={99} value={jersey} onChange={(e) => setJersey(e.target.value)} />
         </label>
-        <label>{t('common.position')}
-          <select value={position} onChange={(e) => setPosition(e.target.value as Position | '')}>
+        <label htmlFor="position">{t('common.position')}</label>
+          <select id="position" value={position} onChange={(e) => setPosition(e.target.value as Position | '')}>
             <option value="">{t('position.none')}</option>
             <option value="goalie">{t('position.goalie')}</option>
             <option value="defence">{t('position.defence')}</option>
             <option value="forward">{t('position.forward')}</option>
           </select>
-        </label>
+        
         <label>{t('common.phone')}
           <input type="tel" autoComplete="tel" maxLength={30} value={phone} onChange={(e) => setPhone(e.target.value)} />
         </label>

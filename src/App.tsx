@@ -121,6 +121,7 @@ function Protected() {
   )
   return (
     <div className="shell">
+      <a className="skip" href="#main">{t('nav.skip')}</a>
       <aside className="side">
         <Link className="club" to="/events"><Crest /><span className="club-name">{club.name || t('app.name')}</span></Link>
         <nav aria-label={t('nav.main')}>{main}</nav>
@@ -135,7 +136,7 @@ function Protected() {
           <NavLink className="me" to="/profile" aria-label={t('nav.profileOf', { name: fullName })}><Avatar first={profile.first_name} last={profile.last_name} url={photo} /></NavLink>
         </header>
         <PendingBanner />
-        <main>
+        <main id="main" tabIndex={-1}>
           <Outlet />
         </main>
       </div>
