@@ -19,6 +19,32 @@ Recorded on 21 October 2026. Read together with `SPEC.md` and `SPORTEASY_NOTES.m
 14. Not wanted: payments and championships (not used in SportEasy today).
 15. Real use: this will be given to the team, so it must be built carefully.
 
+## Answers to the open questions (21 October 2026)
+1. Manager role: can do everything needed to run the club, from choosing who trains to adding trainings and editing the roster.
+2. Rating privacy: board members and managers can see who gave which rating.
+3. Weekly plans: the number of trainings a player may attend depends on what the player pays. How plans are set and edited can be added later.
+4. Events are not shown to all groups by default. The creator chooses the groups.
+5. Leaving SportEasy is decided by the managers. There is no date. The app must be finished first.
+6. The week starts on Monday.
+
+## Decisions for build step 1 (21 October 2026)
+1. The first board account is created by one manual step in the test project.
+2. Invite links are single use and expire after one week. Davide wants to develop the app before refining this, so the invite details can be revisited.
+3. Only the board can assign roles and edit groups.
+4. A person who joins through an invite link needs no board approval. The link itself is the approval.
+5. The app name stays undecided. A neutral working name is used in the code.
+6. Email and phone are visible to coaches and the board only. Players see names, jersey numbers, positions and groups.
+7. Coaches have the same rights as the board for running the roster: editing member profiles, adding or removing group members and creating invites. Only the board assigns roles, edits groups and removes members.
+8. Players edit their own name, jersey number, position and phone. Staff can correct them.
+9. Login uses email confirmation and password reset by email.
+
+## Assumptions made while building step 1 (to confirm)
+1. The "manager and president" roles are one role called board.
+2. Every member can see every other member's name and group, across the whole club.
+3. Position values are goalie, defence and forward, matching the line-up slots.
+4. A person has no role by default, which means player.
+5. The last board member cannot be removed, so the club cannot lock itself out.
+
 ## Setup status
 1. GitHub repository: github.com/davidedele/hockey-club-app, private, with the first commit pushed (the planning files).
 2. Claude project "Hockey Club App" on claude.ai holds the instructions and these notes.
