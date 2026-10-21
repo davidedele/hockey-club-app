@@ -11,6 +11,10 @@ The built in Supabase email service is for trying things out. It sends only a fe
 3. A Gmail account with an app password: works for testing with a few people, needs 2 step verification on that Google account. Not recommended for the real club.
 Recommendation: Brevo with a single verified sender for the test project now, and Resend with a club domain before the real launch. If the club already has a domain or a club address, say so and the steps below use that.
 
+## Your case: the domain onlyai.lol
+You have the domain onlyai.lol, which is still connected to the Microsoft environment. Use Resend and put the sending on a subdomain, for example `mail.onlyai.lol`. The records Resend asks for are then added only for that subdomain, and the Microsoft records on the main domain stay untouched, so nothing breaks now and nothing needs redoing when you leave Microsoft. The sender address could be `club@mail.onlyai.lol`. This is for testing. Before real players use it, decide whether the club should send from a club domain instead.
+Step by step: create a Resend account, choose Domains, add `mail.onlyai.lol`, then add the DNS records it lists at the place where onlyai.lol is managed (your registrar or DNS host, not necessarily Microsoft). Wait until Resend shows the domain as verified.
+
 ## Step 1: create the sender account
 1. Create the account with the chosen service.
 2. Add and verify the sender address (Brevo), or add the domain and publish the DNS records it shows (Resend).

@@ -25,18 +25,13 @@ Build step 1 works against the Supabase test project. Step 2 (events with weekly
 3. 21 October 2026, first session: specification, notes on the current app, decisions and working rules written. Repository created.
 
 ## Next
-1. Davide: apply `supabase/migrations/0002_events_attendance.sql` in the test project SQL editor, then try the Events tab (create a training with repeat, answer as a player, see the banner, see the staff list).
-2. Davide: choose an email sender and follow `docs/SETUP_EMAIL.md`, then switch "Confirm email" on.
+1. Done by Davide: the step 2 migration is applied in the test project and was tried (events, answers exist). Security advisors checked: row level security is on for every table. The warnings about functions that signed in users can call are intended, since each function checks the caller itself. One setting to switch on in the dashboard: leaked password protection (Authentication, password security), if the plan allows it.
+2. Davide: create a Resend account and verify `mail.onlyai.lol`, following `docs/SETUP_EMAIL.md`, then send me the SMTP details to enter in Supabase (the key stays private, never in the repository). Then switch "Confirm email" on.
 3. Davide: click the "use this invite" button once as a signed in member (open an invite link while logged in).
-4. Decide the reminders (see the questions below), then build them.
+4. Reminders, as decided on 21 October (see `DECISIONS.md`): push first, one reminder the day before a training, more frequent when time is short, managed by the board and managers, and a daily list of who has not answered for coaches. Push needs the service worker and push subscriptions (build step 9), so build that part together with the reminder rules. A first useful piece that needs no push: the coach list of who has not answered, shown in the app.
 5. Attendance season summary per player and the per event grid (spec section 5), for coaches and the board.
 6. Edit groups of an existing event, and change a whole series at once.
 7. Step 3: weekly limit and warnings.
-
-## Questions for Davide about reminders
-1. When should reminders go out? For example when the event is created, then two days later, then the evening before, until the player answers.
-2. By email through the custom sender, by push (needs step 9), or both?
-3. Should coaches also get a daily list of who has not answered?
 
 ## Open problems
 1. In the Supabase test project, "Confirm email" is switched OFF for testing, because the built in email service allows only a few emails per hour. It must be switched on again and a custom email sender connected before real use. The confirmation email path has therefore not been tested yet.
@@ -48,6 +43,6 @@ Build step 1 works against the Supabase test project. Step 2 (events with weekly
 7. Still open in `SPEC.md`: how weekly plans are set and edited (to add later), and the app name.
 8. `npm run test:db` needs Postgres on the Mac (Homebrew). The script now looks in the Homebrew folders too, but this has not been run on the Mac yet.
 9. Working setup: the build has run in cloud sessions, where the Supabase plugin could not connect (network policy). Davide may continue in a local session, where his installed plugins work. Read `CLAUDE.md`, `docs/SPEC.md`, `docs/DECISIONS.md` and this file first.
-10. Email reminders for attendance are not built. The in-app banner and the staff list of non answers exist.
+10. Reminders for attendance are not built. The in-app banner and the staff list of non answers exist. The reminder rules are decided (see `DECISIONS.md`) but need push notifications.
 11. Events are shown to the chosen groups only. A coach who is not in a group sees the event but is not asked to answer.
 12. Git on the shared folder leaves some harmless leftover files under `.git` (names starting with `stale-` and `tmp_obj_`). They can be deleted by hand.

@@ -46,6 +46,13 @@ Recorded on 21 October 2026. Read together with `SPEC.md` and `SPORTEASY_NOTES.m
 4. A person has no role by default, which means player.
 5. The last board member cannot be removed, so the club cannot lock itself out.
 
+## Decisions about reminders (21 October 2026)
+1. The first reminder for a training goes out the day before, once.
+2. Closer to the event reminders can become more frequent, for example every hour once 12 hours are left, and also for other time sensitive things. The board and the managers should be able to manage these reminders and notifications themselves.
+3. Push notifications first. Email only if it is worth it.
+4. Coaches get a daily short list of who has not answered, so they can contact those people directly when they want.
+5. Email sender: Davide has the domain onlyai.lol and plans to remove its connection to the Microsoft environment soon. Use it only for testing, on a separate sending address, until that is done.
+
 ## Assumptions made while building step 2 (to confirm)
 1. Coaches and the board can both create, change and delete events and record attendance, for any group. There is no limit to one coach per team yet.
 2. Players see only their own answers. Coaches and the board see everyone's answers and who has not answered.
