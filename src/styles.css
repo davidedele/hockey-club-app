@@ -173,6 +173,9 @@ main { padding-bottom: 7.5rem; }
   .side nav { display: flex; flex-direction: column; gap: .25rem; }
   .side nav a { display: flex; align-items: center; gap: .75rem; min-height: 44px; padding: 0 .75rem; border-radius: var(--radius-control); color: var(--ink); font-weight: 500; text-decoration: none; }
   .side nav a.active { background: var(--accent-soft); color: var(--accent); }
+  .side .side-foot { margin-top: auto; padding-top: .75rem; border-top: 1px solid var(--line); }
+  .avatar.small { width: 28px; height: 28px; font-size: .75rem; }
+  .side-foot a.active .avatar.small { background: var(--accent); color: var(--on-accent); }
   .top { justify-content: flex-end; background: transparent; border-bottom: 0; padding: 1rem 1.5rem 0; }
   .top .club { display: none; }
   .tabs { display: none; }
@@ -185,8 +188,20 @@ main { padding-bottom: 7.5rem; }
 .banner a { color: var(--accent); }
 
 /* Events home: week strip, the next event as a big panel, then the following events */
-.week { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: .25rem; margin-bottom: 1rem; padding: .5rem; text-align: center; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); }
-.wd { padding: .375rem 0; border: 2px solid transparent; border-radius: 10px; line-height: 1.2; }
+.week { margin-bottom: 1rem; padding: .25rem .5rem .5rem; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); }
+.week-bar { display: flex; align-items: center; justify-content: space-between; }
+.week-label { font-size: .875rem; color: var(--muted); }
+button.icon { width: 44px; height: 44px; min-height: 44px; padding: 0; background: none; color: var(--ink); border-radius: 50%; }
+button.icon svg { width: 22px; height: 22px; }
+.days { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: .25rem; text-align: center; }
+.wd { display: block; min-height: 64px; padding: .375rem 0; font: inherit; color: var(--ink); background: none; border: 2px solid transparent; border-radius: 10px; line-height: 1.2; cursor: pointer; }
+.wd:hover { background: var(--surface-2); }
+.wd.picked { background: var(--accent); color: var(--on-accent); }
+.wd.picked .dow, .wd.picked.past .n { color: var(--on-accent); }
+.wd.picked.has .dot { background: var(--on-accent); }
+.dayview { margin-bottom: 1rem; }
+.dayview h2 { margin: 0; }
+.dayview .row { margin-bottom: .75rem; }
 .wd .dow { display: block; font-size: .75rem; color: var(--muted); }
 .wd .n { display: block; font: 600 1.25rem/1.2 var(--font-display); }
 .wd .dot { display: block; width: 6px; height: 6px; margin: .25rem auto 0; border-radius: 50%; background: transparent; }

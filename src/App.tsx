@@ -38,6 +38,12 @@ const ICONS = {
   ),
   invites: <path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3A4 4 0 0 0 11 18.7l1-1" />,
   attendance: <path d="M5 20V11M12 20V5M19 20v-6" />,
+  settings: (
+    <>
+      <circle cx="12" cy="12" r="3" />
+      <path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z" />
+    </>
+  ),
 }
 
 function TabIcon({ name }: { name: keyof typeof ICONS }) {
@@ -100,32 +106,39 @@ function Protected() {
     return <Navigate to={pending ? `/join/${pending}` : '/login'} replace />
   }
   const initials = `${profile.first_name.charAt(0)}${profile.last_name.charAt(0)}`.toUpperCase()
-  const links = (
+  const fullName = `${profile.first_name} ${profile.last_name}`
+  const main = (
     <>
       <NavLink to="/events"><TabIcon name="events" />{t('nav.events')}</NavLink>
       <NavLink to="/" end><TabIcon name="members" />{t('nav.members')}</NavLink>
       {isStaff && <NavLink to="/attendance"><TabIcon name="attendance" />{t('nav.attendance')}</NavLink>}
       {isStaff && <NavLink to="/invites"><TabIcon name="invites" />{t('nav.invites')}</NavLink>}
-      <NavLink to="/profile"><TabIcon name="profile" />{t('nav.profile')}</NavLink>
     </>
   )
   return (
     <div className="shell">
       <aside className="side">
         <Link className="club" to="/events"><Crest /><span className="club-name">{club.name || t('app.name')}</span></Link>
-        <nav aria-label={t('nav.main')}>{links}</nav>
+        <nav aria-label={t('nav.main')}>{main}</nav>
+        <nav className="side-foot" aria-label={t('nav.account')}>
+          {isStaff && <NavLink to="/club"><TabIcon name="settings" />{t('club.title')}</NavLink>}
+          <NavLink to="/profile"><span className="avatar small" aria-hidden="true">{initials}</span>{fullName}</NavLink>
+        </nav>
       </aside>
       <div className="body">
         <header className="top">
           <Link className="club" to="/events"><Crest /><span className="club-name">{club.name || t('app.name')}</span></Link>
-          <NavLink className="avatar" to="/profile" aria-label={t('nav.profileOf', { name: `${profile.first_name} ${profile.last_name}` })}>{initials}</NavLink>
+          <NavLink className="avatar" to="/profile" aria-label={t('nav.profileOf', { name: fullName })}>{initials}</NavLink>
         </header>
         <PendingBanner />
         <main>
           <Outlet />
         </main>
       </div>
-      <nav className="tabs" aria-label={t('nav.main')}>{links}</nav>
+      <nav className="tabs" aria-label={t('nav.main')}>
+        {main}
+        <NavLink to="/profile"><TabIcon name="profile" />{t('nav.profile')}</NavLink>
+      </nav>
     </div>
   )
 }

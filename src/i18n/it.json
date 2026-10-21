@@ -227,5 +227,12 @@
   "club.coloursHint": "Il pannello della prossima partita usa questi due colori.",
   "club.dark": "Colore di fondo",
   "club.light": "Colore di risalto",
-  "club.preview": "Anteprima"
+  "club.preview": "Anteprima",
+  "nav.account": "Account e impostazioni",
+  "events.prevWeek": "Settimana precedente",
+  "events.nextWeek": "Settimana successiva",
+  "events.thisWeek": "Questa settimana",
+  "events.backToToday": "Torna a oggi",
+  "events.showAll": "Mostra tutti",
+  "events.dayEmpty": "Nessun evento in questo giorno."
 }

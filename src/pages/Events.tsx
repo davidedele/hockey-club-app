@@ -23,6 +23,8 @@ export default function Events() {
   const [answers, setAnswers] = useState<Map<string, Answer>>(new Map())
   const [counts, setCounts] = useState<Map<string, number>>(new Map())
   const [view, setView] = useState<'upcoming' | 'past'>('upcoming')
+  const [weekShift, setWeekShift] = useState(0)
+  const [picked, setPicked] = useState<string | null>(null)
   const [loaded, setLoaded] = useState(false)
   const [busy, setBusy] = useState('')
   const [error, setError] = useState('')
@@ -57,7 +59,8 @@ export default function Events() {
   const now = Date.now()
   const upcoming = useMemo(() => events.filter((e) => new Date(e.ends_at).getTime() >= now), [events, now])
   const past = useMemo(() => events.filter((e) => new Date(e.ends_at).getTime() < now).reverse().slice(0, 60), [events, now])
-  const week = useMemo(() => weekOf(new Date().toISOString()), [])
+  const week = useMemo(() => weekOf(new Date(Date.now() + weekShift * 7 * 86400000).toISOString()), [weekShift])
+  const dayEvents = useMemo(() => (picked ? events.filter((e) => dayKey(e.starts_at) === picked) : []), [events, picked])
   const daysWithEvents = useMemo(() => new Set(events.map((e) => dayKey(e.starts_at))), [events])
   const todayKey = dayKey(new Date().toISOString())
 
@@ -112,24 +115,57 @@ export default function Events() {
   return (
     <div className="page wide">
       <div className="row">
-        <h1>{formatMonth(new Date().toISOString())}</h1>
+        <h1>{formatMonth(`${week[3].date}T12:00:00Z`)}</h1>
         {isStaff && <Link className="button small" to="/events/new">{t('events.new')}</Link>}
       </div>
 
-      <div className="week" aria-label={t('events.week')}>
-        {week.map((d) => {
-          const cls = ['wd', daysWithEvents.has(d.date) ? 'has' : '', d.date < todayKey ? 'past' : '', d.date === todayKey ? 'today' : ''].filter(Boolean).join(' ')
-          return (
-            <div key={d.date} className={cls} aria-current={d.date === todayKey ? 'date' : undefined}>
-              <span className="dow" aria-hidden="true">{d.dow}</span>
-              <span className="n">{d.num}</span>
-              <span className="dot" aria-hidden="true" />
-            </div>
-          )
-        })}
-      </div>
+      <section className="week" aria-label={t('events.week')}>
+        <div className="week-bar">
+          <button className="icon" aria-label={t('events.prevWeek')} onClick={() => { setWeekShift(weekShift - 1); setPicked(null) }}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6" /></svg>
+          </button>
+          {weekShift === 0 ? (
+            <span className="week-label">{t('events.thisWeek')}</span>
+          ) : (
+            <button className="link" onClick={() => { setWeekShift(0); setPicked(null) }}>{t('events.backToToday')}</button>
+          )}
+          <button className="icon" aria-label={t('events.nextWeek')} onClick={() => { setWeekShift(weekShift + 1); setPicked(null) }}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6" /></svg>
+          </button>
+        </div>
+        <div className="days">
+          {week.map((d) => {
+            const cls = ['wd', daysWithEvents.has(d.date) ? 'has' : '', d.date < todayKey ? 'past' : '', d.date === todayKey ? 'today' : '', d.date === picked ? 'picked' : ''].filter(Boolean).join(' ')
+            return (
+              <button
+                key={d.date}
+                className={cls}
+                aria-pressed={d.date === picked}
+                aria-current={d.date === todayKey ? 'date' : undefined}
+                aria-label={formatDay(`${d.date}T12:00:00Z`)}
+                onClick={() => setPicked(d.date === picked ? null : d.date)}
+              >
+                <span className="dow" aria-hidden="true">{d.dow}</span>
+                <span className="n" aria-hidden="true">{d.num}</span>
+                <span className="dot" aria-hidden="true" />
+              </button>
+            )
+          })}
+        </div>
+      </section>
+
+      {picked && (
+        <section className="dayview" aria-live="polite">
+          <div className="row">
+            <h2>{formatDay(`${picked}T12:00:00Z`)}</h2>
+            <button className="link" onClick={() => setPicked(null)}>{t('events.showAll')}</button>
+          </div>
+          {dayEvents.length === 0 ? <p className="hint">{t('events.dayEmpty')}</p> : <ul className="evrows">{dayEvents.map(row)}</ul>}
+        </section>
+      )}
 
       {error && <p className="error" role="alert">{error}</p>}
+      {!picked && (<>
       {loaded && view === 'upcoming' && upcoming.length === 0 && <p className="hint">{t('events.empty')}</p>}
       {loaded && view === 'past' && past.length === 0 && <p className="hint">{t('events.emptyPast')}</p>}
 
@@ -150,6 +186,7 @@ export default function Events() {
         </button>
         {isStaff && <Link to="/events/unanswered">{t('events.unanswered')}</Link>}
       </div>
+      </>)}
     </div>
   )
 }
