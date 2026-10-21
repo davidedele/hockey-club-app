@@ -14,6 +14,7 @@ export default function Members() {
   const [memberships, setMemberships] = useState<{ group_id: number; user_id: string }[]>([])
   const [contacts, setContacts] = useState<Contact[]>([])
   const [filter, setFilter] = useState<number | null>(null)
+  const [query, setQuery] = useState('')
 
   useEffect(() => {
     void (async () => {
@@ -33,21 +34,66 @@ export default function Members() {
   const codeById = useMemo(() => new Map(groups.map((g) => [g.id, g.name])), [groups])
   const contactById = useMemo(() => new Map(contacts.map((c) => [c.user_id, c])), [contacts])
   const photos = useAvatarUrls(profiles.map((p) => p.avatar_path))
+  const q = query.trim().toLowerCase()
   const visible = profiles.filter(
-    (p) => filter === null || memberships.some((m) => m.user_id === p.id && m.group_id === filter),
+    (p) =>
+      (filter === null || memberships.some((m) => m.user_id === p.id && m.group_id === filter)) &&
+      (!q || `${p.first_name} ${p.last_name}`.toLowerCase().includes(q) || `${p.last_name} ${p.first_name}`.toLowerCase().includes(q)),
   )
+  const groupsOf = (id: string) => memberships.filter((m) => m.user_id === id).map((m) => codeById.get(m.group_id)).filter(Boolean).join(', ')
 
   return (
-    <div className="page">
+    <div className="page wide">
       <h1>{t('members.title')}</h1>
+      <label className="search">
+        <span>{t('members.search')}</span>
+        <input type="search" placeholder={t('members.searchHint')} value={query} onChange={(e) => setQuery(e.target.value)} />
+      </label>
       <div className="chips">
         <button className={filter === null ? 'chip on' : 'chip'} onClick={() => setFilter(null)}>{t('members.filterAll')}</button>
         {groups.map((g) => (
           <button key={g.id} className={filter === g.id ? 'chip on' : 'chip'} onClick={() => setFilter(g.id)}>{g.name}</button>
         ))}
       </div>
-      {visible.length === 0 && <p className="hint">{t('members.empty')}</p>}
-      <ul className="list">
+      <div className="scroll desk-only">
+        <table className="members-table">
+          <thead>
+            <tr>
+              <th scope="col">{t('members.colName')}</th>
+              <th scope="col">{t('members.colNumber')}</th>
+              <th scope="col">{t('members.colPosition')}</th>
+              <th scope="col">{t('members.colGroups')}</th>
+              {isStaff && <th scope="col">{t('members.colEmail')}</th>}
+              {isStaff && <th scope="col">{t('members.colPhone')}</th>}
+            </tr>
+          </thead>
+          <tbody>
+            {visible.map((p) => {
+              const contact = contactById.get(p.id)
+              return (
+                <tr key={p.id}>
+                  <th scope="row">
+                    <span className="who">
+                      <Avatar first={p.first_name} last={p.last_name} url={p.avatar_path ? photos.get(p.avatar_path) : null} size="small" />
+                      {isStaff ? <Link to={`/members/${p.id}`}>{p.last_name} {p.first_name}</Link> : <span>{p.last_name} {p.first_name}</span>}
+                    </span>
+                  </th>
+                  <td>{p.jersey_number ?? ''}</td>
+                  <td>{p.position ? t(`position.${p.position}` as MessageKey) : ''}</td>
+                  <td>{groupsOf(p.id)}</td>
+                  {isStaff && <td>{contact?.email ? <a href={`mailto:${contact.email}`}>{contact.email}</a> : ''}</td>}
+                  {isStaff && <td>{contact?.phone ? <a href={`tel:${contact.phone}`}>{contact.phone}</a> : ''}</td>}
+                </tr>
+              )
+            })}
+            {visible.length === 0 && (
+              <tr><td colSpan={isStaff ? 6 : 4} className="empty-cell">{q ? t('members.noMatch') : t('members.empty')}</td></tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+      {visible.length === 0 && <p className="hint phone-only">{q ? t('members.noMatch') : t('members.empty')}</p>}
+      <ul className="list phone-only">
         {visible.map((p) => {
           const mine = memberships.filter((m) => m.user_id === p.id).map((m) => codeById.get(m.group_id))
           const contact = contactById.get(p.id)

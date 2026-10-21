@@ -117,6 +117,36 @@ export default function Events() {
     )
   }
 
+  function card(e: EventRow) {
+    const mine = answers.get(e.id)
+    const over = new Date(e.ends_at).getTime() < now
+    const title = e.type === 'game' && e.opponent ? t('events.vs', { club: club.name || t('app.name'), opponent: e.opponent }) : e.title
+    return (
+      <article key={e.id} className={e.type === 'game' ? 'cal-ev game' : 'cal-ev'} style={e.type === 'game' ? teamColours(e) : undefined}>
+        <Link to={`/events/${e.id}`}>
+          <span className="t">{formatTime(e.starts_at)}</span>
+          <span className="ti">{title}</span>
+          {e.venue && <span className="m">{e.venue}</span>}
+        </Link>
+        {!over && canAnswer(e) ? (
+          <div className="quick" role="group" aria-label={t('events.answerFor', { day: formatDay(e.starts_at) })}>
+            <button className={mine === 'present' ? 'on present' : ''} aria-pressed={mine === 'present'} aria-label={t('answer.present')} disabled={busy === e.id} onClick={() => void answer(e, 'present')}><Tick /></button>
+            <button className={mine === 'absent' ? 'on absent' : ''} aria-pressed={mine === 'absent'} aria-label={t('answer.absent')} disabled={busy === e.id} onClick={() => void answer(e, 'absent')}><Cross /></button>
+          </div>
+        ) : mine ? (
+          <span className="state">{t(mine === 'present' ? 'answer.present' : 'answer.absent')}</span>
+        ) : null}
+      </article>
+    )
+  }
+
+  const weekEvents = new Map(week.map((d) => [d.date, events.filter((e) => dayKey(e.starts_at) === d.date)]))
+  const weekEmpty = week.every((d) => (weekEvents.get(d.date) ?? []).length === 0)
+  const goWeek = (shift: number) => {
+    setWeekShift(shift)
+    setPicked(null)
+  }
+
   return (
     <div className="page wide">
       <div className="row">
@@ -124,7 +154,18 @@ export default function Events() {
         {isStaff && <Link className="button small" to="/events/new">{t('events.new')}</Link>}
       </div>
 
-      <section className="week" aria-label={t('events.week')}>
+      <div className="cal-bar desk-only">
+        <button className="icon" aria-label={t('events.prevWeek')} onClick={() => goWeek(weekShift - 1)}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6" /></svg>
+        </button>
+        <span className="cal-range">{weekRange(week[0].date, week[6].date)}</span>
+        <button className="icon" aria-label={t('events.nextWeek')} onClick={() => goWeek(weekShift + 1)}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6" /></svg>
+        </button>
+        {weekShift !== 0 && <button className="link" onClick={() => goWeek(0)}>{t('events.backToToday')}</button>}
+      </div>
+
+      <section className="week phone-only" aria-label={t('events.week')}>
         <div className="week-bar">
           <button className="icon" aria-label={t('events.prevWeek')} onClick={() => { setWeekShift(weekShift - 1); setPicked(null) }}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6" /></svg>
@@ -160,7 +201,7 @@ export default function Events() {
       </section>
 
       {picked && (
-        <section className="dayview" aria-live="polite">
+        <section className="dayview phone-only" aria-live="polite">
           <div className="row">
             <h2>{formatDay(`${picked}T12:00:00Z`)}</h2>
             <button className="link" onClick={() => setPicked(null)}>{t('events.showAll')}</button>
@@ -177,13 +218,26 @@ export default function Events() {
       <div className="evgrid">
         {next && <NextPanel club={club.name || t('app.name')} colours={teamColours(next)} event={next} groups={groupsOf(next)} mine={answers.get(next.id) ?? null} count={counts.get(next.id)} canAnswer={canAnswer(next)} busy={busy === next.id} onAnswer={(v) => void answer(next, v)} />}
         {rest.length > 0 && (
-          <div>
+          <div className={view === 'upcoming' ? 'phone-only' : undefined}>
             {view === 'upcoming' && <div className="nowline"><span>{t('events.then')}</span><i aria-hidden="true" /></div>}
             {view === 'past' && <h2>{t('events.past')}</h2>}
             <ul className="evrows">{rest.map(row)}</ul>
           </div>
         )}
       </div>
+
+      {view === 'upcoming' && <div className="cal-week desk-only" aria-label={t('events.week')}>
+        {week.map((d) => (
+          <section key={d.date} className={d.date === todayKey ? 'cal-day today' : d.date < todayKey ? 'cal-day past' : 'cal-day'} aria-label={formatDay(`${d.date}T12:00:00Z`)}>
+            <header aria-hidden="true">
+              <span className="dow">{d.dow}</span>
+              <span className="n">{d.num}</span>
+            </header>
+            {(weekEvents.get(d.date) ?? []).map(card)}
+          </section>
+        ))}
+        {loaded && weekEmpty && <p className="cal-none">{t('events.weekEmpty')}</p>}
+      </div>}
 
       <div className="more">
         <button className="link" onClick={() => setView(view === 'upcoming' ? 'past' : 'upcoming')}>
@@ -194,6 +248,16 @@ export default function Events() {
       </>)}
     </div>
   )
+}
+
+const dayMonth = new Intl.DateTimeFormat('it-IT', { timeZone: 'UTC', day: 'numeric', month: 'long' })
+
+// "dal 19 al 25 ottobre", or "dal 28 settembre al 4 ottobre" across two months.
+function weekRange(from: string, to: string) {
+  const a = new Date(`${from}T12:00:00Z`)
+  const b = new Date(`${to}T12:00:00Z`)
+  const first = a.getUTCMonth() === b.getUTCMonth() ? String(a.getUTCDate()) : dayMonth.format(a)
+  return t('events.weekRange', { from: first, to: dayMonth.format(b) })
 }
 
 function NextPanel(props: { club: string; colours: CSSProperties | undefined; event: EventRow; groups: string; mine: Answer | null; count: number | undefined; canAnswer: boolean; busy: boolean; onAnswer: (v: Answer) => void }) {
@@ -210,7 +274,7 @@ function NextPanel(props: { club: string; colours: CSSProperties | undefined; ev
           <span>{props.groups}</span>
         </div>
         {game && e.opponent && <div className="vs">{t('events.vs', { club: props.club, opponent: e.opponent })}</div>}
-        <div>{formatDay(e.starts_at)}</div>
+        <div className="day-line">{formatDay(e.starts_at)}</div>
         <div className="time">
           <span className="big">{formatTime(e.starts_at)}</span>
           <span className="until">{t('events.until', { time: formatTime(e.ends_at) })}</span>

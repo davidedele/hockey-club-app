@@ -263,5 +263,16 @@
   "groups.addTitle": "Nuovo gruppo",
   "groups.add": "Aggiungi gruppo",
   "groups.codeTaken": "Questa sigla è già usata da un altro gruppo.",
-  "groups.hasEvents": "Ci sono eventi solo per questo gruppo. Prima eliminali o aggiungi loro un altro gruppo."
+  "groups.hasEvents": "Ci sono eventi solo per questo gruppo. Prima eliminali o aggiungi loro un altro gruppo.",
+  "events.weekRange": "dal {from} al {to}",
+  "events.weekEmpty": "Nessun evento in questa settimana.",
+  "members.search": "Cerca",
+  "members.searchHint": "Nome o cognome",
+  "members.colName": "Nome",
+  "members.colNumber": "N.",
+  "members.colPosition": "Ruolo",
+  "members.colGroups": "Gruppi",
+  "members.colEmail": "Email",
+  "members.colPhone": "Telefono",
+  "members.noMatch": "Nessun membro corrisponde alla ricerca."
 }

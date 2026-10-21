@@ -172,7 +172,7 @@ a.me.active .avatar { box-shadow: 0 0 0 2px var(--accent); }
 .tabs svg, .side svg { width: 22px; height: 22px; flex: none; }
 
 .side { display: none; }
-@media (min-width: 900px) {
+@media (min-width: 768px) {
   .shell { display: grid; grid-template-columns: 15.5rem 1fr; }
   .side { display: flex; flex-direction: column; gap: 1.5rem; position: sticky; top: 0; height: 100dvh; padding: 1.25rem .875rem; background: var(--surface); border-right: 1px solid var(--line); }
   .side nav { display: flex; flex-direction: column; gap: .25rem; }
@@ -215,7 +215,7 @@ button.icon svg { width: 22px; height: 22px; }
 .wd.today { border-color: var(--now); }
 
 .evgrid { display: grid; gap: 1rem; align-items: start; }
-@media (min-width: 1100px) { .evgrid { grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); } }
+
 
 .next { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
 .next-in { display: flex; flex-direction: column; gap: .75rem; padding: 1.125rem; }
@@ -292,11 +292,66 @@ button.group-head { display: flex; align-items: center; gap: .75rem; width: 100%
 .group-badge img { width: 100%; height: 100%; object-fit: contain; background: var(--surface); }
 .group-edit { padding: 0 1rem 1rem; border-top: 1px solid var(--line); padding-top: 1rem; }
 .group-edit .logo-row { margin: .375rem 0 1rem; align-items: center; }
-.danger-link { color: var(--danger); }
+button.link.danger-link { color: var(--danger); }
 .add-group { margin-top: .5rem; }
 
 /* The own picture in the header: a clean circle with a hairline, no extra ring until active. On computers the sidebar shows it instead. */
 .top .me .avatar { width: 36px; height: 36px; font-size: .8125rem; box-shadow: 0 0 0 1px var(--line); }
 .top .me .avatar img { display: block; }
 a.me.active .avatar { box-shadow: 0 0 0 2px var(--accent); }
-@media (min-width: 900px) { .top { display: none; } }
+@media (min-width: 768px) { .top { display: none; } }
+
+/* Phone and computer versions of the same page. Medium (768px) and up is the computer layout. */
+@media (max-width: 767.98px) { .desk-only { display: none !important; } }
+@media (min-width: 768px) { .phone-only { display: none !important; } .page.wide { max-width: 80rem; } }
+
+/* Search field with a visible name */
+label.search { display: flex; align-items: center; gap: .75rem; max-width: 28rem; margin-bottom: 1rem; font-weight: 500; }
+label.search input { margin-top: 0; }
+
+/* Members table on computers */
+.members-table th, .members-table td { text-align: left; font-size: .9375rem; }
+.members-table tbody th { font-weight: 400; }
+.members-table .who { display: inline-flex; align-items: center; gap: .625rem; }
+.members-table .who a { font-weight: 500; min-height: 44px; display: inline-flex; align-items: center; }
+.members-table td a { display: inline-flex; align-items: center; min-height: 44px; color: var(--ink); text-decoration: none; }
+.members-table td a:hover { color: var(--accent); text-decoration: underline; }
+.members-table .empty-cell { text-align: center; color: var(--muted); padding: 2rem 1rem; }
+
+/* Events home on computers: week calendar under a wide next event panel */
+.cal-bar { display: flex; align-items: center; gap: .25rem; margin: -.25rem 0 1rem; }
+.cal-range { font: 600 1.25rem/1.2 var(--font-display); padding: 0 .5rem; }
+@media (min-width: 768px) {
+  .evgrid { margin-bottom: 1.25rem; }
+  .next-in { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-auto-flow: row dense; column-gap: 2rem; align-content: start; }
+  .next-in > .label { grid-column: 1 / -1; }
+  .next-in > .vs, .next-in > .day-line, .next-in > .time { grid-column: 1; }
+  .next-in > .pair, .next-in > .answers, .next-in > .foot, .next-in > .open { grid-column: 2; }
+  .next-in > .time { grid-row: span 3; align-self: start; }
+  .next .pair { border-top: 0; padding-top: 0; }
+}
+.cal-week { position: relative; display: grid; grid-template-columns: repeat(7, minmax(8.5rem, 1fr)); gap: 1px; overflow-x: auto; background: var(--line); border: 1px solid var(--line); border-radius: var(--radius); }
+.cal-day { display: flex; flex-direction: column; gap: .5rem; min-height: 14rem; padding: .5rem; background: var(--surface); }
+.cal-day header { display: flex; align-items: baseline; gap: .375rem; padding: .25rem .375rem .5rem; border-bottom: 1px solid var(--line); }
+.cal-day .dow { font-size: .875rem; color: var(--muted); text-transform: capitalize; }
+.cal-day .n { font: 600 1.375rem/1 var(--font-display); }
+.cal-day.past { background: var(--surface-2); }
+.cal-day.past .n { color: var(--muted); }
+.cal-day.today header { border-bottom: 2px solid var(--now); }
+.cal-day.today .n { color: var(--now); }
+.cal-ev { display: flex; flex-direction: column; gap: .5rem; padding: .625rem; background: var(--canvas); border: 1px solid var(--line); border-radius: 12px; }
+.cal-ev.game { border-left: 4px solid var(--team-light); }
+.cal-ev > a { display: flex; flex-direction: column; gap: .125rem; color: var(--ink); text-decoration: none; }
+.cal-ev > a:hover .ti { color: var(--accent); text-decoration: underline; }
+.cal-ev .t { font: 600 1.5rem/1 var(--font-display); color: var(--accent); font-variant-numeric: tabular-nums; }
+.cal-ev .ti { font-weight: 500; font-size: .9375rem; overflow-wrap: anywhere; }
+.cal-ev .m { font-size: .8125rem; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cal-ev .state { font-size: .8125rem; color: var(--muted); }
+.cal-none { position: absolute; inset: 50% 0 auto; margin: 0; text-align: center; color: var(--muted); pointer-events: none; }
+
+/* Back links at the top of a page are full size tap targets */
+.page > p:first-child > a { display: inline-flex; align-items: center; min-height: 44px; }
+/* On computers the sidebar column keeps its colour all the way down, however long the page */
+@media (min-width: 768px) {
+  .shell { background: linear-gradient(to right, var(--surface) calc(15.5rem - 1px), var(--line) calc(15.5rem - 1px), var(--line) 15.5rem, var(--canvas) 15.5rem); }
+}
