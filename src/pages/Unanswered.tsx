@@ -3,6 +3,7 @@ import { Link, Navigate } from 'react-router-dom'
 import { errorText, t } from '../i18n'
 import { useSession } from '../lib/session'
 import { supabase } from '../lib/supabase'
+import { formatPhone, phoneLink } from '../lib/phone'
 import type { UnansweredRow } from '../lib/types'
 
 const WINDOWS = [3, 7, 14]
@@ -50,7 +51,7 @@ export default function Unanswered() {
               <span className="tag todo">{r.missing === 1 ? t('unanswered.one') : t('unanswered.many', { n: String(r.missing) })}</span>
             </div>
             <div className="contacts">
-              {r.phone && <a href={`tel:${r.phone}`}>{r.phone}</a>}
+              {r.phone && <a href={phoneLink(r.phone)}>{formatPhone(r.phone)}</a>}
               <a href={`mailto:${r.email}`}>{r.email}</a>
             </div>
           </li>

@@ -4,6 +4,7 @@ import Avatar from '../components/Avatar'
 import { shrinkPhoto, useAvatarUrls } from '../lib/avatars'
 import { signOut, useSession } from '../lib/session'
 import { supabase } from '../lib/supabase'
+import { formatPhone } from '../lib/phone'
 import type { Position } from '../lib/types'
 
 export default function ProfilePage() {
@@ -26,7 +27,7 @@ export default function ProfilePage() {
         supabase.from('profile_contacts').select('phone').eq('user_id', profile.id).maybeSingle(),
         supabase.from('group_members').select('groups(name)').eq('user_id', profile.id),
       ])
-      setPhone((c.data as { phone: string | null } | null)?.phone ?? '')
+      setPhone(formatPhone((c.data as { phone: string | null } | null)?.phone))
       const rows = (g.data ?? []) as unknown as { groups: { name: string } | null }[]
       setMyGroups(rows.flatMap((r) => (r.groups ? [r.groups.name] : [])))
     })()
@@ -93,7 +94,7 @@ export default function ProfilePage() {
         position: position === '' ? null : position,
       })
       .eq('id', profile!.id)
-    const b = await supabase.from('profile_contacts').update({ phone: phone.trim() || null }).eq('user_id', profile!.id)
+    const b = await supabase.from('profile_contacts').update({ phone: formatPhone(phone) || null }).eq('user_id', profile!.id)
     const error = a.error ?? b.error
     if (error) {
       setMessage(errorText(error))
@@ -137,7 +138,7 @@ export default function ProfilePage() {
           </select>
         
         <label>{t('common.phone')}
-          <input type="tel" autoComplete="tel" maxLength={30} value={phone} onChange={(e) => setPhone(e.target.value)} />
+          <input type="tel" autoComplete="tel" maxLength={30} placeholder="333 123 4567" value={phone} onChange={(e) => setPhone(e.target.value)} onBlur={() => setPhone(formatPhone(phone))} />
         </label>
         <button type="submit">{t('common.save')}</button>
         {message && <p className="hint">{message}</p>}

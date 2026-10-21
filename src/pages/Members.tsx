@@ -4,6 +4,7 @@ import { t, type MessageKey } from '../i18n'
 import Avatar from '../components/Avatar'
 import GroupBadge from '../components/GroupBadge'
 import { useAvatarUrls } from '../lib/avatars'
+import { formatPhone, phoneLink } from '../lib/phone'
 import { useSession } from '../lib/session'
 import { supabase } from '../lib/supabase'
 import type { Contact, Group, Profile } from '../lib/types'
@@ -83,7 +84,7 @@ export default function Members() {
                   <td>{p.position ? t(`position.${p.position}` as MessageKey) : ''}</td>
                   <td>{groupsOf(p.id)}</td>
                   {isStaff && <td>{contact?.email ? <a href={`mailto:${contact.email}`}>{contact.email}</a> : ''}</td>}
-                  {isStaff && <td>{contact?.phone ? <a href={`tel:${contact.phone}`}>{contact.phone}</a> : ''}</td>}
+                  {isStaff && <td>{contact?.phone ? <a href={phoneLink(contact.phone)}>{formatPhone(contact.phone)}</a> : ''}</td>}
                 </tr>
               )
             })}
@@ -111,7 +112,7 @@ export default function Members() {
                   {[p.position ? t(`position.${p.position}` as MessageKey) : null, mine.join(', ')].filter(Boolean).join(' · ')}
                 </div>
                 {isStaff && contact && (
-                  <div className="hint">{[contact.email, contact.phone].filter(Boolean).join(' · ')}</div>
+                  <div className="hint">{[contact.email, formatPhone(contact.phone)].filter(Boolean).join(' · ')}</div>
                 )}
               </div>
               <span className="jersey" aria-label={p.jersey_number !== null ? `${t('common.jersey')} ${p.jersey_number}` : undefined}>
