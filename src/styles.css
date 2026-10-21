@@ -63,3 +63,14 @@ a.event { position: relative; padding-right: 1.25rem; }
 a.event::after { content: '\203A'; position: absolute; right: 0; top: 50%; transform: translateY(-50%); color: var(--muted); font-size: 1.4rem; }
 .actions.spaced { margin-top: 1.5rem; }
 select { min-height: 44px; }
+a.chip { display: inline-flex; align-items: center; text-decoration: none; white-space: nowrap; }
+.contacts { display: flex; gap: 1rem; flex-wrap: wrap; margin-top: .25rem; }
+.contacts a { display: inline-flex; align-items: center; min-height: 44px; }
+.page.wide { max-width: 64rem; }
+.scroll { overflow-x: auto; margin-top: 1rem; border: 1px solid var(--line); border-radius: 8px; }
+table { border-collapse: collapse; width: 100%; font-size: .9rem; }
+th, td { padding: .6rem .75rem; border-bottom: 1px solid var(--line); text-align: right; white-space: nowrap; }
+thead th { color: var(--muted); font-weight: 600; vertical-align: bottom; }
+th:first-child, td:first-child { text-align: left; position: sticky; left: 0; background: var(--bg); }
+tbody th { font-weight: 600; }
+tbody tr:last-child th, tbody tr:last-child td { border-bottom: 0; }

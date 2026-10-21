@@ -4,6 +4,7 @@ import { t } from './i18n'
 import { isConfigured } from './lib/supabase'
 import { useSession } from './lib/session'
 import { supabase } from './lib/supabase'
+import AttendanceSummary from './pages/AttendanceSummary'
 import EventDetail from './pages/EventDetail'
 import EventForm from './pages/EventForm'
 import Events from './pages/Events'
@@ -13,6 +14,7 @@ import Join from './pages/Join'
 import Login from './pages/Login'
 import MemberEdit from './pages/MemberEdit'
 import Members from './pages/Members'
+import Unanswered from './pages/Unanswered'
 import ProfilePage from './pages/Profile'
 import ResetPassword from './pages/ResetPassword'
 
@@ -91,6 +93,8 @@ export default function App() {
         <Route path="/" element={<Members />} />
         <Route path="/events" element={<Events />} />
         <Route path="/events/new" element={<EventForm />} />
+        <Route path="/events/unanswered" element={<Unanswered />} />
+        <Route path="/events/summary" element={<AttendanceSummary />} />
         <Route path="/events/:id" element={<EventDetail />} />
         <Route path="/events/:id/edit" element={<EventForm />} />
         <Route path="/members/:id" element={<MemberEdit />} />

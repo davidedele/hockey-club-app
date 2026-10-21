@@ -57,3 +57,28 @@ export interface AttendanceRow {
   answer: Answer | null
   status: Status | null
 }
+
+export interface UnansweredRow {
+  user_id: string
+  first_name: string
+  last_name: string
+  email: string
+  phone: string | null
+  missing: number
+}
+
+export interface SummaryRow {
+  user_id: string
+  first_name: string
+  last_name: string
+  events_total: number
+  answered_present: number
+  answered_absent: number
+  no_answer: number
+  on_time: number
+  late: number
+  excused: number
+  unexcused: number
+  injured: number
+  not_called_up: number
+}

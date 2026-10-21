@@ -55,6 +55,12 @@ export default function Events() {
         <h1>{t('events.title')}</h1>
         {isStaff && <Link className="button" to="/events/new">{t('events.new')}</Link>}
       </div>
+      {isStaff && (
+        <div className="chips">
+          <Link className="chip" to="/events/unanswered">{t('events.unanswered')}</Link>
+          <Link className="chip" to="/events/summary">{t('events.summary')}</Link>
+        </div>
+      )}
       <div className="chips">
         <button className={view === 'upcoming' ? 'chip on' : 'chip'} onClick={() => setView('upcoming')}>{t('events.upcoming')}</button>
         <button className={view === 'past' ? 'chip on' : 'chip'} onClick={() => setView('past')}>{t('events.past')}</button>
