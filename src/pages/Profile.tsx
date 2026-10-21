@@ -146,7 +146,7 @@ export default function ProfilePage() {
       <h2>{t('profile.groups')}</h2>
       <p>{myGroups.length ? myGroups.join(', ') : t('profile.noGroups')}</p>
       {roles.length > 0 && <p className="hint">{roles.map((r) => t(`role.${r}` as MessageKey)).join(', ')}</p>}
-      {isStaff && <p><Link to="/club">{t('club.title')}</Link></p>}
+      {isStaff && <p><Link to="/settings">{t('settings.title')}</Link></p>}
       <button className="link" onClick={() => void signOut()}>{t('common.signOut')}</button>
     </div>
   )

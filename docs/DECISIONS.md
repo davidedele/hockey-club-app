@@ -68,7 +68,7 @@ Recorded on 21 October 2026. Read together with `SPEC.md` and `SPORTEASY_NOTES.m
 12. The attendance summary counts finished events shown to a player's groups. "Tutta la stagione" means every finished event so far, and there is a last 30 days view. A person in two groups of one event counts it once.
 
 ## Setup status
-1. GitHub repository: github.com/davidedele/hockey-club-app, private, with the first commit pushed (the planning files).
+1. GitHub repository: github.com/davidedele/hockey-club-app, public (Davide, 21 October), with the first commit pushed (the planning files).
 2. Claude project "Hockey Club App" on claude.ai holds the instructions and these notes.
 3. App name: undecided. Candidates are HockeyHome, Spogliatoio, Cambio and Ingaggio. The repository can be renamed later.
 4. Free credit: Davide has the Claude Code cloud session credit for Pro. It only works in cloud sessions, not in project chats or local terminal sessions, and it expires on 4 November 2026. The Claude GitHub App must be installed on this repository only. Building should happen in cloud sessions on this repository.
@@ -87,7 +87,7 @@ Recorded on 21 October 2026. Read together with `SPEC.md` and `SPORTEASY_NOTES.m
 8. Built on 21 October with Archivo and Archivo Narrow (SIL Open Font License, licence in public/fonts). On computers a left sidebar replaces the floating tab bar, like the SportEasy website. Tabs: Eventi, Membri, Profilo for everyone, plus Presenze and Inviti for staff. The attendance summary moved to its own address, /attendance.
 9. Players see how many people said present for an event and who they are, as in SportEasy (Davide, 21 October). Absent answers and recorded attendance stay visible to staff only. Functions `event_present_counts` (migration 0004) and `event_present_people` (migration 0005).
 10. Nothing about one club is built in (Davide, 21 October). Staff set the club name, the logo and the game day colours in the app (Profilo, Impostazioni del club). They are stored in `club_settings` (one row, readable by everyone because the sign in page shows them, changeable by staff only) and the logo in a public storage bucket `club` (PNG, JPEG or WebP, at most 1 MB, upload and removal by staff only). Migration 0006. Without a logo the app shows a stick and puck.
-11. For now the game day colours are one pair for the whole club, not one per team. Per team colours can come later if the teams want different ones.
+11. Game day colours: the club pair is the default; each group can have its own pair (see 15).
 12. On computers, club settings and the own profile sit at the bottom left of the sidebar. On phones they are reached from Profilo.
 13. The week strip on the events home works as a calendar: arrows move by week, tapping a day shows that day's events, tapping it again or Mostra tutti goes back.
 14. Profile pictures (Davide, 21 October): optional, each person adds or removes their own on Profilo. Only club members can see them: private storage bucket `avatars`, shown through links that expire after an hour. The app crops the photo to a square, shrinks it to 256 pixels and saves it as JPEG, which also drops metadata such as location. Each person can only write in their own folder; the board can remove any picture. Migration 0007.
@@ -105,3 +105,8 @@ Recorded on 21 October 2026. Read together with `SPEC.md` and `SPORTEASY_NOTES.m
 2. Create a free Supabase test project.
 3. Install the Claude GitHub App on this repository.
 4. Start the first cloud session.
+
+## Decisions about settings (21 October)
+15. Groups are set up by the board only: name, short code, own game day colours (or the club colours), a picture, and a default weekly training limit. The board can add groups and remove them; a group cannot be removed while an event belongs only to it. Migration 0009.
+16. Settings live in one place, Impostazioni: Club (staff), Gruppi (board), Inviti (staff). Invites are no longer a tab. On computers Impostazioni is at the bottom of the sidebar; on phones it is reached from Profilo.
+17. Coaches can still change the club logo, but group pictures are for the board only.

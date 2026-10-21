@@ -1,5 +1,5 @@
 import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react'
-import { Navigate } from 'react-router-dom'
+import { Link, Navigate } from 'react-router-dom'
 import Crest from '../components/Crest'
 import { errorText, t } from '../i18n'
 import { useClub } from '../lib/club'
@@ -88,6 +88,7 @@ export default function ClubSettings() {
 
   return (
     <div className="page narrow">
+      <p><Link to="/settings">{t('settings.title')}</Link></p>
       <h1>{t('club.title')}</h1>
       <p className="hint">{t('club.intro')}</p>
 

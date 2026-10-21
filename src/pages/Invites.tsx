@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Navigate } from 'react-router-dom'
+import { Link, Navigate } from 'react-router-dom'
 import { errorText, t } from '../i18n'
 import { useSession } from '../lib/session'
 import { supabase } from '../lib/supabase'
@@ -66,6 +66,7 @@ export default function Invites() {
 
   return (
     <div className="page narrow">
+      <p><Link to="/settings">{t('settings.title')}</Link></p>
       <h1>{t('invites.title')}</h1>
       <p className="hint">{t('invites.intro')}</p>
       <label>{t('common.group')}

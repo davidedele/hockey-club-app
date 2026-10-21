@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState, type CSSProperties } from 'react'
 import { Link } from 'react-router-dom'
 import { errorText, t } from '../i18n'
 import { useClub } from '../lib/club'
@@ -65,6 +65,11 @@ export default function Events() {
   const todayKey = dayKey(new Date().toISOString())
 
   const canAnswer = (e: EventRow) => e.event_groups.some((x) => myGroups.includes(x.group_id))
+  // A game uses the colours of its first group that has its own; otherwise the club colours.
+  const teamColours = (e: EventRow): CSSProperties | undefined => {
+    const g = e.event_groups.map((x) => groups.find((y) => y.id === x.group_id)).find((y) => y?.game_dark && y?.game_light)
+    return g ? ({ '--team-dark': g.game_dark, '--team-light': g.game_light } as CSSProperties) : undefined
+  }
   const groupsOf = (e: EventRow) => e.event_groups.map((x) => groupName.get(x.group_id)).filter(Boolean).join(', ')
 
   async function answer(e: EventRow, value: Answer) {
@@ -170,7 +175,7 @@ export default function Events() {
       {loaded && view === 'past' && past.length === 0 && <p className="hint">{t('events.emptyPast')}</p>}
 
       <div className="evgrid">
-        {next && <NextPanel club={club.name || t('app.name')} event={next} groups={groupsOf(next)} mine={answers.get(next.id) ?? null} count={counts.get(next.id)} canAnswer={canAnswer(next)} busy={busy === next.id} onAnswer={(v) => void answer(next, v)} />}
+        {next && <NextPanel club={club.name || t('app.name')} colours={teamColours(next)} event={next} groups={groupsOf(next)} mine={answers.get(next.id) ?? null} count={counts.get(next.id)} canAnswer={canAnswer(next)} busy={busy === next.id} onAnswer={(v) => void answer(next, v)} />}
         {rest.length > 0 && (
           <div>
             {view === 'upcoming' && <div className="nowline"><span>{t('events.then')}</span><i aria-hidden="true" /></div>}
@@ -191,13 +196,13 @@ export default function Events() {
   )
 }
 
-function NextPanel(props: { club: string;  event: EventRow; groups: string; mine: Answer | null; count: number | undefined; canAnswer: boolean; busy: boolean; onAnswer: (v: Answer) => void }) {
+function NextPanel(props: { club: string; colours: CSSProperties | undefined; event: EventRow; groups: string; mine: Answer | null; count: number | undefined; canAnswer: boolean; busy: boolean; onAnswer: (v: Answer) => void }) {
   const { event: e, mine } = props
   const game = e.type === 'game'
   const started = new Date(e.starts_at).getTime() <= Date.now()
   const label = started ? t('events.now') : t(game ? 'events.nextGame' : 'events.nextTraining')
   return (
-    <section className={game ? 'next game' : 'next'} aria-label={label}>
+    <section className={game ? 'next game' : 'next'} style={game ? props.colours : undefined} aria-label={label}>
       {game && <div className="stripes" aria-hidden="true"><span /><span /><span /><span /><span /><span /></div>}
       <div className="next-in">
         <div className="label">

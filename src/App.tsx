@@ -11,6 +11,8 @@ import { useSession } from './lib/session'
 import { supabase } from './lib/supabase'
 import AttendanceSummary from './pages/AttendanceSummary'
 import ClubSettings from './pages/ClubSettings'
+import GroupSettings from './pages/GroupSettings'
+import Settings from './pages/Settings'
 import EventDetail from './pages/EventDetail'
 import EventForm from './pages/EventForm'
 import Events from './pages/Events'
@@ -115,7 +117,6 @@ function Protected() {
       <NavLink to="/events"><TabIcon name="events" />{t('nav.events')}</NavLink>
       <NavLink to="/" end><TabIcon name="members" />{t('nav.members')}</NavLink>
       {isStaff && <NavLink to="/attendance"><TabIcon name="attendance" />{t('nav.attendance')}</NavLink>}
-      {isStaff && <NavLink to="/invites"><TabIcon name="invites" />{t('nav.invites')}</NavLink>}
     </>
   )
   return (
@@ -124,7 +125,7 @@ function Protected() {
         <Link className="club" to="/events"><Crest /><span className="club-name">{club.name || t('app.name')}</span></Link>
         <nav aria-label={t('nav.main')}>{main}</nav>
         <nav className="side-foot" aria-label={t('nav.account')}>
-          {isStaff && <NavLink to="/club"><TabIcon name="settings" />{t('club.title')}</NavLink>}
+          {isStaff && <NavLink to="/settings"><TabIcon name="settings" />{t('settings.title')}</NavLink>}
           <NavLink to="/profile"><Avatar first={profile.first_name} last={profile.last_name} url={photo} size="small" />{fullName}</NavLink>
         </nav>
       </aside>
@@ -164,8 +165,12 @@ export default function App() {
         <Route path="/events/:id/edit" element={<EventForm />} />
         <Route path="/members/:id" element={<MemberEdit />} />
         <Route path="/profile" element={<ProfilePage />} />
-        <Route path="/invites" element={<Invites />} />
-        <Route path="/club" element={<ClubSettings />} />
+        <Route path="/settings" element={<Settings />} />
+        <Route path="/settings/club" element={<ClubSettings />} />
+        <Route path="/settings/groups" element={<GroupSettings />} />
+        <Route path="/settings/invites" element={<Invites />} />
+        <Route path="/invites" element={<Navigate to="/settings/invites" replace />} />
+        <Route path="/club" element={<Navigate to="/settings/club" replace />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

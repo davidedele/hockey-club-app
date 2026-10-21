@@ -5,6 +5,10 @@ export interface Group {
   id: number
   code: string
   name: string
+  game_dark: string | null
+  game_light: string | null
+  logo_path: string | null
+  weekly_limit: number | null
 }
 
 export interface Profile {
