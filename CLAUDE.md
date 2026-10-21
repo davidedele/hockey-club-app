@@ -25,3 +25,8 @@ Interface language is Italian. English can be added later, so keep all text in t
 
 ## Deliverables
 Code goes in this folder. Hand over work as small, reviewable changes with a plain description of what changed and how to try it.
+
+## Memory between sessions
+1. `docs/DECISIONS.md` holds the decisions made so far. When Davide gives a new decision, add it there.
+2. `docs/PROGRESS.md` holds the current state and what comes next. Update it at the end of every session.
+3. Read both files, together with `docs/SPEC.md`, at the start of every session.
