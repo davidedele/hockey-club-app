@@ -16,6 +16,11 @@ const CODES = [
   'email_not_confirmed',
   'forbidden',
   'last_board_member',
+  'groups_required',
+  'repeat_only_training',
+  'repeat_invalid',
+  'event_over',
+  'event_needs_group',
   'over_email_send_rate_limit',
   'email_address_invalid',
   'weak_password',
@@ -30,6 +35,7 @@ export function errorText(error: { message?: string; code?: string } | null | un
   for (const code of CODES) {
     if (text.includes(code)) return t(`error.${code}` as MessageKey)
   }
+  if (/23514|violates check constraint/.test(text)) return t('error.check_violation')
   const raw = import.meta.env?.DEV && text.trim() ? ` (${text.trim()})` : ''
   return t('common.error') + raw
 }

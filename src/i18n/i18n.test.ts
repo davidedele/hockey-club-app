@@ -16,6 +16,9 @@ describe('errorText', () => {
   it('maps sign in error codes', () => {
     expect(errorText({ code: 'over_email_send_rate_limit', message: 'x' })).toBe(t('error.over_email_send_rate_limit'))
   })
+  it('explains a refused time or date', () => {
+    expect(errorText({ code: '23514', message: 'new row violates check constraint "events_check"' })).toBe(t('error.check_violation'))
+  })
   it('falls back to a generic message', () => {
     expect(errorText({ message: 'boom' })).toContain(t('common.error'))
     expect(errorText(null)).toBe(t('common.error'))
