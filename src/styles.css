@@ -165,3 +165,6 @@ tbody th { font-weight: 500; }
 tbody tr:last-child th, tbody tr:last-child td { border-bottom: 0; }
 .stafflinks { gap: 1.5rem; margin-bottom: .5rem; }
 .stafflinks a { display: inline-flex; align-items: center; min-height: 44px; font-weight: 500; }
+
+.steps { padding-left: 1.25rem; margin: 1rem 0; }
+.steps li { margin: .25rem 0; }

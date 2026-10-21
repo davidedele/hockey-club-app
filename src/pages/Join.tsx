@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { errorText, t } from '../i18n'
+import { clearPendingInvite, savePendingInvite } from '../lib/invite'
 import { useSession } from '../lib/session'
 import { supabase } from '../lib/supabase'
 import Brand from '../components/Brand'
@@ -16,7 +17,32 @@ export default function Join() {
   const [error, setError] = useState('')
   const [sent, setSent] = useState(false)
   const [busy, setBusy] = useState(false)
+  const [resent, setResent] = useState(false)
+  const [wait, setWait] = useState(0)
   const redeemed = useRef(false)
+
+  useEffect(() => {
+    if (token) savePendingInvite(token)
+  }, [token])
+
+  useEffect(() => {
+    if (wait <= 0) return
+    const id = setTimeout(() => setWait(wait - 1), 1000)
+    return () => clearTimeout(id)
+  }, [wait])
+
+  async function resend() {
+    setError('')
+    setResent(false)
+    const { error } = await supabase.auth.resend({
+      type: 'signup',
+      email,
+      options: { emailRedirectTo: `${window.location.origin}/join/${token}` },
+    })
+    if (error) setError(errorText(error))
+    else setResent(true)
+    setWait(60)
+  }
 
   async function redeem() {
     if (!session) return
@@ -33,6 +59,7 @@ export default function Join() {
       setBusy(false)
       return
     }
+    clearPendingInvite()
     await reload()
     navigate('/', { replace: true })
   }
@@ -54,12 +81,16 @@ export default function Join() {
       email,
       password,
       options: {
-        emailRedirectTo: window.location.href,
+        emailRedirectTo: `${window.location.origin}/join/${token}`,
         data: { first_name: firstName.trim(), last_name: lastName.trim() },
       },
     })
     if (error) setError(errorText(error))
-    else setSent(true)
+    else {
+      savePendingInvite(token)
+      setSent(true)
+      setWait(60)
+    }
     setBusy(false)
   }
 
@@ -82,8 +113,18 @@ export default function Join() {
     return (
       <div className="page narrow">
       <Brand />
-        <h1>{t('join.title')}</h1>
-        <p>{t('join.checkEmail')}</p>
+        <h1>{t('join.sentTitle')}</h1>
+        <p>{t('join.sentText', { email })}</p>
+        <ol className="steps">
+          <li>{t('join.sentStep1')}</li>
+          <li>{t('join.sentStep2')}</li>
+        </ol>
+        {error && <p className="error">{error}</p>}
+        {resent && <p role="status">{t('join.resent')}</p>}
+        <button className="link" onClick={resend} disabled={wait > 0}>
+          {wait > 0 ? t('join.resendWait', { n: String(wait) }) : t('join.resend')}
+        </button>
+        <p className="hint">{t('join.spam')}</p>
       </div>
     )
   }

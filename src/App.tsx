@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { Link, NavLink, Navigate, Outlet, Route, Routes, useLocation } from 'react-router-dom'
 import { t } from './i18n'
 import { isConfigured } from './lib/supabase'
+import { getPendingInvite } from './lib/invite'
 import { useSession } from './lib/session'
 import { supabase } from './lib/supabase'
 import AttendanceSummary from './pages/AttendanceSummary'
@@ -89,7 +90,10 @@ function Protected() {
   const { loading, session, profile, isStaff } = useSession()
   if (loading) return <p className="center">{t('common.loading')}</p>
   if (!session) return <Navigate to="/login" replace />
-  if (!profile) return <Navigate to="/login" replace />
+  if (!profile) {
+    const pending = getPendingInvite()
+    return <Navigate to={pending ? `/join/${pending}` : '/login'} replace />
+  }
   return (
     <div className="shell">
       <PendingBanner />

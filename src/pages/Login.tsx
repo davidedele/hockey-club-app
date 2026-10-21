@@ -1,7 +1,8 @@
 import { useState, type FormEvent } from 'react'
 import { Navigate } from 'react-router-dom'
 import { Link } from 'react-router-dom'
-import { t } from '../i18n'
+import { errorText, t } from '../i18n'
+import { getPendingInvite } from '../lib/invite'
 import { useSession } from '../lib/session'
 import { supabase } from '../lib/supabase'
 import Brand from '../components/Brand'
@@ -14,13 +15,15 @@ export default function Login() {
   const [busy, setBusy] = useState(false)
 
   if (!loading && session && profile) return <Navigate to="/" replace />
+  const pending = getPendingInvite()
+  if (!loading && session && !profile && pending) return <Navigate to={`/join/${pending}`} replace />
 
   async function submit(e: FormEvent) {
     e.preventDefault()
     setBusy(true)
     setError('')
     const { error } = await supabase.auth.signInWithPassword({ email, password })
-    if (error) setError(t('login.invalid'))
+    if (error) setError(/email_not_confirmed/.test(`${error.code} ${error.message}`) ? errorText(error) : t('login.invalid'))
     setBusy(false)
   }
 
