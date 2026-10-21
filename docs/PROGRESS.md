@@ -38,7 +38,8 @@ Build step 1 works against the Supabase test project. Step 2 (events with weekly
 ## Open problems
 1. In the Supabase test project, "Confirm email" is switched OFF for testing, because the built in email service allows only a few emails per hour. It must be switched on again and a custom email sender connected before real use. The confirmation email path has therefore not been tested yet.
 2. The app is not yet installable as a real PWA: there is a manifest and icons but no service worker. The service worker comes with push notifications (step 9).
-3. Invite details (single use, 7 days) may be revisited. Davide prefers to refine them later.
+3. Signing up again with an address that already has an account (from an earlier attempt) sends no new email, and the resend button sends nothing either. The auth log shows a repeated sign up for that address and expired links from the first email. To look at later with Davide: probably the account is already confirmed, so the person should log in or reset the password, and the screen should say so.
+4. Invite details (single use, 7 days) may be revisited. Davide prefers to refine them later.
 4. A deleted member keeps their sign in account. Only the profile is removed, which blocks all access. Full account removal needs a server side step.
 5. The contact email is copied from the account at joining and does not follow later changes.
 6. A person who creates an account some other way than a link has no profile and sees nothing. Names are taken from the join form only. An account created by hand in the Supabase dashboard cannot join with an invite, because it has no names.
