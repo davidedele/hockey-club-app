@@ -283,7 +283,10 @@ label.button.file:focus-within { outline: 2px solid var(--accent); outline-offse
 
 /* Settings */
 .list.settings li { padding: 0; }
-.list.settings a { display: flex; flex-direction: column; gap: .125rem; padding: .875rem 1rem; min-height: 64px; color: var(--ink); text-decoration: none; }
+.list.settings li > a { display: flex; flex-direction: row; align-items: center; gap: .75rem; padding: .875rem 1rem; min-height: 64px; color: var(--ink); text-decoration: none; }
+.settings-text { flex: 1; display: flex; flex-direction: column; gap: .125rem; }
+.list.settings .chev { width: 20px; height: 20px; color: var(--muted); }
+.list.settings li > a:hover .settings-name { text-decoration: underline; }
 .settings-name { font-weight: 500; color: var(--accent); }
 .list.groups li { padding: 0; }
 button.group-head { display: flex; align-items: center; gap: .75rem; width: 100%; min-height: 64px; padding: .75rem 1rem; color: var(--ink); background: none; border-radius: 0; text-align: left; font-weight: 400; }
@@ -424,3 +427,14 @@ label[for] + select { margin-bottom: 1rem; }
 @media (min-width: 768px) {
   #root > .page.narrow { margin-top: 8vh; padding: 2rem 2.25rem; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: 0 6px 24px rgba(14, 34, 54, .06); }
 }
+
+/* Phone header: settings for staff next to the own picture */
+.top-actions { display: flex; align-items: center; gap: .25rem; }
+a.gear { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; color: var(--ink); }
+a.gear svg { width: 22px; height: 22px; }
+a.gear.active { color: var(--accent); background: var(--accent-soft); }
+/* Small group badge inside chips */
+.group-badge.small { width: 22px; height: 22px; border-radius: 6px; font-size: .6875rem; }
+.chip .group-badge.small { margin-left: -.375rem; }
+select.full { width: 100%; max-width: 20rem; }
+button.secondary { background: var(--surface); color: var(--accent); border: 1px solid var(--line-strong); }

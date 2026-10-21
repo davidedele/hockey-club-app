@@ -30,14 +30,15 @@ select test.fails('nobody can add a second settings row', $$insert into public.c
 select test.fails('nobody can delete the settings', $$delete from public.club_settings$$, 'permission denied');
 select test.logout();
 select test.login('00000000-0000-0000-0000-0000000000c1');
-select test.affected('a coach can change the club name', $$update public.club_settings set name = 'Sgularat Milano'$$, 1);
-select test.affected('a coach can set the game day colours', $$update public.club_settings set game_dark = '#000000', game_light = '#ffcc00'$$, 1);
-select test.fails('a colour must be a hex code', $$update public.club_settings set game_dark = 'black'$$, 'violates check constraint');
-select test.fails('a logo path must be a logo file name', $$update public.club_settings set logo_path = '../x.png'$$, 'violates check constraint');
-select test.affected('a coach can set the logo file', $$update public.club_settings set logo_path = 'logo-1000000000.png'$$, 1);
+select test.affected('a coach cannot change the club name', $$update public.club_settings set name = 'X'$$, 0);
+select test.affected('a coach cannot change the colours', $$update public.club_settings set game_dark = '#000000'$$, 0);
 select test.logout();
 select test.login('00000000-0000-0000-0000-0000000000b1');
-select test.affected('the board can change it too', $$update public.club_settings set name = 'Sgularat'$$, 1);
+select test.affected('the board changes the club name', $$update public.club_settings set name = 'Sgularat Milano'$$, 1);
+select test.affected('the board sets the colours', $$update public.club_settings set game_dark = '#000000', game_light = '#ffcc00'$$, 1);
+select test.fails('a colour must be a hex code', $$update public.club_settings set game_dark = 'black'$$, 'violates check constraint');
+select test.fails('a logo path must be a logo file name', $$update public.club_settings set logo_path = '../x.png'$$, 'violates check constraint');
+select test.affected('the board sets the logo file', $$update public.club_settings set logo_path = 'logo-1000000000.png'$$, 1);
 select test.logout();
 
 \echo == logo files
@@ -49,10 +50,14 @@ select test.login_anon();
 select test.fails('anonymous cannot upload a logo', $$insert into storage.objects (bucket_id, name) values ('club', 'logo-2000000000.png')$$, 'row-level security');
 select test.logout();
 select test.login('00000000-0000-0000-0000-0000000000c1');
-select test.works('a coach can upload a logo', $$insert into storage.objects (bucket_id, name) values ('club', 'logo-2000000000.png')$$);
-select test.fails('staff rights stop at the club bucket', $$insert into storage.objects (bucket_id, name) values ('other', 'y.png')$$, 'row-level security');
-select test.affected('a coach cannot remove files of other buckets', $$delete from storage.objects where bucket_id = 'other'$$, 0);
-select test.affected('a coach can remove an old logo', $$delete from storage.objects where name = 'logo-1000000000.png'$$, 1);
+select test.fails('a coach cannot upload a logo', $$insert into storage.objects (bucket_id, name) values ('club', 'logo-2000000000.png')$$, 'row-level security');
+select test.affected('a coach cannot remove the logo', $$delete from storage.objects where name = 'logo-1000000000.png'$$, 0);
+select test.logout();
+select test.login('00000000-0000-0000-0000-0000000000b1');
+select test.works('the board uploads a logo', $$insert into storage.objects (bucket_id, name) values ('club', 'logo-2000000000.png')$$);
+select test.fails('rights stop at the club bucket', $$insert into storage.objects (bucket_id, name) values ('other', 'y.png')$$, 'row-level security');
+select test.affected('the board cannot remove files of other buckets', $$delete from storage.objects where bucket_id = 'other'$$, 0);
+select test.affected('the board removes an old logo', $$delete from storage.objects where name = 'logo-1000000000.png'$$, 1);
 select test.logout();
 
 rollback;

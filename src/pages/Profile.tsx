@@ -1,5 +1,4 @@
 import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react'
-import { Link } from 'react-router-dom'
 import { errorText, t, type MessageKey } from '../i18n'
 import Avatar from '../components/Avatar'
 import { shrinkPhoto, useAvatarUrls } from '../lib/avatars'
@@ -8,7 +7,7 @@ import { supabase } from '../lib/supabase'
 import type { Position } from '../lib/types'
 
 export default function ProfilePage() {
-  const { profile, roles, reload, isStaff } = useSession()
+  const { profile, roles, reload } = useSession()
   const [firstName, setFirstName] = useState(profile?.first_name ?? '')
   const [lastName, setLastName] = useState(profile?.last_name ?? '')
   const [jersey, setJersey] = useState(profile?.jersey_number?.toString() ?? '')
@@ -146,7 +145,6 @@ export default function ProfilePage() {
       <h2>{t('profile.groups')}</h2>
       <p>{myGroups.length ? myGroups.join(', ') : t('profile.noGroups')}</p>
       {roles.length > 0 && <p className="hint">{roles.map((r) => t(`role.${r}` as MessageKey)).join(', ')}</p>}
-      {isStaff && <p><Link to="/settings">{t('settings.title')}</Link></p>}
       <button className="link" onClick={() => void signOut()}>{t('common.signOut')}</button>
     </div>
   )

@@ -30,7 +30,7 @@ select test.login('00000000-0000-0000-0000-0000000000c1');
 select test.affected('a coach cannot change a group', $$update public.groups set weekly_limit = 3$$, 0);
 select test.fails('a coach cannot add a group', $$insert into public.groups (code, name) values ('D', 'D')$$, 'row-level security');
 select test.fails('a coach cannot upload a group picture', $$insert into storage.objects (bucket_id, name) values ('club', 'group-1-1000000000.png')$$, 'row-level security');
-select test.works('a coach can still upload the club logo', $$insert into storage.objects (bucket_id, name) values ('club', 'logo-1000000000.png')$$);
+select test.fails('a coach cannot upload the club logo either', $$insert into storage.objects (bucket_id, name) values ('club', 'logo-1000000000.png')$$, 'row-level security');
 select test.logout();
 select test.login('00000000-0000-0000-0000-0000000000b1');
 select test.affected('the board sets colours and a weekly limit', $$update public.groups set game_dark = '#111111', game_light = '#ffd400', weekly_limit = 2 where code = 'A'$$, 1);

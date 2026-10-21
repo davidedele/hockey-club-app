@@ -32,6 +32,7 @@ export interface Invite {
   created_at: string
   expires_at: string
   used_at: string | null
+  used_by?: string | null
   revoked_at: string | null
 }
 

@@ -9,9 +9,9 @@ import { supabase } from '../lib/supabase'
 const TYPES: Record<string, string> = { 'image/png': 'png', 'image/jpeg': 'jpg', 'image/webp': 'webp' }
 const MAX_BYTES = 1024 * 1024
 
-// Staff set the club name, logo and game day colours here.
+// The board sets the club name, logo and colours here.
 export default function ClubSettings() {
-  const { isStaff, loading } = useSession()
+  const { isBoard, loading } = useSession()
   const club = useClub()
   const [name, setName] = useState(club.name)
   const [dark, setDark] = useState(club.gameDark)
@@ -26,7 +26,7 @@ export default function ClubSettings() {
     setLight(club.gameLight)
   }, [club.name, club.gameDark, club.gameLight])
 
-  if (!loading && !isStaff) return <Navigate to="/events" replace />
+  if (!loading && !isBoard) return <Navigate to="/settings" replace />
 
   // An update that row level security silently refuses comes back with no rows.
   async function update(values: Record<string, string | null>) {

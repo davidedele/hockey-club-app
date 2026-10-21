@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { t, type MessageKey } from '../i18n'
 import Avatar from '../components/Avatar'
+import GroupBadge from '../components/GroupBadge'
 import { useAvatarUrls } from '../lib/avatars'
 import { useSession } from '../lib/session'
 import { supabase } from '../lib/supabase'
@@ -52,7 +53,7 @@ export default function Members() {
       <div className="chips">
         <button className={filter === null ? 'chip on' : 'chip'} onClick={() => setFilter(null)}>{t('members.filterAll')}</button>
         {groups.map((g) => (
-          <button key={g.id} className={filter === g.id ? 'chip on' : 'chip'} onClick={() => setFilter(g.id)}>{g.name}</button>
+          <button key={g.id} className={filter === g.id ? 'chip on' : 'chip'} onClick={() => setFilter(g.id)}><GroupBadge group={g} size="small" />{g.name}</button>
         ))}
       </div>
       <div className="scroll desk-only">

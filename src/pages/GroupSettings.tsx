@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState, type ChangeEvent, type FormEvent } from 'react'
 import { Link, Navigate } from 'react-router-dom'
 import { errorText, t } from '../i18n'
-import { logoUrl, useClub } from '../lib/club'
+import GroupBadge from '../components/GroupBadge'
+import { useClub } from '../lib/club'
 import { useSession } from '../lib/session'
 import { supabase } from '../lib/supabase'
 import type { Group } from '../lib/types'
@@ -17,6 +18,7 @@ export default function GroupSettings() {
   const [open, setOpen] = useState<number | null>(null)
   const [newName, setNewName] = useState('')
   const [newCode, setNewCode] = useState('')
+  const [adding, setAdding] = useState(false)
   const [error, setError] = useState('')
 
   const load = useCallback(async () => {
@@ -43,6 +45,7 @@ export default function GroupSettings() {
     if (error) return setError(groupError(error))
     setNewName('')
     setNewCode('')
+    setAdding(false)
     await load()
   }
 
@@ -66,8 +69,9 @@ export default function GroupSettings() {
         ))}
       </ul>
 
-      <h2>{t('groups.addTitle')}</h2>
-      <form onSubmit={add} className="add-group">
+      {!adding && <p><button className="secondary" onClick={() => setAdding(true)}>{t('groups.add')}</button></p>}
+      {adding && <h2>{t('groups.addTitle')}</h2>}
+      {adding && <form onSubmit={add} className="add-group">
         <label>{t('groups.name')}
           <input required maxLength={40} value={newName} onChange={(e) => setNewName(e.target.value)} />
         </label>
@@ -75,8 +79,11 @@ export default function GroupSettings() {
           <input required maxLength={4} pattern="[A-Za-z0-9]{1,4}" value={newCode} onChange={(e) => setNewCode(e.target.value)} />
           <span className="hint">{t('groups.codeHint')}</span>
         </label>
-        <button type="submit">{t('groups.add')}</button>
-      </form>
+        <div className="actions">
+          <button type="submit">{t('groups.add')}</button>
+          <button type="button" className="link" onClick={() => setAdding(false)}>{t('common.cancel')}</button>
+        </div>
+      </form>}
     </div>
   )
 }
@@ -88,15 +95,6 @@ function groupError(error: { message?: string; code?: string }) {
   return errorText(error)
 }
 
-export function GroupBadge({ group }: { group: Group }) {
-  const url = logoUrl(group.logo_path)
-  return (
-    <span className="group-badge" aria-hidden="true" style={{ background: group.game_dark ?? undefined, color: group.game_light ?? undefined }}>
-      {url ? <img src={url} alt="" /> : group.code}
-    </span>
-  )
-}
-
 function GroupEditor({ group, count, onDone, onChange }: { group: Group; count: number; onDone: () => Promise<void>; onChange: () => Promise<void> }) {
   const club = useClub()
   const [name, setName] = useState(group.name)
@@ -104,7 +102,6 @@ function GroupEditor({ group, count, onDone, onChange }: { group: Group; count: 
   const [own, setOwn] = useState(Boolean(group.game_dark && group.game_light))
   const [dark, setDark] = useState(group.game_dark ?? club.gameDark)
   const [light, setLight] = useState(group.game_light ?? club.gameLight)
-  const [limit, setLimit] = useState(group.weekly_limit?.toString() ?? '')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const [confirming, setConfirming] = useState(false)
@@ -125,7 +122,6 @@ function GroupEditor({ group, count, onDone, onChange }: { group: Group; count: 
       code: code.trim().toUpperCase(),
       game_dark: own ? dark : null,
       game_light: own ? light : null,
-      weekly_limit: limit === '' ? null : Number(limit),
     })
     setBusy(false)
     if (problem) return setError(problem)
@@ -217,11 +213,6 @@ function GroupEditor({ group, count, onDone, onChange }: { group: Group; count: 
         ) : (
           <p className="hint">{t('groups.clubColours')}</p>
         )}
-
-        <label>{t('groups.limit')}
-          <input type="number" inputMode="numeric" min={1} max={14} value={limit} onChange={(e) => setLimit(e.target.value)} />
-          <span className="hint">{t('groups.limitHint')}</span>
-        </label>
 
         {error && <p className="error" role="alert">{error}</p>}
         <div className="actions">

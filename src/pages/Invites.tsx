@@ -13,22 +13,29 @@ function status(i: Invite): string {
 }
 
 export default function Invites() {
-  const { isStaff } = useSession()
+  const { isStaff, isBoard } = useSession()
   const [groups, setGroups] = useState<Group[]>([])
   const [invites, setInvites] = useState<Invite[]>([])
   const [groupId, setGroupId] = useState<number | ''>('')
   const [link, setLink] = useState('')
   const [copied, setCopied] = useState(false)
   const [error, setError] = useState('')
+  const [names, setNames] = useState<Map<string, string>>(new Map())
 
   const refresh = useCallback(async () => {
     const [g, i] = await Promise.all([
       supabase.from('groups').select('*').order('id'),
-      supabase.from('invites').select('id, group_id, created_at, expires_at, used_at, revoked_at').order('created_at', { ascending: false }).limit(30),
+      supabase.from('invites').select('id, group_id, created_at, expires_at, used_at, used_by, revoked_at').order('created_at', { ascending: false }).limit(30),
     ])
     const list = (g.data ?? []) as Group[]
     setGroups(list)
-    setInvites((i.data ?? []) as Invite[])
+    const list2 = (i.data ?? []) as Invite[]
+    setInvites(list2)
+    const ids = [...new Set(list2.map((x) => x.used_by).filter((x): x is string => Boolean(x)))]
+    if (ids.length) {
+      const p = await supabase.from('profiles').select('id, first_name, last_name').in('id', ids)
+      setNames(new Map(((p.data ?? []) as { id: string; first_name: string; last_name: string }[]).map((x) => [x.id, `${x.first_name} ${x.last_name}`])))
+    }
     setGroupId((current) => (current === '' && list[0] ? list[0].id : current))
   }, [])
 
@@ -57,6 +64,16 @@ export default function Invites() {
     await refresh()
   }
 
+  const canShare = typeof navigator !== 'undefined' && 'share' in navigator
+
+  async function share() {
+    try {
+      await navigator.share({ title: t('invites.shareTitle'), text: t('invites.shareText'), url: link })
+    } catch {
+      // The person closed the share sheet. Nothing to do.
+    }
+  }
+
   async function copy() {
     await navigator.clipboard.writeText(link)
     setCopied(true)
@@ -66,11 +83,11 @@ export default function Invites() {
 
   return (
     <div className="page narrow">
-      <p><Link to="/settings">{t('settings.title')}</Link></p>
+      {isBoard && <p><Link to="/settings">{t('settings.title')}</Link></p>}
       <h1>{t('invites.title')}</h1>
       <p className="hint">{t('invites.intro')}</p>
-      <label htmlFor="invite-group">{t('common.group')}</label>
-        <select id="invite-group" value={groupId} onChange={(e) => setGroupId(Number(e.target.value))}>
+ <label htmlFor="invite-group">{t('common.group')}</label>
+        <select id="invite-group" className="full" value={groupId} onChange={(e) => setGroupId(Number(e.target.value))}>
           {groups.map((g) => <option key={g.id} value={g.id}>{g.name}</option>)}
         </select>
       
@@ -81,7 +98,10 @@ export default function Invites() {
           <strong>{t('invites.link')}</strong>
           <code>{link}</code>
           <p className="hint">{t('invites.once')}</p>
-          <button onClick={copy}>{copied ? t('common.copied') : t('common.copy')}</button>
+          <div className="actions">
+            {canShare && <button onClick={() => void share()}>{t('invites.share')}</button>}
+            <button className={canShare ? 'secondary' : undefined} onClick={copy}>{copied ? t('common.copied') : t('common.copy')}</button>
+          </div>
         </div>
       )}
       <h2>{t('invites.list')}</h2>
@@ -91,7 +111,7 @@ export default function Invites() {
           <li key={i.id}>
             <div className="row">
               <strong>{groupName(i.group_id)}</strong>
-              <span className="hint">{status(i)}</span>
+              <span className="hint">{i.used_by && names.get(i.used_by) ? t('invites.usedBy', { name: names.get(i.used_by)! }) : status(i)}</span>
             </div>
             {!i.used_at && !i.revoked_at && new Date(i.expires_at) > new Date() && (
               <button className="link" onClick={() => revoke(i.id)}>{t('invites.revoke')}</button>

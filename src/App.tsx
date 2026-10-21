@@ -90,7 +90,7 @@ function PendingBanner() {
     return () => window.removeEventListener('attendance-changed', load)
   }, [load])
 
-  if (count === 0 || location.pathname === '/events') return null
+  if (count === 0 || location.pathname === '/events' || location.pathname.startsWith('/settings') || location.pathname === '/profile') return null
   return (
     <div className="banner" role="status">
       <span>{count === 1 ? t('banner.one') : t('banner.many', { n: String(count) })}</span>
@@ -101,7 +101,7 @@ function PendingBanner() {
 
 // Signed in people with a profile get the app. Everyone else is sent to log in.
 function Protected() {
-  const { loading, session, profile, isStaff } = useSession()
+  const { loading, session, profile, isStaff, isBoard } = useSession()
   const club = useClub()
   const mine = useAvatarUrls([profile?.avatar_path])
   if (loading) return <p className="center">{t('common.loading')}</p>
@@ -126,14 +126,18 @@ function Protected() {
         <Link className="club" to="/events"><Crest /><span className="club-name">{club.name || t('app.name')}</span></Link>
         <nav aria-label={t('nav.main')}>{main}</nav>
         <nav className="side-foot" aria-label={t('nav.account')}>
-          {isStaff && <NavLink to="/settings"><TabIcon name="settings" />{t('settings.title')}</NavLink>}
+          {isBoard && <NavLink to="/settings"><TabIcon name="settings" />{t('settings.title')}</NavLink>}
+          {isStaff && !isBoard && <NavLink to="/settings/invites"><TabIcon name="invites" />{t('nav.invites')}</NavLink>}
           <NavLink to="/profile"><Avatar first={profile.first_name} last={profile.last_name} url={photo} size="small" />{fullName}</NavLink>
         </nav>
       </aside>
       <div className="body">
         <header className="top">
           <Link className="club" to="/events"><Crest /><span className="club-name">{club.name || t('app.name')}</span></Link>
+          <span className="top-actions">
+          {isStaff && <NavLink className="gear" to={isBoard ? '/settings' : '/settings/invites'} aria-label={t(isBoard ? 'settings.title' : 'nav.invites')}><TabIcon name={isBoard ? 'settings' : 'invites'} /></NavLink>}
           <NavLink className="me" to="/profile" aria-label={t('nav.profileOf', { name: fullName })}><Avatar first={profile.first_name} last={profile.last_name} url={photo} /></NavLink>
+          </span>
         </header>
         <PendingBanner />
         <main id="main" tabIndex={-1}>
@@ -142,7 +146,6 @@ function Protected() {
       </div>
       <nav className="tabs" aria-label={t('nav.main')}>
         {main}
-        <NavLink to="/profile"><TabIcon name="profile" />{t('nav.profile')}</NavLink>
       </nav>
     </div>
   )
