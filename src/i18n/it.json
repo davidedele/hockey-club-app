@@ -40,6 +40,8 @@
   "join.submit": "Crea account",
   "join.checkEmail": "Ti abbiamo inviato un'email. Conferma l'indirizzo, poi torna a questo link per entrare.",
   "join.haveAccount": "Hai già un account? Accedi con questa email e il link verrà usato dopo l'accesso.",
+  "join.existing": "Sei già iscritto al club. Vuoi usare questo invito per aggiungerti a un altro gruppo?",
+  "join.useInvite": "Usa l'invito",
   "join.working": "Sto usando l'invito...",
   "join.passwordHint": "Almeno 8 caratteri.",
 

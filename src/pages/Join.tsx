@@ -7,7 +7,7 @@ import { supabase } from '../lib/supabase'
 export default function Join() {
   const { token = '' } = useParams()
   const navigate = useNavigate()
-  const { loading, session, reload } = useSession()
+  const { loading, session, profile, reload } = useSession()
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
   const [email, setEmail] = useState('')
@@ -17,24 +17,33 @@ export default function Join() {
   const [busy, setBusy] = useState(false)
   const redeemed = useRef(false)
 
-  // Signed in (after confirming the email, or an existing member): use the invite once.
-  useEffect(() => {
-    if (loading || !session || redeemed.current) return
-    redeemed.current = true
+  async function redeem() {
+    if (!session) return
     setBusy(true)
+    setError('')
     const meta = session.user.user_metadata as { first_name?: string; last_name?: string }
-    supabase
-      .rpc('redeem_invite', { p_token: token, p_first_name: meta.first_name ?? null, p_last_name: meta.last_name ?? null })
-      .then(async ({ error }) => {
-        if (error) {
-          setError(errorText(error))
-          setBusy(false)
-          return
-        }
-        await reload()
-        navigate('/', { replace: true })
-      })
-  }, [loading, session, token, reload, navigate])
+    const { error } = await supabase.rpc('redeem_invite', {
+      p_token: token,
+      p_first_name: meta.first_name ?? null,
+      p_last_name: meta.last_name ?? null,
+    })
+    if (error) {
+      setError(errorText(error))
+      setBusy(false)
+      return
+    }
+    await reload()
+    navigate('/', { replace: true })
+  }
+
+  // A new person (signed up, no profile yet) is joined automatically. A member who is
+  // already signed in must press the button, so opening a link by accident uses nothing.
+  useEffect(() => {
+    if (loading || !session || profile || redeemed.current) return
+    redeemed.current = true
+    void redeem()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading, session, profile])
 
   async function submit(e: FormEvent) {
     e.preventDefault()
@@ -57,7 +66,9 @@ export default function Join() {
     return (
       <div className="page narrow">
         <h1>{t('join.title')}</h1>
-        {error ? <p className="error">{error}</p> : <p>{t('join.working')}</p>}
+        {profile && !busy && <p>{t('join.existing')}</p>}
+        {profile && !busy && !error && <button onClick={redeem}>{t('join.useInvite')}</button>}
+        {error ? <p className="error">{error}</p> : (!profile || busy) && <p>{t('join.working')}</p>}
         {error && <p><Link to="/">{t('nav.members')}</Link></p>}
       </div>
     )
