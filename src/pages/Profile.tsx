@@ -1,11 +1,12 @@
 import { useEffect, useState, type FormEvent } from 'react'
+import { Link } from 'react-router-dom'
 import { errorText, t, type MessageKey } from '../i18n'
 import { useSession } from '../lib/session'
 import { supabase } from '../lib/supabase'
 import type { Position } from '../lib/types'
 
 export default function ProfilePage() {
-  const { profile, roles, reload } = useSession()
+  const { profile, roles, reload, isStaff } = useSession()
   const [firstName, setFirstName] = useState(profile?.first_name ?? '')
   const [lastName, setLastName] = useState(profile?.last_name ?? '')
   const [jersey, setJersey] = useState(profile?.jersey_number?.toString() ?? '')
@@ -81,6 +82,7 @@ export default function ProfilePage() {
       <h2>{t('profile.groups')}</h2>
       <p>{myGroups.length ? myGroups.join(', ') : t('profile.noGroups')}</p>
       {roles.length > 0 && <p className="hint">{roles.map((r) => t(`role.${r}` as MessageKey)).join(', ')}</p>}
+      {isStaff && <p><Link to="/club">{t('club.title')}</Link></p>}
       <button className="link" onClick={() => supabase.auth.signOut()}>{t('common.signOut')}</button>
     </div>
   )

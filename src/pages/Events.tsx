@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { errorText, t } from '../i18n'
+import { useClub } from '../lib/club'
 import { useSession } from '../lib/session'
 import { supabase } from '../lib/supabase'
 import { dayKey, formatDay, formatMonth, formatShortDay, formatTime, weekOf } from '../lib/time'
@@ -15,6 +16,7 @@ const Cross = () => (
 
 export default function Events() {
   const { isStaff, profile } = useSession()
+  const club = useClub()
   const [events, setEvents] = useState<EventRow[]>([])
   const [groups, setGroups] = useState<Group[]>([])
   const [myGroups, setMyGroups] = useState<number[]>([])
@@ -81,7 +83,7 @@ export default function Events() {
   function row(e: EventRow) {
     const mine = answers.get(e.id)
     const over = new Date(e.ends_at).getTime() < now
-    const title = e.type === 'game' && e.opponent ? t('events.vs', { opponent: e.opponent }) : e.title
+    const title = e.type === 'game' && e.opponent ? t('events.vs', { club: club.name || t('app.name'), opponent: e.opponent }) : e.title
     const meta = [e.venue, e.meetup_at ? t('events.meetup', { time: formatTime(e.meetup_at) }) : null].filter(Boolean).join(', ')
     return (
       <li key={e.id} className={e.type === 'game' ? 'evrow game' : 'evrow'}>
@@ -132,7 +134,7 @@ export default function Events() {
       {loaded && view === 'past' && past.length === 0 && <p className="hint">{t('events.emptyPast')}</p>}
 
       <div className="evgrid">
-        {next && <NextPanel event={next} groups={groupsOf(next)} mine={answers.get(next.id) ?? null} count={counts.get(next.id)} canAnswer={canAnswer(next)} busy={busy === next.id} onAnswer={(v) => void answer(next, v)} />}
+        {next && <NextPanel club={club.name || t('app.name')} event={next} groups={groupsOf(next)} mine={answers.get(next.id) ?? null} count={counts.get(next.id)} canAnswer={canAnswer(next)} busy={busy === next.id} onAnswer={(v) => void answer(next, v)} />}
         {rest.length > 0 && (
           <div>
             {view === 'upcoming' && <div className="nowline"><span>{t('events.then')}</span><i aria-hidden="true" /></div>}
@@ -152,7 +154,7 @@ export default function Events() {
   )
 }
 
-function NextPanel(props: { event: EventRow; groups: string; mine: Answer | null; count: number | undefined; canAnswer: boolean; busy: boolean; onAnswer: (v: Answer) => void }) {
+function NextPanel(props: { club: string;  event: EventRow; groups: string; mine: Answer | null; count: number | undefined; canAnswer: boolean; busy: boolean; onAnswer: (v: Answer) => void }) {
   const { event: e, mine } = props
   const game = e.type === 'game'
   const started = new Date(e.starts_at).getTime() <= Date.now()
@@ -165,7 +167,7 @@ function NextPanel(props: { event: EventRow; groups: string; mine: Answer | null
           <strong>{label}</strong>
           <span>{props.groups}</span>
         </div>
-        {game && e.opponent && <div className="vs">{t('events.vs', { opponent: e.opponent })}</div>}
+        {game && e.opponent && <div className="vs">{t('events.vs', { club: props.club, opponent: e.opponent })}</div>}
         <div>{formatDay(e.starts_at)}</div>
         <div className="time">
           <span className="big">{formatTime(e.starts_at)}</span>

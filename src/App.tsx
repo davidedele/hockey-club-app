@@ -2,10 +2,13 @@ import { useCallback, useEffect, useState } from 'react'
 import { Link, NavLink, Navigate, Outlet, Route, Routes, useLocation } from 'react-router-dom'
 import { t } from './i18n'
 import { isConfigured } from './lib/supabase'
+import Crest from './components/Crest'
+import { useClub } from './lib/club'
 import { getPendingInvite } from './lib/invite'
 import { useSession } from './lib/session'
 import { supabase } from './lib/supabase'
 import AttendanceSummary from './pages/AttendanceSummary'
+import ClubSettings from './pages/ClubSettings'
 import EventDetail from './pages/EventDetail'
 import EventForm from './pages/EventForm'
 import Events from './pages/Events'
@@ -89,6 +92,7 @@ function PendingBanner() {
 // Signed in people with a profile get the app. Everyone else is sent to log in.
 function Protected() {
   const { loading, session, profile, isStaff } = useSession()
+  const club = useClub()
   if (loading) return <p className="center">{t('common.loading')}</p>
   if (!session) return <Navigate to="/login" replace />
   if (!profile) {
@@ -108,12 +112,12 @@ function Protected() {
   return (
     <div className="shell">
       <aside className="side">
-        <Link className="club" to="/events"><Crest /><span className="club-name">{t('app.club')}</span></Link>
+        <Link className="club" to="/events"><Crest /><span className="club-name">{club.name || t('app.name')}</span></Link>
         <nav aria-label={t('nav.main')}>{links}</nav>
       </aside>
       <div className="body">
         <header className="top">
-          <Link className="club" to="/events"><Crest /><span className="club-name">{t('app.club')}</span></Link>
+          <Link className="club" to="/events"><Crest /><span className="club-name">{club.name || t('app.name')}</span></Link>
           <NavLink className="avatar" to="/profile" aria-label={t('nav.profileOf', { name: `${profile.first_name} ${profile.last_name}` })}>{initials}</NavLink>
         </header>
         <PendingBanner />
@@ -123,15 +127,6 @@ function Protected() {
       </div>
       <nav className="tabs" aria-label={t('nav.main')}>{links}</nav>
     </div>
-  )
-}
-
-// The club crest.
-function Crest() {
-  return (
-    <span className="crest" aria-hidden="true">
-      <img src="/club-logo.png" alt="" width="44" height="44" />
-    </span>
   )
 }
 
@@ -154,6 +149,7 @@ export default function App() {
         <Route path="/members/:id" element={<MemberEdit />} />
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="/invites" element={<Invites />} />
+        <Route path="/club" element={<ClubSettings />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
