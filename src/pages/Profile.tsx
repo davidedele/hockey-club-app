@@ -6,7 +6,10 @@ import { signOut, useSession } from '../lib/session'
 import { supabase } from '../lib/supabase'
 import { formatPhone } from '../lib/phone'
 import AbsencePeriods from '../components/AbsencePeriods'
-import type { Position } from '../lib/types'
+import { useClub } from '../lib/club'
+import { summary } from '../lib/documents'
+import type { MemberDocument, Position } from '../lib/types'
+import { Link } from 'react-router-dom'
 
 export default function ProfilePage() {
   const { profile, roles, reload } = useSession()
@@ -20,14 +23,18 @@ export default function ProfilePage() {
   const [photoBusy, setPhotoBusy] = useState(false)
   const [photoError, setPhotoError] = useState('')
   const photos = useAvatarUrls([profile?.avatar_path])
+  const club = useClub()
+  const [docs, setDocs] = useState<MemberDocument[] | null>(null)
 
   useEffect(() => {
     if (!profile) return
     void (async () => {
-      const [c, g] = await Promise.all([
+      const [c, g, d] = await Promise.all([
         supabase.from('profile_contacts').select('phone').eq('user_id', profile.id).maybeSingle(),
         supabase.from('group_members').select('groups(name)').eq('user_id', profile.id),
+        supabase.from('member_documents').select('*').eq('user_id', profile.id),
       ])
+      setDocs((d.data ?? []) as MemberDocument[])
       setPhone(formatPhone((c.data as { phone: string | null } | null)?.phone))
       const rows = (g.data ?? []) as unknown as { groups: { name: string } | null }[]
       setMyGroups(rows.flatMap((r) => (r.groups ? [r.groups.name] : [])))
@@ -35,6 +42,7 @@ export default function ProfilePage() {
   }, [profile])
 
   if (!profile) return null
+  const docState = docs ? summary(docs, club.privacyNoticePath) : null
 
   async function setPhoto(path: string | null) {
     const { data, error } = await supabase.from('profiles').update({ avatar_path: path }).eq('id', profile!.id).select()
@@ -144,6 +152,9 @@ export default function ProfilePage() {
         <button type="submit">{t('common.save')}</button>
         {message && <p className="hint">{message}</p>}
       </form>
+      <h2>{t('docs.title')}</h2>
+      {docState && <p className={`doc-status ${docState.level}`}><span className="dot" aria-hidden="true" />{docState.text}</p>}
+      <p><Link className="button secondary small" to="/documents">{t('docs.open')}</Link></p>
       <AbsencePeriods userId={profile.id} />
       <h2>{t('profile.groups')}</h2>
       <p>{myGroups.length ? myGroups.join(', ') : t('profile.noGroups')}</p>

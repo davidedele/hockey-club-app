@@ -141,3 +141,8 @@ export function rangeParts(from: string, to: string): { from: string; to: string
 export function daysBetween(from: string, to: string): number {
   return Math.round((Date.parse(`${to}T12:00:00Z`) - Date.parse(`${from}T12:00:00Z`)) / 86400000)
 }
+
+const dayMonthYear = new Intl.DateTimeFormat('it-IT', { timeZone: 'UTC', day: 'numeric', month: 'long', year: 'numeric' })
+
+// "14 marzo 2027", for dates that may fall in another year.
+export const formatDateYear = (date: string) => dayMonthYear.format(new Date(`${date}T12:00:00Z`))

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState, type CSSProperties } from 'r
 import { Link } from 'react-router-dom'
 import { errorText, t } from '../i18n'
 import Crest from '../components/Crest'
-import { useClub } from '../lib/club'
+import { jerseyName, useClub } from '../lib/club'
 import { useSession } from '../lib/session'
 import { supabase } from '../lib/supabase'
 import { dayKey, formatDay, formatMonth, formatShortDay, formatTime, rangeParts, weekOf } from '../lib/time'
@@ -299,6 +299,7 @@ const weekRange = (from: string, to: string) => t('events.weekRange', rangeParts
 
 function NextPanel(props: { club: string; colours: CSSProperties | undefined; event: EventRow; groups: string; mine: Answer | null; count: number | undefined; canAnswer: boolean; busy: boolean; onAnswer: (v: Answer) => void }) {
   const { event: e, mine } = props
+  const club = useClub()
   const game = e.type === 'game'
   const started = new Date(e.starts_at).getTime() <= Date.now()
   const label = started ? t('events.now') : t(game ? 'events.nextGame' : 'events.nextTraining')
@@ -328,7 +329,7 @@ function NextPanel(props: { club: string; colours: CSSProperties | undefined; ev
           {game && e.jersey && (
             <div>
               <dt>{t('event.jersey')}</dt>
-              <dd>{t(e.jersey === 'dark' ? 'jersey.dark' : 'jersey.light')}</dd>
+              <dd>{jerseyName(club, e.jersey)}</dd>
             </div>
           )}
         </dl>

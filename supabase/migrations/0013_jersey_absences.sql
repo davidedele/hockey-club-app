@@ -1,10 +1,16 @@
 -- Jersey colour for games, and absence periods.
 
 -- Jersey colour ---------------------------------------------------------
--- Staff say which jersey to bring to a game: light or dark.
+-- Staff say which of the club's two jerseys to bring to a game. The board names them,
+-- Chiara and Scura unless changed; events keep the slot, light or dark.
 alter table public.events add column jersey text check (jersey in ('light', 'dark'));
 alter table public.events add constraint events_jersey_game check (type = 'game' or jersey is null);
 grant update (jersey) on public.events to authenticated;
+
+alter table public.club_settings
+  add column jersey_light_name text not null default 'Chiara' check (length(trim(jersey_light_name)) between 1 and 20),
+  add column jersey_dark_name text not null default 'Scura' check (length(trim(jersey_dark_name)) between 1 and 20);
+grant update (jersey_light_name, jersey_dark_name) on public.club_settings to authenticated;
 
 -- Absence periods -------------------------------------------------------
 -- A person is away from one day to another (Italian dates, both included). Every event of

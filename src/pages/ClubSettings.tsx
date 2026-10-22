@@ -8,6 +8,7 @@ import { supabase } from '../lib/supabase'
 
 const TYPES: Record<string, string> = { 'image/png': 'png', 'image/jpeg': 'jpg', 'image/webp': 'webp' }
 const MAX_BYTES = 1024 * 1024
+const MAX_NOTICE_BYTES = 5 * 1024 * 1024
 
 // The board sets the club name, logo and colours here.
 export default function ClubSettings() {
@@ -16,6 +17,9 @@ export default function ClubSettings() {
   const [name, setName] = useState(club.name)
   const [dark, setDark] = useState(club.gameDark)
   const [light, setLight] = useState(club.gameLight)
+  const [jerseyLight, setJerseyLight] = useState(club.jerseyLight)
+  const [jerseyDark, setJerseyDark] = useState(club.jerseyDark)
+  const [noticeLink, setNoticeLink] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
@@ -24,7 +28,17 @@ export default function ClubSettings() {
     setName(club.name)
     setDark(club.gameDark)
     setLight(club.gameLight)
-  }, [club.name, club.gameDark, club.gameLight])
+    setJerseyLight(club.jerseyLight)
+    setJerseyDark(club.jerseyDark)
+  }, [club.name, club.gameDark, club.gameLight, club.jerseyLight, club.jerseyDark])
+
+  // The notice is private to members, so it opens through a short lived link.
+  useEffect(() => {
+    if (!club.privacyNoticePath) return setNoticeLink(null)
+    void supabase.storage.from('documents').createSignedUrls([club.privacyNoticePath], 600).then(({ data }) => {
+      setNoticeLink(((data ?? []) as { signedUrl: string }[])[0]?.signedUrl ?? null)
+    })
+  }, [club.privacyNoticePath])
 
   if (!loading && !isBoard) return <Navigate to="/settings" replace />
 
@@ -40,7 +54,7 @@ export default function ClubSettings() {
     e.preventDefault()
     setBusy(true)
     setMessage('')
-    const problem = await update({ name: name.trim(), game_dark: dark, game_light: light })
+    const problem = await update({ name: name.trim(), game_dark: dark, game_light: light, jersey_light_name: jerseyLight.trim(), jersey_dark_name: jerseyDark.trim() })
     if (problem) setError(problem)
     else {
       setError('')
@@ -64,6 +78,27 @@ export default function ClubSettings() {
     const problem = up.error ? errorText(up.error) : await update({ logo_path: path })
     if (problem && !up.error) await supabase.storage.from('club').remove([path])
     if (!problem && club.logoPath) await supabase.storage.from('club').remove([club.logoPath])
+    if (problem) setError(problem)
+    else {
+      setError('')
+      setMessage(t('common.saved'))
+      await club.reload()
+    }
+    setBusy(false)
+  }
+
+  async function uploadNotice(e: ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+    setMessage('')
+    if (file.type !== 'application/pdf' || file.size > MAX_NOTICE_BYTES) return setError(t('club.noticeType'))
+    setBusy(true)
+    const path = `club/privacy-${Date.now()}.pdf`
+    const up = await supabase.storage.from('documents').upload(path, file, { contentType: 'application/pdf' })
+    const problem = up.error ? errorText(up.error) : await update({ privacy_notice_path: path })
+    if (problem && !up.error) await supabase.storage.from('documents').remove([path])
+    if (!problem && club.privacyNoticePath) await supabase.storage.from('documents').remove([club.privacyNoticePath])
     if (problem) setError(problem)
     else {
       setError('')
@@ -124,10 +159,32 @@ export default function ClubSettings() {
           <span>{t('club.preview')}</span>
           <strong>20:45</strong>
         </div>
+        <h2>{t('club.jerseys')}</h2>
+        <p className="hint">{t('club.jerseysHint')}</p>
+        <div className="colours">
+          <label>{t('club.jerseyLight')}
+            <input required maxLength={20} value={jerseyLight} onChange={(e) => setJerseyLight(e.target.value)} />
+          </label>
+          <label>{t('club.jerseyDark')}
+            <input required maxLength={20} value={jerseyDark} onChange={(e) => setJerseyDark(e.target.value)} />
+          </label>
+        </div>
         {error && <p className="error" role="alert">{error}</p>}
         {message && <p className="hint" role="status">{message}</p>}
         <button type="submit" disabled={busy}>{t('common.save')}</button>
       </form>
+
+      <h2>{t('club.notice')}</h2>
+      <p className="hint">{t('club.noticeHint')}</p>
+      {club.privacyNoticePath ? (
+        noticeLink && <p><a href={noticeLink} target="_blank" rel="noopener noreferrer">{t('club.noticeOpen')}</a></p>
+      ) : (
+        <p className="hint">{t('club.noticeNone')}</p>
+      )}
+      <label className="button file">
+        {t(club.privacyNoticePath ? 'club.noticeReplace' : 'club.noticeUpload')}
+        <input type="file" accept="application/pdf" disabled={busy} onChange={(e) => void uploadNotice(e)} />
+      </label>
     </div>
   )
 }

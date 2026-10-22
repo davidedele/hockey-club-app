@@ -113,6 +113,9 @@ export default function MemberEdit() {
       </div>
       <p className="hint">{t('member.groupsHint')}</p>
 
+      <h2>{t('docs.title')}</h2>
+      <p><Link className="button secondary small" to={`/members/${person.id}/documents`}>{t('docs.open')}</Link></p>
+
       <AbsencePeriods userId={person.id} name={person.first_name} />
 
       {isBoard && (

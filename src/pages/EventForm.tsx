@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom'
 import { errorText, t } from '../i18n'
+import { jerseyName, useClub } from '../lib/club'
 import { useSession } from '../lib/session'
 import { supabase } from '../lib/supabase'
 import { endIso, isoToItaly, italyToIso, meetupIso, shiftClock } from '../lib/time'
@@ -13,6 +14,7 @@ export default function EventForm() {
   const editing = Boolean(id)
   const navigate = useNavigate()
   const { isStaff } = useSession()
+  const club = useClub()
   const [groups, setGroups] = useState<Group[]>([])
   const [loaded, setLoaded] = useState(!editing)
 
@@ -203,7 +205,7 @@ export default function EventForm() {
               <div className="chips">
                 {(['', 'light', 'dark'] as const).map((x) => (
                   <button type="button" key={x || 'none'} className={jersey === x ? 'chip on' : 'chip'} aria-pressed={jersey === x} onClick={() => setJersey(x)}>
-                    {t(x === 'light' ? 'jersey.light' : x === 'dark' ? 'jersey.dark' : 'jersey.none')}
+                    {x ? jerseyName(club, x) : t('jersey.none')}
                   </button>
                 ))}
               </div>

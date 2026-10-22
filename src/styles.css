@@ -483,3 +483,23 @@ button.secondary { background: var(--surface); color: var(--accent); border: 1px
 /* Share links that look like secondary buttons */
 a.button.secondary { background: var(--surface); color: var(--accent); border: 1px solid var(--line-strong); }
 .share-row { margin-top: .75rem; }
+
+/* Paperwork status: a coloured dot with words, never colour alone */
+:root { --ok: #1d7a46; --warn: #9a5800; }
+@media (prefers-color-scheme: dark) { :root { --ok: #5fd08f; --warn: #f2b45c; } }
+.doc-status { display: flex; align-items: center; gap: .5rem; margin: .25rem 0 .75rem; font-weight: 500; }
+.doc-status .dot { flex: none; width: 10px; height: 10px; border-radius: 50%; background: var(--line-strong); }
+.doc-status.ok { color: var(--ok); } .doc-status.ok .dot { background: var(--ok); }
+.doc-status.soon { color: var(--warn); } .doc-status.soon .dot { background: var(--warn); }
+.doc-status.bad { color: var(--now); } .doc-status.bad .dot { background: var(--now); }
+.doc-status.none { color: var(--muted); font-weight: 400; }
+a.doc-status { display: inline-flex; margin: 0; min-height: 44px; text-decoration: none; }
+a.doc-status:hover { text-decoration: underline; }
+.list .member a.doc-status { min-height: 44px; }
+.doc-card { margin: 1rem 0; padding: 1rem; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); }
+.doc-card h2 { margin-top: 0; }
+.doc-card form { margin-bottom: 1rem; }
+.doc-file { padding-top: 1rem; border-top: 1px solid var(--line); }
+.doc-file > a, .doc-card p > a { display: inline-flex; align-items: center; min-height: 44px; font-weight: 500; }
+.doc-card label.button.file { margin: .5rem 1rem 0 0; }
+.doc-banner { background: color-mix(in srgb, var(--now) 10%, var(--surface)); }

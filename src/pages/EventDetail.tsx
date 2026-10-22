@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom'
 import { errorText, t, type MessageKey } from '../i18n'
 import EventGame from './EventGame'
-import { useClub } from '../lib/club'
+import { jerseyName, useClub } from '../lib/club'
 import { useSession } from '../lib/session'
 import { whatsappLink } from '../lib/whatsapp'
 import { supabase } from '../lib/supabase'
@@ -74,13 +74,13 @@ export default function EventDetail() {
   const dayLabel = formatDay(event.starts_at)
   const link = `${window.location.origin}/events/${id}`
   const matchName = event.type === 'game' && event.opponent ? t('events.vs', { club: club.name || t('app.name'), opponent: event.opponent }) : event.title
-  const jerseyName = event.jersey ? t(event.jersey === 'dark' ? 'jersey.dark' : 'jersey.light') : ''
+  const jerseyLabel = event.jersey ? jerseyName(club, event.jersey) : ''
   const hasScore = event.score_for !== null && event.score_against !== null
   const shareText = [
     t('share.eventText', { title: matchName, day: dayLabel, time: formatTime(event.starts_at) }),
     event.meetup_at ? t('share.meetupText', { time: formatTime(event.meetup_at) }) : '',
     event.venue ? t('share.venueText', { venue: event.venue }) : '',
-    jerseyName ? t('share.jerseyText', { jersey: jerseyName.toLowerCase() }) : '',
+    jerseyLabel ? t('share.jerseyText', { jersey: jerseyLabel.toLowerCase() }) : '',
     t('share.answerText', { url: link }),
   ].filter(Boolean).join(' ')
   const resultText = hasScore
@@ -187,7 +187,7 @@ export default function EventDetail() {
         {event.meetup_at && (<><dt>{t('event.meetup')}</dt><dd>{formatTime(event.meetup_at)}</dd></>)}
         {event.venue && (<><dt>{t('event.venue')}</dt><dd>{event.venue}</dd></>)}
         {event.opponent && (<><dt>{t('event.opponent')}</dt><dd>{event.opponent}{event.home_away ? ` · ${t(event.home_away === 'home' ? 'event.home' : 'event.away')}` : ''}</dd></>)}
-        {event.jersey && (<><dt>{t('event.jersey')}</dt><dd>{jerseyName}</dd></>)}
+        {event.jersey && (<><dt>{t('event.jersey')}</dt><dd>{jerseyLabel}</dd></>)}
         {event.score_for !== null && event.score_against !== null && (
           <><dt>{t('event.scoreTitle')}</dt><dd>{t('event.scoreValue', { us: String(event.score_for), them: String(event.score_against) })}</dd></>
         )}

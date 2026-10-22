@@ -47,6 +47,18 @@ select test.logout();
 select test.login(pg_temp.u('1'));
 select test.affected('a player cannot change the jersey', $$update public.events set jersey = 'light' where id = pg_temp.u('a5')$$, 0);
 select test.rows('a player sees the jersey', $$select 1 from public.events where id = pg_temp.u('a5') and jersey = 'dark'$$, 1);
+select test.rows('the jerseys are called Chiara and Scura at first', $$select 1 from public.club_settings where jersey_light_name = 'Chiara' and jersey_dark_name = 'Scura'$$, 1);
+select test.affected('a player cannot rename the jerseys', $$update public.club_settings set jersey_light_name = 'Gialla'$$, 0);
+select test.logout();
+select test.login(pg_temp.u('c1'));
+select test.affected('a coach cannot rename the jerseys', $$update public.club_settings set jersey_light_name = 'Gialla'$$, 0);
+select test.logout();
+insert into auth.users (id, email, email_confirmed_at) values ('00000000-0000-0000-0000-0000000000b1', 'board1@example.test', now());
+insert into public.profiles (id, first_name, last_name) values ('00000000-0000-0000-0000-0000000000b1', 'Bea', 'Board');
+insert into public.user_roles values ('00000000-0000-0000-0000-0000000000b1', 'board');
+select test.login(pg_temp.u('b1'));
+select test.affected('the board renames a jersey', $$update public.club_settings set jersey_light_name = 'Gialla'$$, 1);
+select test.fails('a jersey needs a name', $$update public.club_settings set jersey_dark_name = '  '$$, 'check constraint');
 select test.logout();
 
 \echo == absence periods

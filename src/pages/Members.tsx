@@ -7,7 +7,9 @@ import { useAvatarUrls } from '../lib/avatars'
 import { formatPhone, phoneLink } from '../lib/phone'
 import { useSession } from '../lib/session'
 import { supabase } from '../lib/supabase'
-import type { Contact, Group, Profile } from '../lib/types'
+import type { Contact, Group, MemberDocument, Profile } from '../lib/types'
+import { useClub } from '../lib/club'
+import { summary } from '../lib/documents'
 
 export default function Members() {
   const { isStaff } = useSession()
@@ -15,17 +17,21 @@ export default function Members() {
   const [profiles, setProfiles] = useState<Profile[]>([])
   const [memberships, setMemberships] = useState<{ group_id: number; user_id: string }[]>([])
   const [contacts, setContacts] = useState<Contact[]>([])
+  const [docs, setDocs] = useState<MemberDocument[]>([])
+  const club = useClub()
   const [filter, setFilter] = useState<number | null>(null)
   const [query, setQuery] = useState('')
 
   useEffect(() => {
     void (async () => {
-      const [g, p, m, c] = await Promise.all([
+      const [g, p, m, c, d] = await Promise.all([
         supabase.from('groups').select('*').order('id'),
         supabase.from('profiles').select('*').order('last_name'),
         supabase.from('group_members').select('group_id, user_id'),
         isStaff ? supabase.from('profile_contacts').select('*') : Promise.resolve({ data: [] }),
+        isStaff ? supabase.from('member_documents').select('*') : Promise.resolve({ data: [] }),
       ])
+      setDocs((d.data ?? []) as MemberDocument[])
       setGroups((g.data ?? []) as Group[])
       setProfiles((p.data ?? []) as Profile[])
       setMemberships((m.data ?? []) as { group_id: number; user_id: string }[])
@@ -42,6 +48,15 @@ export default function Members() {
       (filter === null || memberships.some((m) => m.user_id === p.id && m.group_id === filter)) &&
       (!q || `${p.first_name} ${p.last_name}`.toLowerCase().includes(q) || `${p.last_name} ${p.first_name}`.toLowerCase().includes(q)),
   )
+  // Staff see each member's paperwork at a glance, linked to their documents page.
+  function docCell(id: string) {
+    const state = summary(docs.filter((d) => d.user_id === id), club.privacyNoticePath)
+    return (
+      <Link className={`doc-status ${state.level}`} to={`/members/${id}/documents`}>
+        <span className="dot" aria-hidden="true" />{state.text}
+      </Link>
+    )
+  }
   const groupsOf = (id: string) => memberships.filter((m) => m.user_id === id).map((m) => codeById.get(m.group_id)).filter(Boolean).join(', ')
 
   return (
@@ -67,6 +82,7 @@ export default function Members() {
               <th scope="col">{t('members.colGroups')}</th>
               {isStaff && <th scope="col">{t('members.colEmail')}</th>}
               {isStaff && <th scope="col">{t('members.colPhone')}</th>}
+              {isStaff && <th scope="col">{t('members.colDocs')}</th>}
             </tr>
           </thead>
           <tbody>
@@ -85,11 +101,12 @@ export default function Members() {
                   <td>{groupsOf(p.id)}</td>
                   {isStaff && <td>{contact?.email ? <a href={`mailto:${contact.email}`}>{contact.email}</a> : ''}</td>}
                   {isStaff && <td>{contact?.phone ? <a href={phoneLink(contact.phone)}>{formatPhone(contact.phone)}</a> : ''}</td>}
+                  {isStaff && <td>{docCell(p.id)}</td>}
                 </tr>
               )
             })}
             {visible.length === 0 && (
-              <tr><td colSpan={isStaff ? 6 : 4} className="empty-cell">{q ? t('members.noMatch') : t('members.empty')}</td></tr>
+              <tr><td colSpan={isStaff ? 7 : 4} className="empty-cell">{q ? t('members.noMatch') : t('members.empty')}</td></tr>
             )}
           </tbody>
         </table>
@@ -114,6 +131,7 @@ export default function Members() {
                 {isStaff && contact && (
                   <div className="hint">{[contact.email, formatPhone(contact.phone)].filter(Boolean).join(' · ')}</div>
                 )}
+                {isStaff && docCell(p.id)}
               </div>
               <span className="jersey" aria-label={p.jersey_number !== null ? `${t('common.jersey')} ${p.jersey_number}` : undefined}>
                 {p.jersey_number !== null ? p.jersey_number : ''}

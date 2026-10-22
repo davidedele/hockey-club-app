@@ -144,3 +144,13 @@ export interface AbsencePeriod {
   ends_on: string
   reason: AbsenceReason | null
 }
+
+export type DocumentKind = 'medical_certificate' | 'privacy_consent'
+
+export interface MemberDocument {
+  user_id: string
+  kind: DocumentKind
+  valid_until: string | null
+  file_path: string | null
+  accepted_at: string | null
+}

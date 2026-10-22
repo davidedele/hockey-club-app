@@ -11,6 +11,8 @@ import { useSession } from './lib/session'
 import { supabase } from './lib/supabase'
 import AttendanceSummary from './pages/AttendanceSummary'
 import ClubSettings from './pages/ClubSettings'
+import Documents from './pages/Documents'
+import DocumentsBanner from './components/DocumentsBanner'
 import GroupSettings from './pages/GroupSettings'
 import Settings from './pages/Settings'
 import Stats from './pages/Stats'
@@ -143,6 +145,7 @@ function Protected() {
           </span>
         </header>
         <PendingBanner />
+        <DocumentsBanner />
         <main id="main" tabIndex={-1}>
           <Outlet />
         </main>
@@ -172,6 +175,8 @@ export default function App() {
         <Route path="/events/:id" element={<EventDetail />} />
         <Route path="/events/:id/edit" element={<EventForm />} />
         <Route path="/members/:id" element={<MemberEdit />} />
+        <Route path="/members/:id/documents" element={<Documents />} />
+        <Route path="/documents" element={<Documents />} />
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="/settings" element={<Settings />} />
         <Route path="/settings/club" element={<ClubSettings />} />
