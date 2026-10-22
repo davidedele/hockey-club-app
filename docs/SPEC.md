@@ -81,7 +81,7 @@ Needed first: new event, attendance reminder, change of time or venue, weekly li
 On iPhone, push notifications need the app to be added to the home screen.
 
 ## 13. Data and privacy
-Keep the minimum: name, email, phone (optional), jersey number, position, group membership, weekly plan, profile picture (optional, added by the person, decided 21 October), game numbers, ratings and MVP votes (decided 21 October).
+Keep the minimum: name, email, phone (optional), jersey number, position, group membership, weekly plan, profile picture (optional, added by the person, decided 21 October), game numbers, ratings and MVP votes (decided 21 October), absence periods with an optional reason (22 October), medical certificate expiry and file, privacy consent date (22 October).
 Not needed: date of birth, height, weight, parent fields.
 Row level security in the database: players see their own groups' events, their own answers and who said present for those events (decided 21 October); ratings follow the rule above; only the board sees plans and warnings.
 The club holds members' data, so the board should agree to the move and members should be told what is stored.
@@ -106,7 +106,7 @@ The club holds members' data, so the board should agree to the move and members 
 Move the club over only when steps 1 to 4 have been used by a small group of real players for a few weeks.
 
 ## 16. Out of scope
-Payments, championships and standings, parent accounts, sponsor pages. SportEasy has them and the club does not use them.
+Payments, parent accounts, sponsor pages. SportEasy has them and the club does not use them. Championships and standings were out of scope too, until Davide asked on 22 October for a championship page fed by the league's website.
 
 ## 17. Open questions
 1. Exactly what the manager role can see and do.

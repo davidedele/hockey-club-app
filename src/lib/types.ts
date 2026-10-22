@@ -53,6 +53,7 @@ export interface EventRow {
   home_away: 'home' | 'away' | null
   score_for: number | null
   score_against: number | null
+  jersey: 'light' | 'dark' | null
   event_groups: { group_id: number }[]
 }
 
@@ -132,4 +133,14 @@ export interface SeasonRecord {
   losses: number
   goals_for: number
   goals_against: number
+}
+
+export type AbsenceReason = 'work' | 'injury' | 'illness' | 'travel' | 'other'
+
+export interface AbsencePeriod {
+  id: string
+  user_id: string
+  starts_on: string
+  ends_on: string
+  reason: AbsenceReason | null
 }

@@ -123,3 +123,21 @@ export function seasonOf(iso: string): number {
 
 // 2026 to "2026/27".
 export const seasonLabel = (year: number) => `${year}/${pad((year + 1) % 100)}`
+
+const dayMonth = new Intl.DateTimeFormat('it-IT', { timeZone: 'UTC', day: 'numeric', month: 'long' })
+
+// A calendar date such as "2026-12-02" as "2 dicembre".
+export const formatDate = (date: string) => dayMonth.format(new Date(`${date}T12:00:00Z`))
+
+// The two ends of a date range, for "dal 19 al 25 ottobre" or "dal 28 settembre al 4 ottobre".
+export function rangeParts(from: string, to: string): { from: string; to: string } {
+  const a = new Date(`${from}T12:00:00Z`)
+  const b = new Date(`${to}T12:00:00Z`)
+  const sameMonth = a.getUTCMonth() === b.getUTCMonth() && a.getUTCFullYear() === b.getUTCFullYear()
+  return { from: sameMonth ? String(a.getUTCDate()) : dayMonth.format(a), to: dayMonth.format(b) }
+}
+
+// Whole days from one calendar date to another.
+export function daysBetween(from: string, to: string): number {
+  return Math.round((Date.parse(`${to}T12:00:00Z`) - Date.parse(`${from}T12:00:00Z`)) / 86400000)
+}

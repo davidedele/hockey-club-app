@@ -33,6 +33,7 @@ const CODES = [
   'already_voted',
   'mvp_invalid',
   'rating_invalid',
+  'period_past',
 ]
 
 // Database errors carry a short code in their message, and sign in errors in their code.

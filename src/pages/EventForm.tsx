@@ -31,6 +31,7 @@ export default function EventForm() {
   const [weeks, setWeeks] = useState('12')
   const [opponent, setOpponent] = useState('')
   const [homeAway, setHomeAway] = useState<'home' | 'away'>('home')
+  const [jersey, setJersey] = useState<'light' | 'dark' | ''>('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
 
@@ -55,6 +56,7 @@ export default function EventForm() {
         setVenue(e.venue ?? '')
         setOpponent(e.opponent ?? '')
         setHomeAway(e.home_away ?? 'home')
+        setJersey(e.jersey ?? '')
       }
       setLoaded(true)
     })()
@@ -96,6 +98,7 @@ export default function EventForm() {
           venue: venue.trim() || null,
           opponent: isGame ? opponent.trim() || null : null,
           home_away: isGame ? homeAway : null,
+          jersey: isGame ? jersey || null : null,
         })
         .eq('id', id!)
         .select()
@@ -125,6 +128,15 @@ export default function EventForm() {
       setError(errorText(error))
       setBusy(false)
       return
+    }
+    // The jersey is set right after creating, so creating keeps one simple call for both event types.
+    if (isGame && jersey) {
+      const j = await supabase.from('events').update({ jersey }).eq('id', data as string).select()
+      if (j.error || !j.data || j.data.length === 0) {
+        setError(errorText(j.error ?? { message: 'forbidden' }))
+        setBusy(false)
+        return
+      }
     }
     navigate(type === 'training' && repeat ? '/events' : `/events/${data as string}`, { replace: true })
   }
@@ -182,6 +194,16 @@ export default function EventForm() {
                 {(['home', 'away'] as const).map((x) => (
                   <button type="button" key={x} className={homeAway === x ? 'chip on' : 'chip'} aria-pressed={homeAway === x} onClick={() => setHomeAway(x)}>
                     {t(x === 'home' ? 'event.home' : 'event.away')}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="field">
+              <span className="label">{t('form.jersey')}</span>
+              <div className="chips">
+                {(['', 'light', 'dark'] as const).map((x) => (
+                  <button type="button" key={x || 'none'} className={jersey === x ? 'chip on' : 'chip'} aria-pressed={jersey === x} onClick={() => setJersey(x)}>
+                    {t(x === 'light' ? 'jersey.light' : x === 'dark' ? 'jersey.dark' : 'jersey.none')}
                   </button>
                 ))}
               </div>

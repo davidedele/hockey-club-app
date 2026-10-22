@@ -2,7 +2,9 @@ import { useCallback, useEffect, useState } from 'react'
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom'
 import { errorText, t, type MessageKey } from '../i18n'
 import EventGame from './EventGame'
+import { useClub } from '../lib/club'
 import { useSession } from '../lib/session'
+import { whatsappLink } from '../lib/whatsapp'
 import { supabase } from '../lib/supabase'
 import { formatDay, formatTime } from '../lib/time'
 import type { Answer, AttendanceRow, EventRow, Group, Status } from '../lib/types'
@@ -13,6 +15,7 @@ export default function EventDetail() {
   const { id = '' } = useParams()
   const navigate = useNavigate()
   const { profile, isStaff } = useSession()
+  const club = useClub()
   const [event, setEvent] = useState<EventRow | null>(null)
   const [loaded, setLoaded] = useState(false)
   const [groups, setGroups] = useState<Group[]>([])
@@ -69,6 +72,20 @@ export default function EventDetail() {
     .filter(Boolean)
     .join(', ')
   const dayLabel = formatDay(event.starts_at)
+  const link = `${window.location.origin}/events/${id}`
+  const matchName = event.type === 'game' && event.opponent ? t('events.vs', { club: club.name || t('app.name'), opponent: event.opponent }) : event.title
+  const jerseyName = event.jersey ? t(event.jersey === 'dark' ? 'jersey.dark' : 'jersey.light') : ''
+  const hasScore = event.score_for !== null && event.score_against !== null
+  const shareText = [
+    t('share.eventText', { title: matchName, day: dayLabel, time: formatTime(event.starts_at) }),
+    event.meetup_at ? t('share.meetupText', { time: formatTime(event.meetup_at) }) : '',
+    event.venue ? t('share.venueText', { venue: event.venue }) : '',
+    jerseyName ? t('share.jerseyText', { jersey: jerseyName.toLowerCase() }) : '',
+    t('share.answerText', { url: link }),
+  ].filter(Boolean).join(' ')
+  const resultText = hasScore
+    ? t('share.resultText', { match: matchName, us: String(event.score_for), them: String(event.score_against), url: link })
+    : ''
 
   // A change that a rule silently refuses must not look like it worked.
   async function guarded(change: () => PromiseLike<{ error: { message?: string; code?: string } | null; data?: unknown[] | null }>) {
@@ -170,10 +187,15 @@ export default function EventDetail() {
         {event.meetup_at && (<><dt>{t('event.meetup')}</dt><dd>{formatTime(event.meetup_at)}</dd></>)}
         {event.venue && (<><dt>{t('event.venue')}</dt><dd>{event.venue}</dd></>)}
         {event.opponent && (<><dt>{t('event.opponent')}</dt><dd>{event.opponent}{event.home_away ? ` · ${t(event.home_away === 'home' ? 'event.home' : 'event.away')}` : ''}</dd></>)}
+        {event.jersey && (<><dt>{t('event.jersey')}</dt><dd>{jerseyName}</dd></>)}
         {event.score_for !== null && event.score_against !== null && (
           <><dt>{t('event.scoreTitle')}</dt><dd>{t('event.scoreValue', { us: String(event.score_for), them: String(event.score_against) })}</dd></>
         )}
       </dl>
+      <div className="actions share-row">
+        {!over && <a className="button secondary small" href={whatsappLink(shareText)} target="_blank" rel="noopener noreferrer">{t('share.whatsapp')}</a>}
+        {hasScore && <a className="button secondary small" href={whatsappLink(resultText)} target="_blank" rel="noopener noreferrer">{t('share.result')}</a>}
+      </div>
 
       {event.type === 'game' && profile && (
         <EventGame
@@ -224,6 +246,18 @@ export default function EventDetail() {
           {!started && <p className="hint">{t('event.recordHint')}</p>}
           <h3>{t('event.noAnswer', { n: String(pending.length) })}</h3>
           <ul className="list">{pending.map(person)}</ul>
+          {!over && pending.length > 0 && (
+            <div className="actions share-row">
+              <a
+                className="button secondary small"
+                href={whatsappLink(t('share.missingText', { title: matchName, day: dayLabel, names: pending.map((r) => `${r.first_name} ${r.last_name}`).join(', '), url: link }))}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {t('share.missing')}
+              </a>
+            </div>
+          )}
           <h3>{t('event.presentList', { n: String(present.length) })}</h3>
           <ul className="list">{present.map(person)}</ul>
           <h3>{t('event.absentList', { n: String(absent.length) })}</h3>

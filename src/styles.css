@@ -472,3 +472,14 @@ button.secondary { background: var(--surface); color: var(--accent); border: 1px
 @media (min-width: 768px) { .statgrid { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
 .statgrid label { margin: 0; font-size: .875rem; color: var(--muted); }
 .statgrid input { color: var(--ink); font-variant-numeric: tabular-nums; }
+
+/* Absences: the two dates side by side */
+.absence-form { margin-top: 1rem; }
+.absence-dates { display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; }
+.absence-dates label { margin-bottom: .75rem; }
+.list li.row > span { min-width: 0; }
+.absence-reason { display: block; }
+
+/* Share links that look like secondary buttons */
+a.button.secondary { background: var(--surface); color: var(--accent); border: 1px solid var(--line-strong); }
+.share-row { margin-top: .75rem; }

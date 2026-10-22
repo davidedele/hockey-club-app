@@ -5,7 +5,7 @@ import Crest from '../components/Crest'
 import { useClub } from '../lib/club'
 import { useSession } from '../lib/session'
 import { supabase } from '../lib/supabase'
-import { dayKey, formatDay, formatMonth, formatShortDay, formatTime, weekOf } from '../lib/time'
+import { dayKey, formatDay, formatMonth, formatShortDay, formatTime, rangeParts, weekOf } from '../lib/time'
 import type { Answer, EventRow, Group } from '../lib/types'
 
 const Tick = () => (
@@ -294,15 +294,8 @@ export default function Events() {
   )
 }
 
-const dayMonth = new Intl.DateTimeFormat('it-IT', { timeZone: 'UTC', day: 'numeric', month: 'long' })
-
 // "dal 19 al 25 ottobre", or "dal 28 settembre al 4 ottobre" across two months.
-function weekRange(from: string, to: string) {
-  const a = new Date(`${from}T12:00:00Z`)
-  const b = new Date(`${to}T12:00:00Z`)
-  const first = a.getUTCMonth() === b.getUTCMonth() ? String(a.getUTCDate()) : dayMonth.format(a)
-  return t('events.weekRange', { from: first, to: dayMonth.format(b) })
-}
+const weekRange = (from: string, to: string) => t('events.weekRange', rangeParts(from, to))
 
 function NextPanel(props: { club: string; colours: CSSProperties | undefined; event: EventRow; groups: string; mine: Answer | null; count: number | undefined; canAnswer: boolean; busy: boolean; onAnswer: (v: Answer) => void }) {
   const { event: e, mine } = props
@@ -332,6 +325,12 @@ function NextPanel(props: { club: string; colours: CSSProperties | undefined; ev
             <dt>{t('event.venue')}</dt>
             <dd>{e.venue || t('common.none')}</dd>
           </div>
+          {game && e.jersey && (
+            <div>
+              <dt>{t('event.jersey')}</dt>
+              <dd>{t(e.jersey === 'dark' ? 'jersey.dark' : 'jersey.light')}</dd>
+            </div>
+          )}
         </dl>
         {props.canAnswer && (
           <div className="answers">

@@ -5,6 +5,7 @@ import { shrinkPhoto, useAvatarUrls } from '../lib/avatars'
 import { signOut, useSession } from '../lib/session'
 import { supabase } from '../lib/supabase'
 import { formatPhone } from '../lib/phone'
+import AbsencePeriods from '../components/AbsencePeriods'
 import type { Position } from '../lib/types'
 
 export default function ProfilePage() {
@@ -143,6 +144,7 @@ export default function ProfilePage() {
         <button type="submit">{t('common.save')}</button>
         {message && <p className="hint">{message}</p>}
       </form>
+      <AbsencePeriods userId={profile.id} />
       <h2>{t('profile.groups')}</h2>
       <p>{myGroups.length ? myGroups.join(', ') : t('profile.noGroups')}</p>
       {roles.length > 0 && <p className="hint">{roles.map((r) => t(`role.${r}` as MessageKey)).join(', ')}</p>}

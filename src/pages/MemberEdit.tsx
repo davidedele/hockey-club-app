@@ -4,6 +4,7 @@ import { errorText, t } from '../i18n'
 import { useSession } from '../lib/session'
 import { supabase } from '../lib/supabase'
 import type { Group, Profile, Role } from '../lib/types'
+import AbsencePeriods from '../components/AbsencePeriods'
 
 const ROLES: Role[] = ['coach', 'board']
 
@@ -111,6 +112,8 @@ export default function MemberEdit() {
         ))}
       </div>
       <p className="hint">{t('member.groupsHint')}</p>
+
+      <AbsencePeriods userId={person.id} name={person.first_name} />
 
       {isBoard && (
         <>

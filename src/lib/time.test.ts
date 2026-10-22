@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { addDays, dayKey, endIso, formatTime, isoToItaly, italyToIso, meetupIso, shiftClock, dayParts, weekOf, formatMonth, seasonOf, seasonLabel } from './time'
+import { addDays, dayKey, endIso, formatTime, isoToItaly, italyToIso, meetupIso, shiftClock, dayParts, weekOf, formatMonth, seasonOf, seasonLabel, formatDate, rangeParts, daysBetween } from './time'
 
 describe('Italian time', () => {
   it('converts summer time to UTC', () => {
@@ -67,5 +67,19 @@ describe('seasons', () => {
   it('names a season by both years', () => {
     expect(seasonLabel(2026)).toBe('2026/27')
     expect(seasonLabel(2099)).toBe('2099/00')
+  })
+})
+
+describe('date ranges', () => {
+  it('writes a date with the month name', () => {
+    expect(formatDate('2026-12-02')).toBe('2 dicembre')
+  })
+  it('names the month once inside one month and twice across two', () => {
+    expect(rangeParts('2026-12-02', '2026-12-16')).toEqual({ from: '2', to: '16 dicembre' })
+    expect(rangeParts('2026-11-28', '2026-12-04')).toEqual({ from: '28 novembre', to: '4 dicembre' })
+    expect(rangeParts('2026-12-28', '2027-01-04')).toEqual({ from: '28 dicembre', to: '4 gennaio' })
+  })
+  it('counts days across the clock change', () => {
+    expect(daysBetween('2026-10-20', '2026-10-27')).toBe(7)
   })
 })
