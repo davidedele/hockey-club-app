@@ -4,7 +4,7 @@ Update this file at the end of every session, so the next session starts exactly
 Keep entries short and put the newest first.
 
 ## Current state
-Steps 1 and 2 work against the Supabase test project, with migrations up to 0011 applied. Step 7 (game statistics, ratings and MVP) is written and tested locally; its migration 0012 is not applied to the test project yet, so the Statistiche tab and the game sections show errors there until it is. Step 3 (weekly limit) waits, by Davide's choice.
+Migrations up to 0015 are applied to the Supabase test project (0012 to 0015 on 22 October, by Davide in the SQL Editor, from one file with a check that stops on the wrong project or a second run). Security advisors after that: row level security on every table; `league_ignored` has no policies on purpose, since only the league function and triggers use it. The league-sync server function is not deployed yet, so the Campionato page stays empty until it is. Step 3 (weekly limit) waits, by Davide's choice.
 
 ## Session log
 1. 21 October 2026, third session (local, Davide away):
@@ -37,7 +37,7 @@ Steps 1 and 2 work against the Supabase test project, with migrations up to 0011
 3. 21 October 2026, first session: specification, notes on the current app, decisions and working rules written. Repository created.
 
 ## Next
-0. Apply migration 0012 to the test project (needs Davide's go ahead), then try a real game: record attendance, enter numbers, vote from two accounts, look at Statistiche.
+0. Deploy the league-sync function to the test project, link each group to its league team in Impostazioni, Gruppi, then try a real game: record attendance, enter numbers, vote from two accounts, look at Statistiche and Campionato.
 1. Done by Davide: the step 2 migration is applied in the test project and was tried (events, answers exist). Security advisors checked: row level security is on for every table. The warnings about functions that signed in users can call are intended, since each function checks the caller itself. One setting to switch on in the dashboard: leaked password protection (Authentication, password security), if the plan allows it.
 2. Davide: the Resend domain `mail.onlyai.lol` is verified. Enter the SMTP details in Supabase yourself (the API key stays private, never in the repository), following `docs/SETUP_EMAIL.md`, then switch "Confirm email" on and test a sign up.
 3. Davide: click the "use this invite" button once as a signed in member (open an invite link while logged in).
