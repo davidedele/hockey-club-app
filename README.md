@@ -7,7 +7,10 @@ Status: steps 1 and 2 of the build order work against a test database.
 1. Sign in, invite links, groups, members, roles, profile pictures.
 2. Events with weekly repeat, attendance answers, who said present, coach lists of missing answers and an attendance summary.
 3. Settings for the board: club name, logo and colours, groups, invites.
-4. Game statistics (goals, assists, penalty minutes, goalie saves), ratings and MVP after each game, and a season statistics page. Written and tested, not yet on the test database.
+4. Game statistics (goals, assists, penalty minutes, goalie saves), ratings and MVP after each game, and a season statistics page.
+5. Jersey colour per game, absence periods, sharing to WhatsApp, a documents page per member (medical certificate, privacy consent).
+6. A championship page with the league's standings, fixtures and results, read from the league's website, and the club's league games added to the calendar.
+Items 4 to 6 are written and tested, not yet on the test database.
 
 Next: reminders, then the weekly training limit.
 

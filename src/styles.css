@@ -503,3 +503,30 @@ a.doc-status:hover { text-decoration: underline; }
 .doc-file > a, .doc-card p > a { display: inline-flex; align-items: center; min-height: 44px; font-weight: 500; }
 .doc-card label.button.file { margin: .5rem 1rem 0 0; }
 .doc-banner { background: color-mix(in srgb, var(--now) 10%, var(--surface)); }
+
+/* Championship: a switch between league and club statistics, standings beside the games on computers */
+.segments { display: inline-flex; gap: .25rem; padding: .25rem; margin: -.25rem 0 1rem; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; max-width: 100%; overflow-x: auto; }
+.segments a { display: inline-flex; align-items: center; min-height: 44px; padding: 0 1rem; border-radius: 10px; color: var(--muted); font-weight: 500; text-decoration: none; white-space: nowrap; }
+.segments a.active { background: var(--accent-soft); color: var(--accent); }
+.league { display: grid; gap: 1.5rem; align-items: start; }
+.league > section { min-width: 0; }
+@media (min-width: 1024px) { .league { grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); } }
+.league h2 { margin-top: 1rem; }
+.league-head { align-items: center; flex-wrap: wrap; }
+.league-head .chips { margin: 0; padding: 0; }
+.standings tr.ours th, .standings tr.ours td { background: var(--accent-soft); font-weight: 500; }
+.standings td:first-child { width: 3rem; position: static; }
+.standings th[scope="row"], .standings thead th:nth-child(2) { text-align: left; }
+.lmatches li { padding: 0; }
+.lmatches li > a, .lmatches li > div { display: grid; grid-template-columns: 6.5rem minmax(0, 1fr); gap: .125rem .75rem; align-items: center; padding: .625rem 1rem; color: var(--ink); text-decoration: none; }
+.lmatches li > a:hover .lm-teams { text-decoration: underline; }
+.lmatches li.ours { box-shadow: inset 4px 0 0 var(--team-light); }
+.lm-when { grid-row: span 2; font-size: .875rem; color: var(--muted); }
+.lm-when strong { display: block; font: 600 1.25rem/1.1 var(--font-display); color: var(--accent); font-variant-numeric: tabular-nums; }
+.lm-teams { display: flex; flex-wrap: wrap; align-items: baseline; gap: .25rem .5rem; min-width: 0; }
+.lm-team.us { font-weight: 500; }
+.lm-score { font: 600 1.125rem/1 var(--font-display); font-variant-numeric: tabular-nums; }
+.lm-vs { color: var(--muted); font-size: .875rem; }
+.lm-venue { font-size: .8125rem; color: var(--muted); }
+.league-source { margin-top: 1.5rem; }
+@media (max-width: 767.98px) { .lmatches li > a, .lmatches li > div { grid-template-columns: 4.75rem minmax(0, 1fr); padding: .625rem .75rem; } }

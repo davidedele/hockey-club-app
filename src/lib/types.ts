@@ -9,6 +9,8 @@ export interface Group {
   game_light: string | null
   logo_path: string | null
   weekly_limit: number | null
+  league_team?: string | null
+  league_championships?: number[]
 }
 
 export interface Profile {
@@ -153,4 +155,38 @@ export interface MemberDocument {
   valid_until: string | null
   file_path: string | null
   accepted_at: string | null
+}
+
+export interface LeagueChampionship {
+  id: number
+  name: string
+  position: number
+}
+
+export interface LeagueMatch {
+  id: number
+  championship_id: number | null
+  championship: string
+  starts_at: string
+  home: string
+  away: string
+  home_score: number | null
+  away_score: number | null
+  venue: string | null
+}
+
+export interface LeagueStanding {
+  championship_id: number
+  position: number
+  team: string
+  played: number
+  points: number
+  goal_diff: number
+}
+
+export interface LeagueSync {
+  started_at: string | null
+  finished_at: string | null
+  ok: boolean | null
+  message: string | null
 }

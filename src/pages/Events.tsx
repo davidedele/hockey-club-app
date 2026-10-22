@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { errorText, t } from '../i18n'
 import Crest from '../components/Crest'
 import { jerseyName, useClub } from '../lib/club'
+import { refreshLeague } from '../lib/league'
 import { useSession } from '../lib/session'
 import { supabase } from '../lib/supabase'
 import { dayKey, formatDay, formatMonth, formatShortDay, formatTime, rangeParts, weekOf } from '../lib/time'
@@ -60,6 +61,11 @@ export default function Events() {
 
   useEffect(() => {
     void load()
+  }, [load])
+
+  // League games enter the calendar when the league's website is read; a stale reading is refreshed here.
+  useEffect(() => {
+    void refreshLeague().then((changed) => { if (changed) void load() })
   }, [load])
 
   const groupName = useMemo(() => new Map(groups.map((g) => [g.id, g.name])), [groups])

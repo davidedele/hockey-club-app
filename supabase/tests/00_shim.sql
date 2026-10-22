@@ -2,6 +2,7 @@
 -- Used only by scripts/test-db.sh. Never applied to a real project.
 create role anon nologin;
 create role authenticated nologin;
+create role service_role nologin bypassrls;
 
 create schema auth;
 create table auth.users (

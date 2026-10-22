@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState, type CSSProperties } from 'react'
 import { errorText, t } from '../i18n'
 import Avatar from '../components/Avatar'
 import GroupBadge from '../components/GroupBadge'
+import SeasonTabs from '../components/SeasonTabs'
 import { useAvatarUrls } from '../lib/avatars'
 import { useSession } from '../lib/session'
 import { supabase } from '../lib/supabase'
@@ -82,6 +83,7 @@ export default function Stats() {
   return (
     <div className="page wide">
       <h1>{t('stats.title')}</h1>
+      <SeasonTabs />
       <p className="hint">{t('stats.intro')}</p>
       <div className="stats-filters">
         {seasons.length > 1 ? (

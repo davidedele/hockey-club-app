@@ -5,7 +5,8 @@ import GroupBadge from '../components/GroupBadge'
 import { useClub } from '../lib/club'
 import { useSession } from '../lib/session'
 import { supabase } from '../lib/supabase'
-import type { Group } from '../lib/types'
+import type { Group, LeagueChampionship } from '../lib/types'
+import { prettyName } from '../lib/league'
 
 const TYPES: Record<string, string> = { 'image/png': 'png', 'image/jpeg': 'jpg', 'image/webp': 'webp' }
 const MAX_BYTES = 1024 * 1024
@@ -15,6 +16,7 @@ export default function GroupSettings() {
   const { isBoard, loading } = useSession()
   const [groups, setGroups] = useState<Group[]>([])
   const [members, setMembers] = useState<Map<number, number>>(new Map())
+  const [league, setLeague] = useState<{ teams: string[]; champs: LeagueChampionship[] }>({ teams: [], champs: [] })
   const [open, setOpen] = useState<number | null>(null)
   const [newName, setNewName] = useState('')
   const [newCode, setNewCode] = useState('')
@@ -22,10 +24,15 @@ export default function GroupSettings() {
   const [error, setError] = useState('')
 
   const load = useCallback(async () => {
-    const [g, m] = await Promise.all([
+    const [g, m, c, lm] = await Promise.all([
       supabase.from('groups').select('*').order('id'),
       supabase.from('group_members').select('group_id'),
+      supabase.from('league_championships').select('*').order('position'),
+      supabase.from('league_matches').select('home, away'),
     ])
+    const teams = new Set<string>()
+    for (const r of (lm.data ?? []) as { home: string; away: string }[]) { teams.add(r.home); teams.add(r.away) }
+    setLeague({ teams: [...teams].sort(), champs: (c.data ?? []) as LeagueChampionship[] })
     setGroups((g.data ?? []) as Group[])
     const counts = new Map<number, number>()
     for (const r of (m.data ?? []) as { group_id: number }[]) counts.set(r.group_id, (counts.get(r.group_id) ?? 0) + 1)
@@ -64,7 +71,7 @@ export default function GroupSettings() {
               <span className="hint">{(members.get(g.id) ?? 0) === 1 ? t('groups.countOne') : t('groups.count', { n: String(members.get(g.id) ?? 0) })}</span>
               <svg className="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6" /></svg>
             </button>
-            {open === g.id && <GroupEditor group={g} count={members.get(g.id) ?? 0} onDone={async () => { setOpen(null); await load() }} onChange={load} />}
+            {open === g.id && <GroupEditor group={g} count={members.get(g.id) ?? 0} league={league} onDone={async () => { setOpen(null); await load() }} onChange={load} />}
           </li>
         ))}
       </ul>
@@ -95,7 +102,7 @@ function groupError(error: { message?: string; code?: string }) {
   return errorText(error)
 }
 
-function GroupEditor({ group, count, onDone, onChange }: { group: Group; count: number; onDone: () => Promise<void>; onChange: () => Promise<void> }) {
+function GroupEditor({ group, count, league, onDone, onChange }: { group: Group; count: number; league: { teams: string[]; champs: LeagueChampionship[] }; onDone: () => Promise<void>; onChange: () => Promise<void> }) {
   const club = useClub()
   const [name, setName] = useState(group.name)
   const [code, setCode] = useState(group.code)
@@ -105,9 +112,11 @@ function GroupEditor({ group, count, onDone, onChange }: { group: Group; count: 
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const [confirming, setConfirming] = useState(false)
+  const [leagueTeam, setLeagueTeam] = useState(group.league_team ?? '')
+  const [comps, setComps] = useState<number[]>(group.league_championships ?? [])
 
   // An update that row level security silently refuses comes back with no rows.
-  async function update(values: Record<string, string | number | null>) {
+  async function update(values: Record<string, string | number | number[] | null>) {
     const { data, error } = await supabase.from('groups').update(values).eq('id', group.id).select()
     if (error) return groupError(error)
     if (!data || data.length === 0) return errorText({ message: 'forbidden' })
@@ -122,6 +131,8 @@ function GroupEditor({ group, count, onDone, onChange }: { group: Group; count: 
       code: code.trim().toUpperCase(),
       game_dark: own ? dark : null,
       game_light: own ? light : null,
+      league_team: leagueTeam || null,
+      league_championships: leagueTeam ? comps : [],
     })
     setBusy(false)
     if (problem) return setError(problem)
@@ -212,6 +223,29 @@ function GroupEditor({ group, count, onDone, onChange }: { group: Group; count: 
           </div>
         ) : (
           <p className="hint">{t('groups.clubColours')}</p>
+        )}
+
+        <label htmlFor={`league-${group.id}`}>{t('groups.league')}</label>
+        <select id={`league-${group.id}`} className="full" value={leagueTeam} onChange={(e) => setLeagueTeam(e.target.value)}>
+          <option value="">{t('groups.leagueNone')}</option>
+          {[...new Set([...league.teams, ...(group.league_team ? [group.league_team] : [])])].sort().map((name) => (
+            <option key={name} value={name}>{prettyName(name)}</option>
+          ))}
+        </select>
+        {league.teams.length === 0 && <p className="hint">{t('groups.leagueEmpty')}</p>}
+        {leagueTeam && league.champs.length > 0 && (
+          <div className="field">
+            <span className="label">{t('groups.leagueComps')}</span>
+            <div className="chips wrap">
+              {league.champs.map((c) => (
+                <button type="button" key={c.id} className={comps.includes(c.id) ? 'chip on' : 'chip'} aria-pressed={comps.includes(c.id)}
+                  onClick={() => setComps(comps.includes(c.id) ? comps.filter((x) => x !== c.id) : [...comps, c.id])}>
+                  {prettyName(c.name)}
+                </button>
+              ))}
+            </div>
+            <span className="hint">{t('groups.leagueHint')}</span>
+          </div>
         )}
 
         {error && <p className="error" role="alert">{error}</p>}

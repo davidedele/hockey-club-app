@@ -12,6 +12,7 @@ import { supabase } from './lib/supabase'
 import AttendanceSummary from './pages/AttendanceSummary'
 import ClubSettings from './pages/ClubSettings'
 import Documents from './pages/Documents'
+import Championship from './pages/Championship'
 import DocumentsBanner from './components/DocumentsBanner'
 import GroupSettings from './pages/GroupSettings'
 import Settings from './pages/Settings'
@@ -108,6 +109,7 @@ function Protected() {
   const { loading, session, profile, isStaff, isBoard } = useSession()
   const club = useClub()
   const mine = useAvatarUrls([profile?.avatar_path])
+  const { pathname } = useLocation()
   if (loading) return <p className="center">{t('common.loading')}</p>
   if (!session) return <Navigate to="/login" replace />
   if (!profile) {
@@ -120,7 +122,7 @@ function Protected() {
     <>
       <NavLink to="/events"><TabIcon name="events" />{t('nav.events')}</NavLink>
       <NavLink to="/" end><TabIcon name="members" />{t('nav.members')}</NavLink>
-      <NavLink to="/stats"><TabIcon name="stats" />{t('nav.stats')}</NavLink>
+      <NavLink to="/campionato" className={({ isActive }) => (isActive || pathname === '/stats' ? 'active' : undefined)}><TabIcon name="stats" />{t('nav.championship')}</NavLink>
       {isStaff && <NavLink to="/attendance"><TabIcon name="attendance" />{t('nav.attendance')}</NavLink>}
     </>
   )
@@ -172,6 +174,7 @@ export default function App() {
         <Route path="/events/unanswered" element={<Unanswered />} />
         <Route path="/attendance" element={<AttendanceSummary />} />
         <Route path="/stats" element={<Stats />} />
+        <Route path="/campionato" element={<Championship />} />
         <Route path="/events/:id" element={<EventDetail />} />
         <Route path="/events/:id/edit" element={<EventForm />} />
         <Route path="/members/:id" element={<MemberEdit />} />

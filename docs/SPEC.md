@@ -69,6 +69,7 @@ Players see the ratings only after they have voted.
 The overall result shows the average per player.
 Open point: whether board members can see who gave which rating. This is a privacy choice for the club, to be confirmed with the board. Until then nobody sees it (decided 21 October).
 There are no training ratings.
+Championship (decided 22 October): a page with the standings, next games and results of each competition the club's teams play, read from the league's website, and the club's league games added to the calendar of the right group.
 Game statistics (decided 21 October): staff enter goals, assists and penalty minutes per player, and shots against and saves for goalies. The whole club sees them per game and per season.
 
 ## 11. Discussion
