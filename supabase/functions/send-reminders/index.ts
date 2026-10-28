@@ -1,9 +1,10 @@
-// Sends the reminder emails and the announcement emails. A scheduled job in the database calls this every hour with a shared
+// Sends the reminder emails, the announcement emails and the calendar emails (new events and changes). A scheduled job in the database calls this every hour with a shared
 // secret; the database says who is due (and stays quiet at night), this function sends one email per
 // person through Resend and then tells the database what went out. No login: the secret protects it.
 // Deploy with "Verify JWT" off. Secrets needed: REMINDER_SECRET, RESEND_API_KEY, REMINDER_FROM, APP_URL.
 import { createClient } from 'npm:@supabase/supabase-js@2.118.0'
 import { buildAnnouncement } from './announcement.ts'
+import { buildEventNotice, type NoticeRow } from './eventnotice.ts'
 import { buildReminder, type ReminderEvent } from './reminder.ts'
 
 const MAX_EMAILS = 100
@@ -30,6 +31,8 @@ type DueAnnouncement = {
   author_name: string
   group_names: string
 }
+
+type DueNotice = NoticeRow & { user_id: string; email: string; first_name: string }
 
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } })
@@ -104,6 +107,34 @@ Deno.serve(async (req: Request) => {
       await new Promise((r) => setTimeout(r, 600))
     }
   }
+
+  // New events and changes to events, one email per person.
+  let noticesSent = 0
+  let noticesFailed = 0
+  const notices = await admin.rpc('event_notices_due')
+  if (!notices.error) {
+    const byPerson = new Map<string, DueNotice[]>()
+    for (const row of (notices.data ?? []) as DueNotice[]) byPerson.set(row.user_id, [...(byPerson.get(row.user_id) ?? []), row])
+    for (const [userId, rows] of byPerson) {
+      if (sent + failed + announcementsSent + announcementsFailed + noticesSent + noticesFailed >= MAX_EMAILS) break
+      const mail = buildEventNotice(rows[0].first_name, rows, appUrl)
+      if (!mail.empty) {
+        const res = await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ from, to: [rows[0].email], subject: mail.subject, text: mail.text, html: mail.html }),
+        })
+        if (!res.ok) {
+          noticesFailed++
+          continue
+        }
+        noticesSent++
+      }
+      // What turned out to be nothing (a change that went back) is marked too, so it is not looked at again.
+      await admin.rpc('event_notices_mark_sent', { p_user: userId, p_events: mail.newEvents, p_changes: mail.changes })
+      if (!mail.empty) await new Promise((r) => setTimeout(r, 600))
+    }
+  }
   // Only counts are returned and logged, never names or addresses.
-  return json({ people: byUser.size, sent, failed, announcements: announcementsSent, announcementsFailed })
+  return json({ people: byUser.size, sent, failed, announcements: announcementsSent, announcementsFailed, notices: noticesSent, noticesFailed })
 })
