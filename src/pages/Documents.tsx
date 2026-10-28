@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState, type ChangeEvent, type FormEvent } fr
 import { Link, Navigate, useParams } from 'react-router-dom'
 import { errorText, t } from '../i18n'
 import { useClub } from '../lib/club'
-import { certificateState, consentState, shrinkDocument, type Level } from '../lib/documents'
+import { certificateState, consentState, shrinkDocument, today, type Level } from '../lib/documents'
 import { useSession } from '../lib/session'
 import { supabase } from '../lib/supabase'
 import type { MemberDocument } from '../lib/types'
@@ -111,7 +111,9 @@ export default function Documents() {
     const problem = await writeCertificate({ file_path: path })
     if (problem) await supabase.storage.from('documents').remove([path])
     else if (cert?.file_path) await supabase.storage.from('documents').remove([cert.file_path])
-    await finish(problem, t('common.saved'))
+    // A file without a date tells nobody anything and no warning email can be sent, so ask for it.
+    const needsDate = !cert?.valid_until || cert.valid_until < today()
+    await finish(problem, needsDate ? t('docs.certNowDate') : t('common.saved'))
   }
 
   async function removeFile() {
@@ -157,6 +159,7 @@ export default function Documents() {
             {t('docs.certDate')}
             <input type="date" required value={date} onChange={(e) => setDate(e.target.value)} />
             <span className="hint">{t('docs.certDateHint')}</span>
+            <span className="hint">{t('docs.certWarnHint')}</span>
           </label>
           <button type="submit" className="secondary" disabled={busy || !date || date === cert?.valid_until}>{t('docs.certSaveDate')}</button>
         </form>
