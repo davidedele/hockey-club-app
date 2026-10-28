@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Navigate } from 'react-router-dom'
+import { Link, Navigate } from 'react-router-dom'
 import { errorText, t, type MessageKey } from '../i18n'
 import { useSession } from '../lib/session'
 import { supabase } from '../lib/supabase'
@@ -36,6 +36,7 @@ export default function AttendanceSummary() {
     <div className="page wide">
       <h1>{t('summary.title')}</h1>
       <p className="hint">{t('summary.intro')}</p>
+      <p><Link to="/attendance/grid">{t('summary.gridLink')}</Link></p>
       <div className="chips">
         <button className={!recent ? 'chip on' : 'chip'} aria-pressed={!recent} onClick={() => setRecent(false)}>{t('summary.all')}</button>
         <button className={recent ? 'chip on' : 'chip'} aria-pressed={recent} onClick={() => setRecent(true)}>{t('summary.last30')}</button>
