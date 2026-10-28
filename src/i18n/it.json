@@ -540,5 +540,12 @@
   "invites.team.full": "Link di squadra completo: {max} posti usati",
   "invites.team.days": "Giorni di validità (da 1 a 90)",
   "invites.team.max": "Numero massimo di persone (da 2 a 200)",
-  "error.team_invite_invalid": "Scegli da 1 a 90 giorni e da 2 a 200 persone."
+  "error.team_invite_invalid": "Scegli da 1 a 90 giorni e da 2 a 200 persone.",
+  "pwa.update": "È disponibile una nuova versione dell'app.",
+  "pwa.updateButton": "Aggiorna",
+  "install.title": "App sul telefono",
+  "install.done": "L'app è già installata su questo dispositivo.",
+  "install.button": "Installa l'app",
+  "install.ios": "Su iPhone tocca il pulsante Condividi del browser e scegli Aggiungi alla schermata Home.",
+  "install.other": "Dal menu del browser scegli Installa app oppure Aggiungi alla schermata Home."
 }

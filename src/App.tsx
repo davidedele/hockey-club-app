@@ -14,6 +14,7 @@ import ClubSettings from './pages/ClubSettings'
 import Documents from './pages/Documents'
 import Championship from './pages/Championship'
 import DocumentsBanner from './components/DocumentsBanner'
+import UpdateBanner from './components/UpdateBanner'
 import GroupSettings from './pages/GroupSettings'
 import IceHours from './pages/IceHours'
 import RinkSettings from './pages/RinkSettings'
@@ -148,6 +149,7 @@ function Protected() {
           <NavLink className="me" to="/profile" aria-label={t('nav.profileOf', { name: fullName })}><Avatar first={profile.first_name} last={profile.last_name} url={photo} /></NavLink>
           </span>
         </header>
+        <UpdateBanner />
         <PendingBanner />
         <DocumentsBanner />
         <main id="main" tabIndex={-1}>
