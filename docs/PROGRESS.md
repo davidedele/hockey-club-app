@@ -7,6 +7,7 @@ Keep entries short and put the newest first.
 Migrations up to 0015 are applied to the Supabase test project (0012 to 0015 on 22 October, by Davide in the SQL Editor, from one file with a check that stops on the wrong project or a second run). Security advisors after that: row level security on every table; `league_ignored` has no policies on purpose, since only the league function and triggers use it. The league-sync server function is not deployed yet, so the Campionato page stays empty until it is. The weekly limit was dropped on 28 October.
 
 ## Session log
+0. 28 October 2026, installable app (branch `claude/installable-app`): service worker `public/sw.js`, manifest completed, update bar, install block in Profilo, no database change. Tried in a real browser here: the app page and files open offline, a missing file is not kept, other addresses are not touched.
 0. 28 October 2026, team invite links (branch `claude/team-invite-link`): migration 0020 (places counted per invite, `create_team_invite` for the board, `redeem_invite` counts uses), 29 database tests, and a Link di squadra block on the invites page. Apply the migration with `apply_0020_team_invite_links.sql`.
 0. 28 October 2026, reminder emails (branch `claude/reminders`): migration 0019 (switch per person, log of what was sent, who is due, mark as sent), 40 database tests (every new rule made a test fail when broken), server function `send-reminders` with the email text and a unit test, and a switch in Profilo. Steps in `docs/SETUP_REMINDERS.md`.
 0. 28 October 2026, online test version (branch `claude/deploy`): Netlify settings in `netlify.toml` and the steps in `docs/DEPLOY.md`. The test copy uses the Supabase test project only.
@@ -41,6 +42,7 @@ Migrations up to 0015 are applied to the Supabase test project (0012 to 0015 on 
 3. 21 October 2026, first session: specification, notes on the current app, decisions and working rules written. Repository created.
 
 ## Next
+0d. Davide: after merging, open the online app on a phone and add it to the home screen (iPhone: Share, Add to Home Screen; Android: Install app), then merge another small change and check that the update bar appears.
 0c. Davide: put the reminders online (`docs/SETUP_REMINDERS.md`) and try them. Then build: team invite link per group, installable app.
 0b. Davide: set up the Netlify site and the address following `docs/DEPLOY.md`, then set the Site URL in the Supabase test project.
 0a. Davide: apply migration 0018 and deploy the calendar-feed function to the test project (`docs/SETUP_CALENDAR_FEED.md`), then subscribe a phone calendar and check the events.

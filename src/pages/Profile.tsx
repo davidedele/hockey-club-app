@@ -8,6 +8,7 @@ import { formatPhone } from '../lib/phone'
 import AbsencePeriods from '../components/AbsencePeriods'
 import CalendarFeed from '../components/CalendarFeed'
 import ReminderSwitch from '../components/ReminderSwitch'
+import InstallApp from '../components/InstallApp'
 import { useClub } from '../lib/club'
 import { summary } from '../lib/documents'
 import type { MemberDocument, Position } from '../lib/types'
@@ -158,6 +159,7 @@ export default function ProfilePage() {
       {docState && <p className={`doc-status ${docState.level}`}><span className="dot" aria-hidden="true" />{docState.text}</p>}
       <p><Link className="button secondary small" to="/documents">{t('docs.open')}</Link></p>
       <AbsencePeriods userId={profile.id} />
+      <InstallApp />
       <ReminderSwitch />
       <CalendarFeed />
       <h2>{t('profile.groups')}</h2>
