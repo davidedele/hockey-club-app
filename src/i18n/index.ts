@@ -12,6 +12,7 @@ export function t(key: MessageKey, values: Record<string, string> = {}): string 
 
 const CODES = [
   'invite_invalid',
+  'team_invite_invalid',
   'names_required',
   'email_not_confirmed',
   'forbidden',
