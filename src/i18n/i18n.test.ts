@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
+import en from './en.json'
 import texts from './it.json'
-import { errorText, t } from './index'
+import { currentLanguage, errorText, t } from './index'
 
 describe('t', () => {
   it('fills in values', () => {
@@ -8,8 +9,14 @@ describe('t', () => {
   })
 })
 
+describe('language', () => {
+  it('speaks Italian until somebody chooses otherwise', () => {
+    expect(currentLanguage()).toBe('it')
+  })
+})
+
 describe('errorText', () => {
-  it('maps database error codes to Italian text', () => {
+  it('maps database error codes to the text of the language in use', () => {
     expect(errorText({ message: 'invite_invalid' })).toBe(t('error.invite_invalid'))
     expect(errorText({ message: 'names_required' })).toBe(t('error.names_required'))
   })
@@ -32,9 +39,12 @@ describe('errorText', () => {
   })
 })
 
-describe('text file', () => {
+describe('text files', () => {
   const keys = Object.keys(texts)
+  const italian = texts as Record<string, string>
+  const english = en as Record<string, string>
   const files = import.meta.glob('../**/*.{ts,tsx}', { query: '?raw', import: 'default', eager: true }) as Record<string, string>
+  const holes = (s: string) => (s.match(/\{(\w+)\}/g) ?? []).sort()
 
   it('has every text key used in the code', () => {
     const missing: string[] = []
@@ -47,8 +57,20 @@ describe('text file', () => {
     expect(missing).toEqual([])
   })
 
+  it('says the same things in both languages', () => {
+    expect(Object.keys(english).sort()).toEqual([...keys].sort())
+  })
+
+  it('keeps the same values inside the texts of both languages', () => {
+    expect(keys.filter((k) => String(holes(italian[k])) !== String(holes(english[k])))).toEqual([])
+  })
+
+  it('leaves no text empty in either language', () => {
+    expect(keys.filter((k) => !italian[k].trim() || !english[k].trim())).toEqual([])
+  })
+
   it('has no dashes used as punctuation', () => {
-    const values = texts as Record<string, string>
-    expect(keys.filter((k) => /[\u2013\u2014]/.test(values[k]))).toEqual([])
+    const bad = keys.filter((k) => /[–—]/.test(italian[k]) || /[–—]/.test(english[k]))
+    expect(bad).toEqual([])
   })
 })

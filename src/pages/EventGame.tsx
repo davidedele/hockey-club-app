@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { errorText, t } from '../i18n'
+import { errorText, locale, t } from '../i18n'
 import { supabase } from '../lib/supabase'
 import type { GameResultRow } from '../lib/types'
 
@@ -12,7 +12,7 @@ const FIELDS: { key: keyof Draft; label: 'stats.colGoals' | 'stats.colAssists' |
   { key: 'saves', label: 'stats.colSaves', goalie: true },
 ]
 const RATINGS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-const decimal = new Intl.NumberFormat('it-IT', { minimumFractionDigits: 1, maximumFractionDigits: 1 })
+const decimal = new Intl.NumberFormat(locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 })
 const name = (r: GameResultRow) => `${r.last_name} ${r.first_name}`
 const isGoalie = (r: GameResultRow) => r.position === 'goalie' || r.shots_against !== null
 const count = (v: string) => (v.trim() === '' ? null : Number(v))

@@ -1,7 +1,44 @@
+import en from './en.json'
 import it from './it.json'
 
-// One flat file per language. To add English later, add en.json and pick it here.
-const messages: Record<string, string> = it
+export const LANGUAGES = ['it', 'en'] as const
+export type Language = (typeof LANGUAGES)[number]
+
+// One flat file per language. Italian is the club's own language; English is there for anybody who
+// needs it. The choice is kept in this browser, so it follows the person on this device only.
+const FILES: Record<Language, Record<string, string>> = { it, en }
+const KEY = 'language'
+
+function saved(): Language | null {
+  try {
+    const value = localStorage.getItem(KEY)
+    return value === 'it' || value === 'en' ? value : null
+  } catch {
+    return null
+  }
+}
+
+// Italian is what the club speaks, so that is what everybody gets until they choose otherwise.
+export function currentLanguage(): Language {
+  return saved() ?? 'it'
+}
+
+// Changing the language loads the page again, which is the simplest way to redraw every text.
+export function chooseLanguage(choice: Language): void {
+  try {
+    localStorage.setItem(KEY, choice)
+  } catch {
+    // Private browsing refuses to remember. The choice then lasts until the page is left.
+  }
+  window.location.reload()
+}
+
+const language = currentLanguage()
+const messages: Record<string, string> = FILES[language]
+
+// Days, months, clock times and numbers follow the chosen language too.
+export const locale = language === 'en' ? 'en-GB' : 'it-IT'
+if (typeof document !== 'undefined') document.documentElement.lang = language
 
 export type MessageKey = keyof typeof it
 
@@ -44,7 +81,7 @@ const CODES = [
 ]
 
 // Database errors carry a short code in their message, and sign in errors in their code.
-// Show the matching Italian text. While developing, an unknown error also shows its raw text.
+// Show the matching text. While developing, an unknown error also shows its raw text.
 export function errorText(error: { message?: string; code?: string } | null | undefined): string {
   const text = `${error?.code ?? ''} ${error?.message ?? ''}`
   for (const code of CODES) {

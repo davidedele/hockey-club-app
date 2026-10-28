@@ -1,5 +1,6 @@
 // The club lives in Italy. Event times are always entered and shown in Italian time,
-// whatever time zone the phone is set to.
+// whatever time zone the phone is set to. Only the words around them follow the chosen language.
+import { locale } from '../i18n'
 const TZ = 'Europe/Rome'
 
 const partsFormat = new Intl.DateTimeFormat('en-US', {
@@ -65,9 +66,9 @@ export function meetupIso(date: string, startTime: string, meetupTime: string): 
   return italyToIso(meetupTime <= startTime ? date : addDays(date, -1), meetupTime)
 }
 
-const dayFormat = new Intl.DateTimeFormat('it-IT', { timeZone: TZ, weekday: 'long', day: 'numeric', month: 'long' })
-const shortDayFormat = new Intl.DateTimeFormat('it-IT', { timeZone: TZ, weekday: 'short', day: 'numeric', month: 'short' })
-const timeFormat = new Intl.DateTimeFormat('it-IT', { timeZone: TZ, hour: '2-digit', minute: '2-digit', hourCycle: 'h23' })
+const dayFormat = new Intl.DateTimeFormat(locale, { timeZone: TZ, weekday: 'long', day: 'numeric', month: 'long' })
+const shortDayFormat = new Intl.DateTimeFormat(locale, { timeZone: TZ, weekday: 'short', day: 'numeric', month: 'short' })
+const timeFormat = new Intl.DateTimeFormat(locale, { timeZone: TZ, hour: '2-digit', minute: '2-digit', hourCycle: 'h23' })
 
 export const formatDay = (iso: string) => dayFormat.format(new Date(iso))
 export const formatShortDay = (iso: string) => shortDayFormat.format(new Date(iso))
@@ -81,7 +82,7 @@ export function shiftClock(time: string, minutes: number): string {
   return `${pad(Math.floor(total / 60))}:${pad(total % 60)}`
 }
 
-const dayPartsFormat = new Intl.DateTimeFormat('it-IT', { timeZone: TZ, weekday: 'short', day: 'numeric', month: 'short' })
+const dayPartsFormat = new Intl.DateTimeFormat(locale, { timeZone: TZ, weekday: 'short', day: 'numeric', month: 'short' })
 
 // The day of the month, the short weekday and the short month, for the date column of the events list.
 export function dayParts(iso: string): { num: string; dow: string; mon: string } {
@@ -92,7 +93,7 @@ export function dayParts(iso: string): { num: string; dow: string; mon: string }
 
 export const isToday = (iso: string) => dayKey(iso) === dayKey(new Date().toISOString())
 
-const narrowDayFormat = new Intl.DateTimeFormat('it-IT', { timeZone: 'UTC', weekday: 'narrow' })
+const narrowDayFormat = new Intl.DateTimeFormat(locale, { timeZone: 'UTC', weekday: 'narrow' })
 
 // The seven days, Monday to Sunday, of the week that holds the given moment, in Italian time.
 export function weekOf(iso: string): { date: string; dow: string; num: string }[] {
@@ -107,7 +108,7 @@ export function weekOf(iso: string): { date: string; dow: string; num: string }[
   })
 }
 
-const monthFormat = new Intl.DateTimeFormat('it-IT', { timeZone: TZ, month: 'long', year: 'numeric' })
+const monthFormat = new Intl.DateTimeFormat(locale, { timeZone: TZ, month: 'long', year: 'numeric' })
 
 // "Ottobre 2026", for the heading of the events home.
 export function formatMonth(iso: string): string {
@@ -124,7 +125,7 @@ export function seasonOf(iso: string): number {
 // 2026 to "2026/27".
 export const seasonLabel = (year: number) => `${year}/${pad((year + 1) % 100)}`
 
-const dayMonth = new Intl.DateTimeFormat('it-IT', { timeZone: 'UTC', day: 'numeric', month: 'long' })
+const dayMonth = new Intl.DateTimeFormat(locale, { timeZone: 'UTC', day: 'numeric', month: 'long' })
 
 // A calendar date such as "2026-12-02" as "2 dicembre".
 export const formatDate = (date: string) => dayMonth.format(new Date(`${date}T12:00:00Z`))
@@ -142,7 +143,7 @@ export function daysBetween(from: string, to: string): number {
   return Math.round((Date.parse(`${to}T12:00:00Z`) - Date.parse(`${from}T12:00:00Z`)) / 86400000)
 }
 
-const dayMonthYear = new Intl.DateTimeFormat('it-IT', { timeZone: 'UTC', day: 'numeric', month: 'long', year: 'numeric' })
+const dayMonthYear = new Intl.DateTimeFormat(locale, { timeZone: 'UTC', day: 'numeric', month: 'long', year: 'numeric' })
 
 // "14 marzo 2027", for dates that may fall in another year.
 export const formatDateYear = (date: string) => dayMonthYear.format(new Date(`${date}T12:00:00Z`))
