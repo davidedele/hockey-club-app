@@ -528,5 +528,8 @@
   "calendar.delayHint": "Il calendario del telefono si aggiorna da solo, ma può metterci anche qualche ora. Google Calendar è il più lento.",
   "calendar.renew": "Crea un nuovo link",
   "calendar.renewWarning": "Il link di prima smette di funzionare e dovrai aggiungere di nuovo il calendario.",
-  "calendar.renewConfirm": "Sì, crea un nuovo link"
+  "calendar.renewConfirm": "Sì, crea un nuovo link",
+  "reminders.title": "Promemoria via email",
+  "reminders.label": "Ricevi un promemoria se non hai risposto",
+  "reminders.hint": "Ti scriviamo una prima volta quando mancano meno di tre giorni a un evento e una seconda volta quando manca meno di un giorno, solo se non hai ancora risposto. Non scriviamo di notte."
 }
