@@ -7,6 +7,7 @@ Keep entries short and put the newest first.
 Migrations up to 0015 are applied to the Supabase test project (0012 to 0015 on 22 October, by Davide in the SQL Editor, from one file with a check that stops on the wrong project or a second run). Security advisors after that: row level security on every table; `league_ignored` has no policies on purpose, since only the league function and triggers use it. The league-sync server function is not deployed yet, so the Campionato page stays empty until it is. The weekly limit was dropped on 28 October.
 
 ## Session log
+0. 28 October 2026, online test version (branch `claude/deploy`): Netlify settings in `netlify.toml` and the steps in `docs/DEPLOY.md`. The test copy uses the Supabase test project only.
 0. 28 October 2026, calendar feed (branch `claude/calendar-feed`): migration 0018 (token table, own token and new token functions, feed function for the server), 20 database tests (every new rule made a test fail when broken: open token policy, feed function open to signed in users, group filter dropped, old token kept, 60 day limit removed), server function `calendar-feed` with the ICS builder (`ics.ts`, unit test `src/lib/ics.test.ts`), and a Calendario block in Profilo. The steps to put it online are in `docs/SETUP_CALENDAR_FEED.md`.
 1. 21 October 2026, third session (local, Davide away):
    1. Staff screen to edit a member: group membership (coaches and board), roles and removing a member (board only), with a named confirmation.
@@ -38,6 +39,7 @@ Migrations up to 0015 are applied to the Supabase test project (0012 to 0015 on 
 3. 21 October 2026, first session: specification, notes on the current app, decisions and working rules written. Repository created.
 
 ## Next
+0b. Davide: set up the Netlify site and the address following `docs/DEPLOY.md`, then set the Site URL in the Supabase test project.
 0a. Davide: apply migration 0018 and deploy the calendar-feed function to the test project (`docs/SETUP_CALENDAR_FEED.md`), then subscribe a phone calendar and check the events.
 0. Deploy the league-sync function to the test project, link each group to its league team in Impostazioni, Gruppi, then try a real game: record attendance, enter numbers, vote from two accounts, look at Statistiche and Campionato.
 1. Done by Davide: the step 2 migration is applied in the test project and was tried (events, answers exist). Security advisors checked: row level security is on for every table. The warnings about functions that signed in users can call are intended, since each function checks the caller itself. One setting to switch on in the dashboard: leaked password protection (Authentication, password security), if the plan allows it.
