@@ -148,7 +148,7 @@ export function buildEventNotice(firstName: string, rows: NoticeRow[], appUrl: s
   const empty = created.length === 0 && edits.lines.length === 0
 
   let subject = w.newMany
-  if (created.length === 1 && edits.lines.length === 0) {
+  if (news.length === 1 && created.length === 1 && edits.lines.length === 0) {
     subject = `${news[0].type === 'game' ? w.newGame : w.newTraining}: ${news[0].title}, ${when(news[0].starts_at)}`
   } else if (created.length === 0 && edits.lines.length === 1) {
     const only = [...edits.kinds][0]
