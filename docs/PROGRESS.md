@@ -7,6 +7,7 @@ Keep entries short and put the newest first.
 Migrations up to 0015 are applied to the Supabase test project (0012 to 0015 on 22 October, by Davide in the SQL Editor, from one file with a check that stops on the wrong project or a second run). Security advisors after that: row level security on every table; `league_ignored` has no policies on purpose, since only the league function and triggers use it. The league-sync server function is not deployed yet, so the Campionato page stays empty until it is. The weekly limit was dropped on 28 October.
 
 ## Session log
+0. 28 October 2026, attendance grid (branch `claude/attendance-grid`): migration 0021 (`attendance_grid`, staff only, one group and at most 93 days), 18 database tests with six mutation checks all caught, page `/attendance/grid` with group chips, month buttons, sticky name column, legend, link from the summary. Decision 49. Next: privacy notice draft, then edit groups of an existing event.
 0. 28 October 2026, installable app (branch `claude/installable-app`): service worker `public/sw.js`, manifest completed, update bar, install block in Profilo, no database change. Tried in a real browser here: the app page and files open offline, a missing file is not kept, other addresses are not touched.
 0. 28 October 2026, team invite links (branch `claude/team-invite-link`): migration 0020 (places counted per invite, `create_team_invite` for the board, `redeem_invite` counts uses), 29 database tests, and a Link di squadra block on the invites page. Apply the migration with `apply_0020_team_invite_links.sql`.
 0. 28 October 2026, reminder emails (branch `claude/reminders`): migration 0019 (switch per person, log of what was sent, who is due, mark as sent), 40 database tests (every new rule made a test fail when broken), server function `send-reminders` with the email text and a unit test, and a switch in Profilo. Steps in `docs/SETUP_REMINDERS.md`.
@@ -51,7 +52,7 @@ Migrations up to 0015 are applied to the Supabase test project (0012 to 0015 on 
 2. Davide: the Resend domain `mail.onlyai.lol` is verified. Enter the SMTP details in Supabase yourself (the API key stays private, never in the repository), following `docs/SETUP_EMAIL.md`, then switch "Confirm email" on and test a sign up.
 3. Davide: click the "use this invite" button once as a signed in member (open an invite link while logged in).
 4. Reminders, as decided on 21 October (see `DECISIONS.md`): push first, one reminder the day before a training, more frequent when time is short, managed by the board and managers, and a daily list of who has not answered for coaches. Push needs the service worker and push subscriptions (build step 9), so build that part together with the reminder rules. The coach list of who has not answered exists as a screen. A daily message with it comes with push.
-5. The per event attendance grid (every player by every date, spec section 5). The per player summary exists.
+5. Done 28 October: the per event attendance grid (branch `claude/attendance-grid`).
 6. Edit groups of an existing event, and change a whole series at once.
 7. Ice hours per rink with a board recap and export (decided 28 October, replaces the weekly limit, which was dropped).
 

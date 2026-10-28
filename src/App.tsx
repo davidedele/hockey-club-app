@@ -9,6 +9,7 @@ import { useClub } from './lib/club'
 import { getPendingInvite } from './lib/invite'
 import { useSession } from './lib/session'
 import { supabase } from './lib/supabase'
+import AttendanceGrid from './pages/AttendanceGrid'
 import AttendanceSummary from './pages/AttendanceSummary'
 import ClubSettings from './pages/ClubSettings'
 import Documents from './pages/Documents'
@@ -177,6 +178,7 @@ export default function App() {
         <Route path="/events/new" element={<EventForm />} />
         <Route path="/events/unanswered" element={<Unanswered />} />
         <Route path="/attendance" element={<AttendanceSummary />} />
+        <Route path="/attendance/grid" element={<AttendanceGrid />} />
         <Route path="/stats" element={<Stats />} />
         <Route path="/campionato" element={<Championship />} />
         <Route path="/events/:id" element={<EventDetail />} />
