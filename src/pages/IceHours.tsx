@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, Navigate } from 'react-router-dom'
-import { errorText, t } from '../i18n'
+import { errorText, locale, t } from '../i18n'
 import { NO_RINK, cost, iceCsv, iceMonths, sumOf, totals, type IceEvent } from '../lib/ice'
 import { useSession } from '../lib/session'
 import { supabase } from '../lib/supabase'
@@ -10,8 +10,8 @@ import type { Rink, RinkPrice } from '../lib/types'
 // The app holds no events before this season.
 const FIRST_SEASON = 2026
 
-const number = new Intl.NumberFormat('it-IT', { maximumFractionDigits: 2 })
-const euro = new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' })
+const number = new Intl.NumberFormat(locale, { maximumFractionDigits: 2 })
+const euro = new Intl.NumberFormat(locale, { style: 'currency', currency: 'EUR' })
 const hours = (n: number | undefined) => (n ? t('ice.hoursValue', { n: number.format(n) }) : '')
 
 // The board's count of ice hours: per rink and per month for a season, to set against the venue's invoice.

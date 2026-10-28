@@ -676,5 +676,7 @@
   "docs.certNowDate": "File caricato. Ora scrivi qui sotto la data di scadenza e salvala.",
   "docs.certWarnHint": "Il club ti manda una email due mesi, un mese e una settimana prima della scadenza, il giorno stesso e, se non lo hai rinnovato, un mese dopo.",
   "docs.certReading": "Sto leggendo la data dalla foto. Resta qui qualche secondo.",
-  "docs.certDateRead": "Questa data è stata letta dalla foto. Controlla che sia giusta e salvala."
+  "docs.certDateRead": "Questa data è stata letta dalla foto. Controlla che sia giusta e salvala.",
+  "language.title": "Lingua",
+  "language.hint": "Vale solo su questo dispositivo. Cambiandola la pagina si ricarica."
 }

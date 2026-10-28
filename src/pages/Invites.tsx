@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link, Navigate } from 'react-router-dom'
-import { errorText, t } from '../i18n'
+import { errorText, locale, t } from '../i18n'
 import { useSession } from '../lib/session'
 import { supabase } from '../lib/supabase'
 import type { Group, Invite } from '../lib/types'
@@ -10,7 +10,7 @@ function status(i: Invite): string {
   if (i.revoked_at) return t('invites.status.revoked')
   if (i.used_at) return team ? t('invites.team.full', { max: String(i.max_uses) }) : t('invites.status.used')
   if (new Date(i.expires_at) <= new Date()) return t('invites.status.expired')
-  const date = new Date(i.expires_at).toLocaleDateString('it-IT')
+  const date = new Date(i.expires_at).toLocaleDateString(locale)
   return team
     ? t('invites.team.status', { used: String(i.use_count), max: String(i.max_uses), date })
     : t('invites.status.open', { date })

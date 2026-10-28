@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type CSSProperties } from 'react'
-import { errorText, t } from '../i18n'
+import { errorText, locale, t } from '../i18n'
 import Avatar from '../components/Avatar'
 import GroupBadge from '../components/GroupBadge'
 import SeasonTabs from '../components/SeasonTabs'
@@ -12,7 +12,7 @@ import type { Group, SeasonRecord, SeasonStatRow } from '../lib/types'
 // The app holds no games before this season.
 const FIRST_SEASON = 2026
 
-const decimal = new Intl.NumberFormat('it-IT', { minimumFractionDigits: 1, maximumFractionDigits: 1 })
+const decimal = new Intl.NumberFormat(locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 })
 const one = (n: number | null) => (n === null ? '' : decimal.format(n))
 
 // Season numbers for the whole club: the team's results from the final scores, then players and goalies.
