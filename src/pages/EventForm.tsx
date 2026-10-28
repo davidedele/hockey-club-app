@@ -8,7 +8,7 @@ import { endIso, isoToItaly, italyToIso, meetupIso, shiftClock } from '../lib/ti
 import type { EventRow, EventType, Group, Rink } from '../lib/types'
 
 // One form for a new event and for changing an existing one.
-// Changing an event does not change its groups or its repeat. Those are set when it is created.
+// Changing an event can change its groups, for this event or for the later ones of its series. The repeat is set when it is created.
 export default function EventForm() {
   const { id } = useParams()
   const editing = Boolean(id)
@@ -31,6 +31,10 @@ export default function EventForm() {
   const [meetupTouched, setMeetupTouched] = useState(false)
   const [venue, setVenue] = useState('')
   const [groupIds, setGroupIds] = useState<number[]>([])
+  const [savedGroupIds, setSavedGroupIds] = useState<number[]>([])
+  const [inSeries, setInSeries] = useState(false)
+  const [groupsLocked, setGroupsLocked] = useState<'' | 'league' | 'ended'>('')
+  const [scope, setScope] = useState<'one' | 'following'>('one')
   const [repeat, setRepeat] = useState(false)
   const [weeks, setWeeks] = useState('12')
   const [opponent, setOpponent] = useState('')
@@ -63,6 +67,11 @@ export default function EventForm() {
         setHomeAway(e.home_away ?? 'home')
         setJersey(e.jersey ?? '')
         setRinkId(e.rink_id)
+        const ids = e.event_groups.map((x) => x.group_id)
+        setGroupIds(ids)
+        setSavedGroupIds(ids)
+        setInSeries(Boolean(e.series_id))
+        setGroupsLocked(e.league_match_id !== null ? 'league' : new Date(e.ends_at).getTime() <= Date.now() ? 'ended' : '')
       }
       setLoaded(true)
     })()
@@ -113,6 +122,20 @@ export default function EventForm() {
         setError(errorText(error ?? { message: 'forbidden' }))
         setBusy(false)
         return
+      }
+      const groupsChanged = !groupsLocked && (groupIds.length !== savedGroupIds.length || groupIds.some((g) => !savedGroupIds.includes(g)))
+      if (groupsChanged || (!groupsLocked && inSeries && scope === 'following' && groupIds.length > 0)) {
+        if (groupIds.length === 0) {
+          setError(t('form.groupsRequired'))
+          setBusy(false)
+          return
+        }
+        const res = await supabase.rpc('set_event_groups', { p_event_id: id!, p_group_ids: groupIds, p_scope: scope })
+        if (res.error) {
+          setError(errorText(res.error))
+          setBusy(false)
+          return
+        }
       }
       navigate(`/events/${id}`, { replace: true })
       return
@@ -230,6 +253,34 @@ export default function EventForm() {
               </div>
             </div>
           </>
+        )}
+        {editing && (
+          <div className="field">
+            <span className="label">{t('form.groups')}</span>
+            {groupsLocked ? (
+              <>
+                <p>{groups.filter((g) => groupIds.includes(g.id)).map((g) => g.name).join(', ')}</p>
+                <span className="hint">{t(groupsLocked === 'league' ? 'form.groupsLeague' : 'form.groupsEnded')}</span>
+              </>
+            ) : (
+              <>
+                <div className="chips wrap">
+                  {groups.map((g) => (
+                    <button type="button" key={g.id} className={groupIds.includes(g.id) ? 'chip on' : 'chip'} aria-pressed={groupIds.includes(g.id)} onClick={() => toggleGroup(g.id)}>
+                      {g.name}
+                    </button>
+                  ))}
+                </div>
+                <span className="hint">{t('form.groupsEditHint')}</span>
+                {inSeries && (
+                  <div className="chips wrap">
+                    <button type="button" className={scope === 'one' ? 'chip on' : 'chip'} aria-pressed={scope === 'one'} onClick={() => setScope('one')}>{t('form.scopeOne')}</button>
+                    <button type="button" className={scope === 'following' ? 'chip on' : 'chip'} aria-pressed={scope === 'following'} onClick={() => setScope('following')}>{t('form.scopeFollowing')}</button>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
         )}
         {!editing && (
           <>

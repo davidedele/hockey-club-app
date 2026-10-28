@@ -592,5 +592,13 @@
   "ann.linkCount": "{n} nuovi",
   "ann.link": "Avvisi",
   "ann.latest": "Ultimo avviso",
-  "error.announcement_invalid": "Il titolo deve avere da 1 a 80 caratteri e il messaggio da 1 a 2000."
+  "error.announcement_invalid": "Il titolo deve avere da 1 a 80 caratteri e il messaggio da 1 a 2000.",
+  "form.groupsEditHint": "Solo questi gruppi vedono l'evento. Chi viene tolto dall'evento perde la sua risposta.",
+  "form.groupsLeague": "Le partite del campionato prendono i gruppi dal collegamento con la lega, quindi qui non si cambiano.",
+  "form.groupsEnded": "L'evento è finito, i gruppi non si cambiano più.",
+  "form.scopeOne": "Solo questo evento",
+  "form.scopeFollowing": "Questo e i prossimi della serie",
+  "error.league_event": "Le partite del campionato prendono i gruppi dalla lega e non si cambiano qui.",
+  "error.event_ended": "L'evento è già finito, i gruppi non si possono più cambiare.",
+  "error.scope_invalid": "Scelta non valida. Riprova."
 }
