@@ -3,6 +3,8 @@ import { Link, Navigate, useParams } from 'react-router-dom'
 import { errorText, t } from '../i18n'
 import { useClub } from '../lib/club'
 import { certificateState, consentState, shrinkDocument, today, type Level } from '../lib/documents'
+import { findExpiry } from '../lib/expiry'
+import { readText } from '../lib/ocr'
 import { useSession } from '../lib/session'
 import { supabase } from '../lib/supabase'
 import type { MemberDocument } from '../lib/types'
@@ -28,6 +30,7 @@ export default function Documents() {
   const [date, setDate] = useState('')
   const [loaded, setLoaded] = useState(false)
   const [busy, setBusy] = useState(false)
+  const [reading, setReading] = useState(false)
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
 
@@ -114,6 +117,23 @@ export default function Documents() {
     // A file without a date tells nobody anything and no warning email can be sent, so ask for it.
     const needsDate = !cert?.valid_until || cert.valid_until < today()
     await finish(problem, needsDate ? t('docs.certNowDate') : t('common.saved'))
+    if (!problem && !pdf && needsDate) await propose(body)
+  }
+
+  // The photo is read here on the phone to save the member typing the date. The picture is not
+  // sent anywhere for this, and the date that comes out still has to be checked and saved by hand.
+  async function propose(image: Blob) {
+    setReading(true)
+    try {
+      const found = findExpiry(await readText(image), today())
+      if (found) {
+        setDate(found)
+        setMessage(t('docs.certDateRead'))
+      }
+    } catch {
+      // The reading engine could not be fetched or made nothing of the photo. The member types it.
+    }
+    setReading(false)
   }
 
   async function removeFile() {
@@ -162,6 +182,7 @@ export default function Documents() {
             <span className="hint">{t('docs.certWarnHint')}</span>
           </label>
           <button type="submit" className="secondary" disabled={busy || !date || date === cert?.valid_until}>{t('docs.certSaveDate')}</button>
+          {reading && <p className="hint" role="status">{t('docs.certReading')}</p>}
         </form>
         <div className="doc-file">
           {cert?.file_path ? (
