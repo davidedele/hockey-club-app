@@ -175,7 +175,7 @@
   "form.create": "Crea evento",
   "form.titleTraining": "Allenamento",
   "form.titleGame": "Partita",
-  "error.invite_invalid": "Questo invito non è valido, è già stato usato o è scaduto. Chiedi un nuovo link.",
+  "error.invite_invalid": "Questo invito non è valido, è già stato usato, è scaduto o ha raggiunto il numero massimo di persone. Chiedi un nuovo link.",
   "error.names_required": "Inserisci nome e cognome.",
   "error.email_not_confirmed": "Conferma prima il tuo indirizzo email.",
   "error.over_email_send_rate_limit": "Sono state inviate troppe email in poco tempo. Aspetta un po' e riprova.",
@@ -531,5 +531,11 @@
   "calendar.renewConfirm": "Sì, crea un nuovo link",
   "reminders.title": "Promemoria via email",
   "reminders.label": "Ricevi un promemoria se non hai risposto",
-  "reminders.hint": "Ti scriviamo una prima volta quando mancano meno di tre giorni a un evento e una seconda volta quando manca meno di un giorno, solo se non hai ancora risposto. Non scriviamo di notte."
+  "reminders.hint": "Ti scriviamo una prima volta quando mancano meno di tre giorni a un evento e una seconda volta quando manca meno di un giorno, solo se non hai ancora risposto. Non scriviamo di notte.",
+  "invites.team.title": "Link di squadra",
+  "invites.team.intro": "Un solo link per tutto il gruppo, valido per 30 giorni e fino a 100 persone. Chi è già nel gruppo non usa un posto. Lo vedono solo il consiglio e chi lo crea.",
+  "invites.team.create": "Crea link di squadra",
+  "invites.team.once": "Questo link vale per più persone. Viene mostrato una volta sola, quindi copialo ora e mandalo al gruppo. Puoi revocarlo in qualsiasi momento.",
+  "invites.team.status": "Link di squadra: {used} su {max} posti usati, valido fino al {date}",
+  "invites.team.full": "Link di squadra completo: {max} posti usati"
 }

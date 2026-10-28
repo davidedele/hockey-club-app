@@ -6,10 +6,14 @@ import { supabase } from '../lib/supabase'
 import type { Group, Invite } from '../lib/types'
 
 function status(i: Invite): string {
-  if (i.used_at) return t('invites.status.used')
+  const team = i.max_uses > 1
   if (i.revoked_at) return t('invites.status.revoked')
+  if (i.used_at) return team ? t('invites.team.full', { max: String(i.max_uses) }) : t('invites.status.used')
   if (new Date(i.expires_at) <= new Date()) return t('invites.status.expired')
-  return t('invites.status.open', { date: new Date(i.expires_at).toLocaleDateString('it-IT') })
+  const date = new Date(i.expires_at).toLocaleDateString('it-IT')
+  return team
+    ? t('invites.team.status', { used: String(i.use_count), max: String(i.max_uses), date })
+    : t('invites.status.open', { date })
 }
 
 export default function Invites() {
@@ -18,6 +22,7 @@ export default function Invites() {
   const [invites, setInvites] = useState<Invite[]>([])
   const [groupId, setGroupId] = useState<number | ''>('')
   const [link, setLink] = useState('')
+  const [linkIsTeam, setLinkIsTeam] = useState(false)
   const [copied, setCopied] = useState(false)
   const [error, setError] = useState('')
   const [names, setNames] = useState<Map<string, string>>(new Map())
@@ -25,7 +30,7 @@ export default function Invites() {
   const refresh = useCallback(async () => {
     const [g, i] = await Promise.all([
       supabase.from('groups').select('*').order('id'),
-      supabase.from('invites').select('id, group_id, created_at, expires_at, used_at, used_by, revoked_at').order('created_at', { ascending: false }).limit(30),
+      supabase.from('invites').select('id, group_id, created_at, expires_at, used_at, used_by, revoked_at, max_uses, use_count').order('created_at', { ascending: false }).limit(30),
     ])
     const list = (g.data ?? []) as Group[]
     setGroups(list)
@@ -45,16 +50,19 @@ export default function Invites() {
 
   if (!isStaff) return <Navigate to="/" replace />
 
-  async function create() {
+  async function create(team: boolean) {
     if (groupId === '') return
     setError('')
     setCopied(false)
-    const { data, error } = await supabase.rpc('create_invite', { p_group_id: groupId })
+    const { data, error } = team
+      ? await supabase.rpc('create_team_invite', { p_group_id: groupId })
+      : await supabase.rpc('create_invite', { p_group_id: groupId })
     if (error) {
       setError(errorText(error))
       return
     }
     setLink(`${window.location.origin}/join/${data as string}`)
+    setLinkIsTeam(team)
     await refresh()
   }
 
@@ -91,13 +99,20 @@ export default function Invites() {
           {groups.map((g) => <option key={g.id} value={g.id}>{g.name}</option>)}
         </select>
       
-      <button onClick={create}>{t('invites.create')}</button>
+      <button onClick={() => void create(false)}>{t('invites.create')}</button>
+      {isBoard && (
+        <>
+          <h2>{t('invites.team.title')}</h2>
+          <p className="hint">{t('invites.team.intro')}</p>
+          <button className="secondary" onClick={() => void create(true)}>{t('invites.team.create')}</button>
+        </>
+      )}
       {error && <p className="error">{error}</p>}
       {link && (
         <div className="box">
           <strong>{t('invites.link')}</strong>
           <code>{link}</code>
-          <p className="hint">{t('invites.once')}</p>
+          <p className="hint">{t(linkIsTeam ? 'invites.team.once' : 'invites.once')}</p>
           <div className="actions">
             {canShare && <button onClick={() => void share()}>{t('invites.share')}</button>}
             <button className={canShare ? 'secondary' : undefined} onClick={copy}>{copied ? t('common.copied') : t('common.copy')}</button>

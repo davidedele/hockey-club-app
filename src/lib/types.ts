@@ -35,6 +35,8 @@ export interface Invite {
   used_at: string | null
   used_by?: string | null
   revoked_at: string | null
+  max_uses: number
+  use_count: number
 }
 
 export type EventType = 'training' | 'game'
