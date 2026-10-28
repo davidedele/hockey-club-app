@@ -5,7 +5,7 @@ import { jerseyName, useClub } from '../lib/club'
 import { useSession } from '../lib/session'
 import { supabase } from '../lib/supabase'
 import { endIso, isoToItaly, italyToIso, meetupIso, shiftClock } from '../lib/time'
-import type { EventRow, EventType, Group } from '../lib/types'
+import type { EventRow, EventType, Group, Rink } from '../lib/types'
 
 // One form for a new event and for changing an existing one.
 // Changing an event does not change its groups or its repeat. Those are set when it is created.
@@ -16,6 +16,8 @@ export default function EventForm() {
   const { isStaff } = useSession()
   const club = useClub()
   const [groups, setGroups] = useState<Group[]>([])
+  const [rinks, setRinks] = useState<Rink[]>([])
+  const [rinkId, setRinkId] = useState<number | null>(null)
   const [loaded, setLoaded] = useState(!editing)
 
   const [type, setType] = useState<EventType>('training')
@@ -39,8 +41,9 @@ export default function EventForm() {
 
   useEffect(() => {
     void (async () => {
-      const g = await supabase.from('groups').select('*').order('id')
+      const [g, r] = await Promise.all([supabase.from('groups').select('*').order('id'), supabase.from('rinks').select('id, name').order('name')])
       setGroups((g.data ?? []) as Group[])
+      setRinks((r.data ?? []) as Rink[])
       if (!id) return
       const { data } = await supabase.from('events').select('*, event_groups(group_id)').eq('id', id).maybeSingle()
       const e = data as EventRow | null
@@ -59,6 +62,7 @@ export default function EventForm() {
         setOpponent(e.opponent ?? '')
         setHomeAway(e.home_away ?? 'home')
         setJersey(e.jersey ?? '')
+        setRinkId(e.rink_id)
       }
       setLoaded(true)
     })()
@@ -101,6 +105,7 @@ export default function EventForm() {
           opponent: isGame ? opponent.trim() || null : null,
           home_away: isGame ? homeAway : null,
           jersey: isGame ? jersey || null : null,
+          rink_id: rinkId,
         })
         .eq('id', id!)
         .select()
@@ -125,6 +130,7 @@ export default function EventForm() {
       p_opponent: isGame ? opponent.trim() || null : null,
       p_home_away: isGame ? homeAway : null,
       p_repeat_weeks: type === 'training' && repeat ? total - 1 : 0,
+      p_rink_id: rinkId,
     })
     if (error) {
       setError(errorText(error))
@@ -184,6 +190,19 @@ export default function EventForm() {
           {t('form.venue')}
           <input maxLength={120} value={venue} onChange={(e) => setVenue(e.target.value)} />
         </label>
+        {rinks.length > 0 && (
+          <div className="field">
+            <span className="label">{t('form.rink')}</span>
+            <div className="chips wrap">
+              {[null, ...rinks].map((r) => (
+                <button type="button" key={r?.id ?? 'none'} className={rinkId === (r?.id ?? null) ? 'chip on' : 'chip'} aria-pressed={rinkId === (r?.id ?? null)} onClick={() => setRinkId(r?.id ?? null)}>
+                  {r ? r.name : t('form.rinkNone')}
+                </button>
+              ))}
+            </div>
+            <span className="hint">{t('form.rinkHint')}</span>
+          </div>
+        )}
         {type === 'game' && (
           <>
             <label>

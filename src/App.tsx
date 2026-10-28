@@ -15,6 +15,8 @@ import Documents from './pages/Documents'
 import Championship from './pages/Championship'
 import DocumentsBanner from './components/DocumentsBanner'
 import GroupSettings from './pages/GroupSettings'
+import IceHours from './pages/IceHours'
+import RinkSettings from './pages/RinkSettings'
 import Settings from './pages/Settings'
 import Stats from './pages/Stats'
 import EventDetail from './pages/EventDetail'
@@ -76,7 +78,7 @@ function PendingBanner() {
     const now = new Date()
     const until = new Date(now.getTime() + BANNER_DAYS * 86400000)
     const [e, a] = await Promise.all([
-      supabase.from('events').select('id, event_groups(group_id)').gt('ends_at', now.toISOString()).lt('starts_at', until.toISOString()),
+      supabase.from('events').select('id, event_groups(group_id)').is('cancelled_at', null).gt('ends_at', now.toISOString()).lt('starts_at', until.toISOString()),
       supabase.from('attendance_answers').select('event_id').eq('user_id', profile.id),
     ])
     const answered = new Set(((a.data ?? []) as { event_id: string }[]).map((x) => x.event_id))
@@ -184,6 +186,8 @@ export default function App() {
         <Route path="/settings" element={<Settings />} />
         <Route path="/settings/club" element={<ClubSettings />} />
         <Route path="/settings/groups" element={<GroupSettings />} />
+        <Route path="/settings/rinks" element={<RinkSettings />} />
+        <Route path="/settings/ice" element={<IceHours />} />
         <Route path="/settings/invites" element={<Invites />} />
         <Route path="/invites" element={<Navigate to="/settings/invites" replace />} />
         <Route path="/club" element={<Navigate to="/settings/club" replace />} />

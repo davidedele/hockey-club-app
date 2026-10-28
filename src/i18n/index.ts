@@ -34,6 +34,7 @@ const CODES = [
   'mvp_invalid',
   'rating_invalid',
   'period_past',
+  'event_cancelled',
 ]
 
 // Database errors carry a short code in their message, and sign in errors in their code.

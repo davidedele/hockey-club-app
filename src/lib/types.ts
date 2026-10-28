@@ -56,6 +56,8 @@ export interface EventRow {
   score_for: number | null
   score_against: number | null
   jersey: 'light' | 'dark' | null
+  rink_id: number | null
+  cancelled_at: string | null
   event_groups: { group_id: number }[]
 }
 
@@ -189,4 +191,14 @@ export interface LeagueSync {
   finished_at: string | null
   ok: boolean | null
   message: string | null
+}
+
+export interface Rink {
+  id: number
+  name: string
+}
+
+export interface RinkPrice {
+  rink_id: number
+  price_cents: number
 }
