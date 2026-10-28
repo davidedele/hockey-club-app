@@ -517,5 +517,16 @@
   "ice.colHours": "Ore",
   "ice.colState": "Stato",
   "ice.colCost": "Costo (euro)",
-  "ice.took": "Svolto"
+  "ice.took": "Svolto",
+  "calendar.title": "Calendario sul telefono",
+  "calendar.intro": "Aggiungi gli eventi del club al calendario del telefono. Vedi gli stessi eventi che vedi qui, con gli orari e i luoghi, e si aggiornano da soli.",
+  "calendar.show": "Mostra il mio link",
+  "calendar.linkLabel": "Il tuo link personale",
+  "calendar.open": "Aggiungi al calendario",
+  "calendar.copyFailed": "Non riesco a copiare. Tieni premuto sul link e copialo a mano.",
+  "calendar.privateHint": "Il link è personale: chi lo ha vede i tuoi eventi. Non condividerlo.",
+  "calendar.delayHint": "Il calendario del telefono si aggiorna da solo, ma può metterci anche qualche ora. Google Calendar è il più lento.",
+  "calendar.renew": "Crea un nuovo link",
+  "calendar.renewWarning": "Il link di prima smette di funzionare e dovrai aggiungere di nuovo il calendario.",
+  "calendar.renewConfirm": "Sì, crea un nuovo link"
 }
