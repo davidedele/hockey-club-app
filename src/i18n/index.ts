@@ -36,6 +36,9 @@ const CODES = [
   'rating_invalid',
   'period_past',
   'event_cancelled',
+  'league_event',
+  'event_ended',
+  'scope_invalid',
 ]
 
 // Database errors carry a short code in their message, and sign in errors in their code.

@@ -59,6 +59,7 @@ export interface EventRow {
   jersey: 'light' | 'dark' | null
   rink_id: number | null
   cancelled_at: string | null
+  league_match_id: number | null
   event_groups: { group_id: number }[]
 }
 

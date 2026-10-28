@@ -7,6 +7,7 @@ Keep entries short and put the newest first.
 Migrations up to 0015 are applied to the Supabase test project (0012 to 0015 on 22 October, by Davide in the SQL Editor, from one file with a check that stops on the wrong project or a second run). Security advisors after that: row level security on every table; `league_ignored` has no policies on purpose, since only the league function and triggers use it. The league-sync server function is not deployed yet, so the Campionato page stays empty until it is. The weekly limit was dropped on 28 October.
 
 ## Session log
+0. 28 October 2026, groups of an event (branch `claude/event-groups`): migration 0022 (`set_event_groups`, staff only, one event or the later ones of a series), 20 database tests with mutation checks (one check cannot fail: a later event of a series is always unfinished), groups block in the edit form with a choice of scope. Decision 52. Next: announcements per group, then new and changed event emails.
 0. 28 October 2026, privacy notice draft (branch `claude/privacy-notice`): `docs/PRIVACY_NOTICE_DRAFT.md` in Italian for the board, decisions 50 and 51 (EU region confirmed; president's request for OCR of the medical certificate with email alerts, noted not built).
 0. 28 October 2026, attendance grid (branch `claude/attendance-grid`): migration 0021 (`attendance_grid`, staff only, one group and at most 93 days), 18 database tests with six mutation checks all caught, page `/attendance/grid` with group chips, month buttons, sticky name column, legend, link from the summary. Decision 49. Next: privacy notice draft, then edit groups of an existing event.
 0. 28 October 2026, installable app (branch `claude/installable-app`): service worker `public/sw.js`, manifest completed, update bar, install block in Profilo, no database change. Tried in a real browser here: the app page and files open offline, a missing file is not kept, other addresses are not touched.
@@ -54,7 +55,7 @@ Migrations up to 0015 are applied to the Supabase test project (0012 to 0015 on 
 3. Davide: click the "use this invite" button once as a signed in member (open an invite link while logged in).
 4. Reminders, as decided on 21 October (see `DECISIONS.md`): push first, one reminder the day before a training, more frequent when time is short, managed by the board and managers, and a daily list of who has not answered for coaches. Push needs the service worker and push subscriptions (build step 9), so build that part together with the reminder rules. The coach list of who has not answered exists as a screen. A daily message with it comes with push.
 5. Done 28 October: the per event attendance grid (branch `claude/attendance-grid`).
-6. Edit groups of an existing event, and change a whole series at once.
+6. Done 28 October: edit groups of an existing event or of the later ones of a series. Changing times, venue or title of a whole series at once is still open.
 7. Ice hours per rink with a board recap and export (decided 28 October, replaces the weekly limit, which was dropped).
 
 ## Open problems
