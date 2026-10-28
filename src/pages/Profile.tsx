@@ -6,6 +6,7 @@ import { signOut, useSession } from '../lib/session'
 import { supabase } from '../lib/supabase'
 import { formatPhone } from '../lib/phone'
 import AbsencePeriods from '../components/AbsencePeriods'
+import CalendarFeed from '../components/CalendarFeed'
 import { useClub } from '../lib/club'
 import { summary } from '../lib/documents'
 import type { MemberDocument, Position } from '../lib/types'
@@ -156,6 +157,7 @@ export default function ProfilePage() {
       {docState && <p className={`doc-status ${docState.level}`}><span className="dot" aria-hidden="true" />{docState.text}</p>}
       <p><Link className="button secondary small" to="/documents">{t('docs.open')}</Link></p>
       <AbsencePeriods userId={profile.id} />
+      <CalendarFeed />
       <h2>{t('profile.groups')}</h2>
       <p>{myGroups.length ? myGroups.join(', ') : t('profile.noGroups')}</p>
       {roles.length > 0 && <p className="hint">{roles.map((r) => t(`role.${r}` as MessageKey)).join(', ')}</p>}
