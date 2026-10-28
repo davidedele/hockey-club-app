@@ -203,3 +203,14 @@ export interface RinkPrice {
   rink_id: number
   price_cents: number
 }
+
+export interface Announcement {
+  id: string
+  author_id: string | null
+  title: string
+  body: string
+  email: boolean
+  created_at: string
+  announcement_groups: { group_id: number }[]
+  profiles: { first_name: string; last_name: string } | null
+}

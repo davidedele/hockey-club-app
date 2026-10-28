@@ -1,8 +1,9 @@
-// Sends the reminder emails. A scheduled job in the database calls this every hour with a shared
+// Sends the reminder emails and the announcement emails. A scheduled job in the database calls this every hour with a shared
 // secret; the database says who is due (and stays quiet at night), this function sends one email per
 // person through Resend and then tells the database what went out. No login: the secret protects it.
 // Deploy with "Verify JWT" off. Secrets needed: REMINDER_SECRET, RESEND_API_KEY, REMINDER_FROM, APP_URL.
 import { createClient } from 'npm:@supabase/supabase-js@2.118.0'
+import { buildAnnouncement } from './announcement.ts'
 import { buildReminder, type ReminderEvent } from './reminder.ts'
 
 const MAX_EMAILS = 100
@@ -17,6 +18,17 @@ type Due = {
   type: 'training' | 'game'
   starts_at: string
   venue: string | null
+}
+
+type DueAnnouncement = {
+  user_id: string
+  email: string
+  first_name: string
+  announcement_id: string
+  title: string
+  body: string
+  author_name: string
+  group_names: string
 }
 
 const json = (body: unknown, status = 200) =>
@@ -69,6 +81,29 @@ Deno.serve(async (req: Request) => {
     // Resend allows a couple of emails per second on the free plan.
     await new Promise((r) => setTimeout(r, 600))
   }
+
+  // Announcements the writers asked to send by email, one email per announcement and person.
+  let announcementsSent = 0
+  let announcementsFailed = 0
+  const due = await admin.rpc('announcements_due')
+  if (!due.error) {
+    for (const row of (due.data ?? []) as DueAnnouncement[]) {
+      if (sent + failed + announcementsSent + announcementsFailed >= MAX_EMAILS) break
+      const mail = buildAnnouncement(row.first_name, row.title, row.body, row.author_name, row.group_names, appUrl)
+      const res = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ from, to: [row.email], subject: mail.subject, text: mail.text, html: mail.html }),
+      })
+      if (!res.ok) {
+        announcementsFailed++
+        continue
+      }
+      announcementsSent++
+      await admin.rpc('announcements_mark_sent', { p_user: row.user_id, p_announcements: [row.announcement_id] })
+      await new Promise((r) => setTimeout(r, 600))
+    }
+  }
   // Only counts are returned and logged, never names or addresses.
-  return json({ people: byUser.size, sent, failed })
+  return json({ people: byUser.size, sent, failed, announcements: announcementsSent, announcementsFailed })
 })
