@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState, type CSSProperties } from 'react'
 import { Link } from 'react-router-dom'
 import { errorText, t } from '../i18n'
+import AnnouncementsLink from '../components/AnnouncementsLink'
 import Crest from '../components/Crest'
 import { jerseyName, useClub } from '../lib/club'
 import { refreshLeague } from '../lib/league'
@@ -182,6 +183,7 @@ export default function Events() {
         <h1>{formatMonth(`${week[3].date}T12:00:00Z`)}</h1>
         {isStaff && <Link className="button small" to="/events/new">{t('events.new')}</Link>}
       </div>
+      <AnnouncementsLink />
 
       <section className="club-banner desk-only" aria-label={club.name || t('app.name')}>
         <Crest />

@@ -550,3 +550,13 @@ a.doc-status:hover { text-decoration: underline; }
 .grid .cancelled { color: var(--muted); background: var(--surface-2); }
 .legend { list-style: none; padding: 0; margin: .5rem 0 0; display: grid; gap: .25rem; font-size: .875rem; }
 .legend strong { display: inline-block; min-width: 2rem; }
+
+/* Announcements */
+textarea { display: block; width: 100%; margin-top: .375rem; padding: .625rem .75rem; font: inherit; color: inherit; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-control); resize: vertical; }
+textarea:focus-visible { border-color: var(--accent); outline-offset: 0; }
+.ann-link { display: flex; align-items: center; gap: .75rem; min-height: 48px; margin-bottom: 1rem; padding: .5rem .875rem; color: var(--ink); text-decoration: none; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); }
+.ann-latest { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--muted); }
+.ann-list { list-style: none; margin: 1rem 0 0; padding: 0; display: grid; gap: .75rem; }
+.ann { padding: .875rem 1rem; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); }
+.ann h2 { margin: 0; font-size: 1.125rem; }
+.ann-body { margin: .5rem 0; white-space: pre-wrap; overflow-wrap: anywhere; }
