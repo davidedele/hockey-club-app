@@ -23,19 +23,18 @@ insert into public.event_groups select '00000000-0000-0000-0000-0000000000e2', i
 
 \echo == group settings
 select test.login('00000000-0000-0000-0000-000000000001');
-select test.rows('a member reads the group settings', $$select game_dark, weekly_limit from public.groups$$, 4);
+select test.rows('a member reads the group settings', $$select game_dark from public.groups$$, 4);
 select test.affected('a player cannot change a group', $$update public.groups set game_dark = '#000000'$$, 0);
 select test.logout();
 select test.login('00000000-0000-0000-0000-0000000000c1');
-select test.affected('a coach cannot change a group', $$update public.groups set weekly_limit = 3$$, 0);
+select test.affected('a coach cannot change a group', $$update public.groups set game_dark = '#222222'$$, 0);
 select test.fails('a coach cannot add a group', $$insert into public.groups (code, name) values ('D', 'D')$$, 'row-level security');
 select test.fails('a coach cannot upload a group picture', $$insert into storage.objects (bucket_id, name) values ('club', 'group-1-1000000000.png')$$, 'row-level security');
 select test.fails('a coach cannot upload the club logo either', $$insert into storage.objects (bucket_id, name) values ('club', 'logo-1000000000.png')$$, 'row-level security');
 select test.logout();
 select test.login('00000000-0000-0000-0000-0000000000b1');
-select test.affected('the board sets colours and a weekly limit', $$update public.groups set game_dark = '#111111', game_light = '#ffd400', weekly_limit = 2 where code = 'A'$$, 1);
+select test.affected('the board sets colours', $$update public.groups set game_dark = '#111111', game_light = '#ffd400' where code = 'A'$$, 1);
 select test.fails('a colour must be a hex code', $$update public.groups set game_light = 'yellow' where code = 'A'$$, 'violates check constraint');
-select test.fails('the weekly limit is 1 to 14', $$update public.groups set weekly_limit = 0 where code = 'A'$$, 'violates check constraint');
 select test.fails('the id cannot be changed', $$update public.groups set id = 99 where code = 'A'$$, 'can only be updated to DEFAULT');
 select test.works('the board uploads a group picture', $$insert into storage.objects (bucket_id, name) values ('club', 'group-1-1000000000.png')$$);
 select test.affected('the board sets the group picture', $$update public.groups set logo_path = 'group-1-1000000000.png' where code = 'A'$$, 1);

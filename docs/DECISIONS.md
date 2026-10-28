@@ -139,7 +139,7 @@ Recorded on 21 October 2026. Read together with `SPEC.md` and `SPORTEASY_NOTES.m
 40. Navigation: one item, Campionato, holds the league page and the club's own statistics, with a switch at the top, so the phone tab bar stays at three items for players.
 
 ## Decisions of 28 October
-41. The weekly training limit is dropped (Davide). No plans per player, no warnings. The spec, the build order and the screens no longer include it. The column `groups.weekly_limit` from migration 0009 is still in the database and unused.
+41. The weekly training limit is dropped (Davide). No plans per player, no warnings. The spec, the build order and the screens no longer include it. The column `groups.weekly_limit` from migration 0009 is dropped in migration 0017 (Davide agreed).
 42. Ice hours (a request from the club president, answered by Davide): the board counts the hours of ice used, per rink and per month, to compare with the venue's flat monthly fee and its end of season count. The booked ice is the event's own start and end. There are two rinks. An event with nobody present still counts. A cancelled event is kept, marked cancelled, and counted apart; deleting is for mistakes. A recap page for the board with an export to a spreadsheet file. An hourly price per rink is optional and board only.
 43. Weekly plans per person per season (answered on 23 October) are no longer needed because of item 41. SportEasy gives the club no line-ups or training plans, so those wait until after the move.
 44. The club has a fifth group, Start, which the board adds in Impostazioni, Gruppi. The president gets a guest style account to look at the app once it is ready to show.

@@ -8,7 +8,6 @@ export interface Group {
   game_dark: string | null
   game_light: string | null
   logo_path: string | null
-  weekly_limit: number | null
   league_team?: string | null
   league_championships?: number[]
 }
