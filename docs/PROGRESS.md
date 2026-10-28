@@ -7,6 +7,7 @@ Keep entries short and put the newest first.
 Migrations up to 0015 are applied to the Supabase test project (0012 to 0015 on 22 October, by Davide in the SQL Editor, from one file with a check that stops on the wrong project or a second run). Security advisors after that: row level security on every table; `league_ignored` has no policies on purpose, since only the league function and triggers use it. The league-sync server function is not deployed yet, so the Campionato page stays empty until it is. The weekly limit was dropped on 28 October.
 
 ## Session log
+0. 28 October 2026, reminder emails (branch `claude/reminders`): migration 0019 (switch per person, log of what was sent, who is due, mark as sent), 40 database tests (every new rule made a test fail when broken), server function `send-reminders` with the email text and a unit test, and a switch in Profilo. Steps in `docs/SETUP_REMINDERS.md`.
 0. 28 October 2026, online test version (branch `claude/deploy`): Netlify settings in `netlify.toml` and the steps in `docs/DEPLOY.md`. The test copy uses the Supabase test project only.
 0. 28 October 2026, calendar feed (branch `claude/calendar-feed`): migration 0018 (token table, own token and new token functions, feed function for the server), 20 database tests (every new rule made a test fail when broken: open token policy, feed function open to signed in users, group filter dropped, old token kept, 60 day limit removed), server function `calendar-feed` with the ICS builder (`ics.ts`, unit test `src/lib/ics.test.ts`), and a Calendario block in Profilo. The steps to put it online are in `docs/SETUP_CALENDAR_FEED.md`.
 1. 21 October 2026, third session (local, Davide away):
@@ -39,6 +40,7 @@ Migrations up to 0015 are applied to the Supabase test project (0012 to 0015 on 
 3. 21 October 2026, first session: specification, notes on the current app, decisions and working rules written. Repository created.
 
 ## Next
+0c. Davide: put the reminders online (`docs/SETUP_REMINDERS.md`) and try them. Then build: team invite link per group, installable app.
 0b. Davide: set up the Netlify site and the address following `docs/DEPLOY.md`, then set the Site URL in the Supabase test project.
 0a. Davide: apply migration 0018 and deploy the calendar-feed function to the test project (`docs/SETUP_CALENDAR_FEED.md`), then subscribe a phone calendar and check the events.
 0. Deploy the league-sync function to the test project, link each group to its league team in Impostazioni, Gruppi, then try a real game: record attendance, enter numbers, vote from two accounts, look at Statistiche and Campionato.
