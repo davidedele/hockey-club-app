@@ -28,6 +28,7 @@ import Events from './pages/Events'
 import ForgotPassword from './pages/ForgotPassword'
 import Invites from './pages/Invites'
 import Join from './pages/Join'
+import Lineup from './pages/Lineup'
 import Login from './pages/Login'
 import MemberEdit from './pages/MemberEdit'
 import Members from './pages/Members'
@@ -185,6 +186,7 @@ export default function App() {
         <Route path="/campionato" element={<Championship />} />
         <Route path="/events/:id" element={<EventDetail />} />
         <Route path="/events/:id/edit" element={<EventForm />} />
+        <Route path="/events/:id/lineup" element={<Lineup />} />
         <Route path="/members/:id" element={<MemberEdit />} />
         <Route path="/members/:id/documents" element={<Documents />} />
         <Route path="/documents" element={<Documents />} />
