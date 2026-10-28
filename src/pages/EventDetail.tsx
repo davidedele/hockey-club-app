@@ -7,7 +7,7 @@ import { useSession } from '../lib/session'
 import { whatsappLink } from '../lib/whatsapp'
 import { supabase } from '../lib/supabase'
 import { formatDay, formatTime } from '../lib/time'
-import type { Answer, AttendanceRow, EventRow, Group, Status } from '../lib/types'
+import type { Answer, AttendanceRow, EventRow, Group, Rink, Status } from '../lib/types'
 
 const STATUSES: Status[] = ['on_time', 'late', 'excused', 'unexcused', 'injured', 'not_called_up']
 
@@ -19,6 +19,7 @@ export default function EventDetail() {
   const [event, setEvent] = useState<EventRow | null>(null)
   const [loaded, setLoaded] = useState(false)
   const [groups, setGroups] = useState<Group[]>([])
+  const [rinks, setRinks] = useState<Rink[]>([])
   const [myGroupIds, setMyGroupIds] = useState<number[]>([])
   const [mine, setMine] = useState<Answer | null>(null)
   const [rows, setRows] = useState<AttendanceRow[]>([])
@@ -31,15 +32,17 @@ export default function EventDetail() {
 
   const refresh = useCallback(async () => {
     if (!profile) return
-    const [e, g, m, a] = await Promise.all([
+    const [e, g, m, a, rk] = await Promise.all([
       supabase.from('events').select('*, event_groups(group_id)').eq('id', id).maybeSingle(),
       supabase.from('groups').select('*').order('id'),
       supabase.from('group_members').select('group_id').eq('user_id', profile.id),
       supabase.from('attendance_answers').select('answer').eq('event_id', id).eq('user_id', profile.id).maybeSingle(),
+      supabase.from('rinks').select('id, name'),
     ])
     const row = (e.data as EventRow | null) ?? null
     setEvent(row)
     setGroups((g.data ?? []) as Group[])
+    setRinks((rk.data ?? []) as Rink[])
     setMyGroupIds(((m.data ?? []) as { group_id: number }[]).map((x) => x.group_id))
     setMine((a.data as { answer: Answer } | null)?.answer ?? null)
     if (row) {
@@ -65,6 +68,8 @@ export default function EventDetail() {
 
   const now = Date.now()
   const over = new Date(event.ends_at).getTime() < now
+  const cancelled = event.cancelled_at !== null
+  const rinkName = rinks.find((r) => r.id === event.rink_id)?.name ?? ''
   const started = new Date(event.starts_at).getTime() <= now
   const inMyGroups = event.event_groups.some((x) => myGroupIds.includes(x.group_id))
   const groupNames = event.event_groups
@@ -122,6 +127,10 @@ export default function EventDetail() {
     const them = Number(scoreThem)
     if (scoreUs === '' || scoreThem === '' || !Number.isInteger(us) || !Number.isInteger(them)) return
     return guarded(() => supabase.from('events').update({ score_for: us, score_against: them }).eq('id', id).select())
+  }
+
+  function setCancelled(value: boolean) {
+    return guarded(() => supabase.from('events').update({ cancelled_at: value ? new Date().toISOString() : null }).eq('id', id).select())
   }
 
   async function remove(following: boolean) {
@@ -182,10 +191,12 @@ export default function EventDetail() {
         </div>
       </div>
       {error && <p className="error" role="alert">{error}</p>}
+      {cancelled && <p className="box cancelled-note" role="status">{t('event.cancelledBanner')}</p>}
 
       <dl className="facts">
         {event.meetup_at && (<><dt>{t('event.meetup')}</dt><dd>{formatTime(event.meetup_at)}</dd></>)}
         {event.venue && (<><dt>{t('event.venue')}</dt><dd>{event.venue}</dd></>)}
+        {rinkName && (<><dt>{t('event.rink')}</dt><dd>{rinkName}</dd></>)}
         {event.opponent && (<><dt>{t('event.opponent')}</dt><dd>{event.opponent}{event.home_away ? ` · ${t(event.home_away === 'home' ? 'event.home' : 'event.away')}` : ''}</dd></>)}
         {event.jersey && (<><dt>{t('event.jersey')}</dt><dd>{jerseyLabel}</dd></>)}
         {event.score_for !== null && event.score_against !== null && (
@@ -193,7 +204,7 @@ export default function EventDetail() {
         )}
       </dl>
       <div className="actions share-row">
-        {!over && <a className="button secondary small" href={whatsappLink(shareText)} target="_blank" rel="noopener noreferrer">{t('share.whatsapp')}</a>}
+        {!over && !cancelled && <a className="button secondary small" href={whatsappLink(shareText)} target="_blank" rel="noopener noreferrer">{t('share.whatsapp')}</a>}
         {hasScore && <a className="button secondary small" href={whatsappLink(resultText)} target="_blank" rel="noopener noreferrer">{t('share.result')}</a>}
       </div>
 
@@ -208,7 +219,7 @@ export default function EventDetail() {
         />
       )}
 
-      {inMyGroups && (
+      {inMyGroups && !cancelled && (
         <>
           <h2>{t('event.myAnswer')}</h2>
           {over ? (
@@ -246,7 +257,7 @@ export default function EventDetail() {
           {!started && <p className="hint">{t('event.recordHint')}</p>}
           <h3>{t('event.noAnswer', { n: String(pending.length) })}</h3>
           <ul className="list">{pending.map(person)}</ul>
-          {!over && pending.length > 0 && (
+          {!over && !cancelled && pending.length > 0 && (
             <div className="actions share-row">
               <a
                 className="button secondary small"
@@ -282,10 +293,12 @@ export default function EventDetail() {
 
           <div className="actions spaced">
             <Link className="button" to={`/events/${id}/edit`}>{t('event.edit')}</Link>
+            <button className="secondary" disabled={busy} onClick={() => void setCancelled(!cancelled)}>{cancelled ? t('event.restore') : t('event.cancel')}</button>
             {!confirming && (
               <button className="danger" disabled={busy} onClick={() => setConfirming(true)}>{t('event.deleteStart')}</button>
             )}
           </div>
+          {!cancelled && <p className="hint">{t('event.cancelHint')}</p>}
           {confirming && (
             <div className="box" role="alertdialog" aria-label={t('event.delete')}>
               <p>{t('event.deleteConfirm', { title: event.title, date: dayLabel })}</p>

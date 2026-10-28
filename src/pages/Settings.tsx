@@ -10,6 +10,8 @@ export default function Settings() {
   const items: { to: string; key: string; show: boolean }[] = [
     { to: '/settings/club', key: 'club', show: isBoard },
     { to: '/settings/groups', key: 'groups', show: isBoard },
+    { to: '/settings/rinks', key: 'rinks', show: isBoard },
+    { to: '/settings/ice', key: 'ice', show: isBoard },
     { to: '/settings/invites', key: 'invites', show: true },
   ]
   return (

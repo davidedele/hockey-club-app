@@ -14,7 +14,7 @@ Recorded on 21 October 2026. Read together with `SPEC.md` and `SPORTEASY_NOTES.m
 9. Chat: event discussions are enough, mainly useful for trainings.
 10. Line-ups: different at every training. Game line-ups are given before the match in person, so entering them in the app is optional.
 11. Training plans: the coach uses a whiteboard today. Davide wants something interactive and a library of drills, and the coach should choose whether a plan stays visible after the training or is hidden.
-12. Weekly limit: each player has a maximum number of trainings per week, set by the board according to what the player pays. It counts when the player answers "present". Games do not count. A warning goes to the board, the coach and the manager.
+12. (Dropped on 28 October, see item 41.) Weekly limit: each player has a maximum number of trainings per week, set by the board according to what the player pays. It counts when the player answers "present". Games do not count. A warning goes to the board, the coach and the manager.
 13. Decision makers: the coach and a few board members. Davide directs the project and Claude builds it.
 14. Not wanted: payments and championships (not used in SportEasy today).
 15. Real use: this will be given to the team, so it must be built carefully.
@@ -137,3 +137,9 @@ Recorded on 21 October 2026. Read together with `SPEC.md` and `SPORTEASY_NOTES.m
 38. Groups and league teams: the board links each group to its league team and the competitions it plays (Impostazioni, Gruppi), because the club's teams share names on the league site: HC SGULARAT plays Categoria A, B and C, and HC SGULARAT YELLOW plays Categoria C. Seen on the site on 22 October: A is HC SGULARAT in Categoria A, Coppa LHL Cat A and Coppa delle Regioni; B is HC SGULARAT in Categoria B; one C team is HC SGULARAT in Categoria C (and Coppa LHL Cat C); the other is HC SGULARAT YELLOW in Categoria C.
 39. League games in the calendar: a linked group's league matches become games in the app (opponent, home or away, rink, time; meetup an hour before and 90 minutes long unless staff change them). A game created by hand on the same day for that group is linked instead of doubled. Later changes on the league site move the game, and a result fills the score. A league game deleted by staff is not created again. A match between two of the club's teams appears for both groups.
 40. Navigation: one item, Campionato, holds the league page and the club's own statistics, with a switch at the top, so the phone tab bar stays at three items for players.
+
+## Decisions of 28 October
+41. The weekly training limit is dropped (Davide). No plans per player, no warnings. The spec, the build order and the screens no longer include it. The column `groups.weekly_limit` from migration 0009 is dropped in migration 0017 (Davide agreed).
+42. Ice hours (a request from the club president, answered by Davide): the board counts the hours of ice used, per rink and per month, to compare with the venue's flat monthly fee and its end of season count. The booked ice is the event's own start and end. There are two rinks. An event with nobody present still counts. A cancelled event is kept, marked cancelled, and counted apart; deleting is for mistakes. A recap page for the board with an export to a spreadsheet file. An hourly price per rink is optional and board only.
+43. Weekly plans per person per season (answered on 23 October) are no longer needed because of item 41. SportEasy gives the club no line-ups or training plans, so those wait until after the move.
+44. The club has a fifth group, Start, which the board adds in Impostazioni, Gruppi. The president gets a guest style account to look at the app once it is ready to show.

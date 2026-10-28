@@ -530,3 +530,12 @@ a.doc-status:hover { text-decoration: underline; }
 .lm-venue { font-size: .8125rem; color: var(--muted); }
 .league-source { margin-top: 1.5rem; }
 @media (max-width: 767.98px) { .lmatches li > a, .lmatches li > div { grid-template-columns: 4.75rem minmax(0, 1fr); padding: .625rem .75rem; } }
+
+/* Cancelled events stay in the lists, struck through, and take no answers */
+.evrow.cancelled .ti, .cal-ev.cancelled .ti { text-decoration: line-through; color: var(--muted); }
+.evrow.cancelled .t, .cal-ev.cancelled .t { color: var(--muted); }
+.cancelled-note { margin: 1rem 0; font-weight: 500; }
+
+/* Ice hours: the totals sit on their own rows at the foot of each table */
+.stats-table tfoot th, .stats-table tfoot td { border-top: 1px solid var(--line-strong); font-variant-numeric: tabular-nums; }
+.list.rinks li form { margin: 0; }

@@ -12,7 +12,7 @@ Status: steps 1 and 2 of the build order work against a test database.
 6. A championship page with the league's standings, fixtures and results, read from the league's website, and the club's league games added to the calendar.
 Items 4 to 6 are written and tested, not yet on the test database.
 
-Next: reminders, then the weekly training limit.
+Next: the calendar feed, ice hours with export, then email reminders.
 
 Start here:
 1. `CLAUDE.md` holds the working rules for any chat or session on this project.

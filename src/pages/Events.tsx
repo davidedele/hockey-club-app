@@ -77,13 +77,13 @@ export default function Events() {
   const daysWithEvents = useMemo(() => new Set(events.map((e) => dayKey(e.starts_at))), [events])
   const todayKey = dayKey(new Date().toISOString())
   const thisWeek = useMemo(() => weekOf(new Date().toISOString()), [])
-  const weekCount = events.filter((e) => { const k = dayKey(e.starts_at); return k >= thisWeek[0].date && k <= thisWeek[6].date }).length
+  const weekCount = events.filter((e) => { if (e.cancelled_at) return false; const k = dayKey(e.starts_at); return k >= thisWeek[0].date && k <= thisWeek[6].date }).length
 
   // Own attendance this season (from 1 September): recorded as on time or late, or else answered present.
   const season = useMemo(() => {
     const d = new Date()
     const start = new Date(Date.UTC(d.getMonth() >= 8 ? d.getFullYear() : d.getFullYear() - 1, 8, 1)).toISOString()
-    const mine = events.filter((e) => e.starts_at >= start && new Date(e.ends_at).getTime() < Date.now() && e.event_groups.some((x) => myGroups.includes(x.group_id)))
+    const mine = events.filter((e) => e.starts_at >= start && !e.cancelled_at && new Date(e.ends_at).getTime() < Date.now() && e.event_groups.some((x) => myGroups.includes(x.group_id)))
     const came = mine.filter((e) => {
       const r = records.get(e.id)
       return r ? r === 'on_time' || r === 'late' : answers.get(e.id) === 'present'
@@ -91,7 +91,7 @@ export default function Events() {
     return { came, total: mine.length }
   }, [events, myGroups, records, answers])
 
-  const canAnswer = (e: EventRow) => e.event_groups.some((x) => myGroups.includes(x.group_id))
+  const canAnswer = (e: EventRow) => e.cancelled_at === null && e.event_groups.some((x) => myGroups.includes(x.group_id))
   // A game uses the colours of its first group that has its own; otherwise the club colours.
   const teamColours = (e: EventRow): CSSProperties | undefined => {
     const g = e.event_groups.map((x) => groups.find((y) => y.id === x.group_id)).find((y) => y?.game_dark && y?.game_light)
@@ -112,9 +112,10 @@ export default function Events() {
     setBusy('')
   }
 
-  const next = view === 'upcoming' ? upcoming[0] : undefined
-  const todo = upcoming.slice(1).filter((e) => e.event_groups.some((x) => myGroups.includes(x.group_id)) && !answers.has(e.id)).slice(0, 5)
-  const rest = view === 'upcoming' ? upcoming.slice(1) : past
+  const live = upcoming.filter((e) => !e.cancelled_at)
+  const next = view === 'upcoming' ? live[0] : undefined
+  const todo = live.slice(1).filter((e) => e.event_groups.some((x) => myGroups.includes(x.group_id)) && !answers.has(e.id)).slice(0, 5)
+  const rest = view === 'upcoming' ? upcoming.filter((e) => e !== next) : past
 
   function row(e: EventRow) {
     const mine = answers.get(e.id)
@@ -122,7 +123,7 @@ export default function Events() {
     const title = e.type === 'game' && e.opponent ? t('events.vs', { club: club.name || t('app.name'), opponent: e.opponent }) : e.title
     const meta = [e.venue, e.meetup_at ? t('events.meetup', { time: formatTime(e.meetup_at) }) : null].filter(Boolean).join(', ')
     return (
-      <li key={e.id} className={e.type === 'game' ? 'evrow game' : 'evrow'}>
+      <li key={e.id} className={`${e.type === 'game' ? 'evrow game' : 'evrow'}${e.cancelled_at ? ' cancelled' : ''}`}>
         <Link className="evlink" to={`/events/${e.id}`}>
           <div>
             <div className="d">{formatShortDay(e.starts_at)}</div>
@@ -130,7 +131,7 @@ export default function Events() {
           </div>
           <div>
             <div className="ti">{title}</div>
-            <div className="m">{meta || groupsOf(e)}</div>
+            <div className="m">{e.cancelled_at && <span className="tag">{t('events.cancelled')} </span>}{meta || groupsOf(e)}</div>
           </div>
         </Link>
         {!over && canAnswer(e) ? (
@@ -150,11 +151,11 @@ export default function Events() {
     const over = new Date(e.ends_at).getTime() < now
     const title = e.type === 'game' && e.opponent ? t('events.vs', { club: club.name || t('app.name'), opponent: e.opponent }) : e.title
     return (
-      <article key={e.id} className={e.type === 'game' ? 'cal-ev game' : 'cal-ev'} style={e.type === 'game' ? teamColours(e) : undefined}>
+      <article key={e.id} className={`${e.type === 'game' ? 'cal-ev game' : 'cal-ev'}${e.cancelled_at ? ' cancelled' : ''}`} style={e.type === 'game' ? teamColours(e) : undefined}>
         <Link to={`/events/${e.id}`}>
           <span className="t">{formatTime(e.starts_at)}</span>
           <span className="ti">{title}</span>
-          {e.venue && <span className="m">{e.venue}</span>}
+          {e.cancelled_at ? <span className="m">{t('events.cancelled')}</span> : e.venue && <span className="m">{e.venue}</span>}
         </Link>
         {!over && canAnswer(e) ? (
           <div className="quick" role="group" aria-label={t('events.answerFor', { day: formatDay(e.starts_at) })}>
