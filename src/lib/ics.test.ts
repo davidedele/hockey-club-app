@@ -23,7 +23,7 @@ describe('calendar feed text', () => {
   })
 
   it('escapes the characters that have a meaning', () => {
-    expect(escapeText('A, B; C\\D\nE')).toBe('A\\, B\; C\\\\D\\nE')
+    expect(escapeText('A, B; C\\D\nE')).toBe('A\\, B\\; C\\\\D\\nE')
   })
 
   it('folds long lines at 75 bytes without cutting a character', () => {
