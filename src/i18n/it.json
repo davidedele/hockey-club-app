@@ -570,5 +570,13 @@
   "grid.a.present": "P",
   "grid.a.absent": "A",
   "grid.answerOf.present": "Ha risposto presente, presenza non ancora registrata",
-  "grid.answerOf.absent": "Ha risposto assente, presenza non ancora registrata"
+  "grid.answerOf.absent": "Ha risposto assente, presenza non ancora registrata",
+  "form.groupsEditHint": "Solo questi gruppi vedono l'evento. Chi viene tolto dall'evento perde la sua risposta.",
+  "form.groupsLeague": "Le partite del campionato prendono i gruppi dal collegamento con la lega, quindi qui non si cambiano.",
+  "form.groupsEnded": "L'evento è finito, i gruppi non si cambiano più.",
+  "form.scopeOne": "Solo questo evento",
+  "form.scopeFollowing": "Questo e i prossimi della serie",
+  "error.league_event": "Le partite del campionato prendono i gruppi dalla lega e non si cambiano qui.",
+  "error.event_ended": "L'evento è già finito, i gruppi non si possono più cambiare.",
+  "error.scope_invalid": "Scelta non valida. Riprova."
 }
