@@ -4,7 +4,7 @@ Update this file at the end of every session, so the next session starts exactly
 Keep entries short and put the newest first.
 
 ## Current state
-Migrations up to 0015 are applied to the Supabase test project (0012 to 0015 on 22 October, by Davide in the SQL Editor, from one file with a check that stops on the wrong project or a second run). Security advisors after that: row level security on every table; `league_ignored` has no policies on purpose, since only the league function and triggers use it. The league-sync server function is not deployed yet, so the Campionato page stays empty until it is. Step 3 (weekly limit) waits, by Davide's choice.
+Migrations up to 0015 are applied to the Supabase test project (0012 to 0015 on 22 October, by Davide in the SQL Editor, from one file with a check that stops on the wrong project or a second run). Security advisors after that: row level security on every table; `league_ignored` has no policies on purpose, since only the league function and triggers use it. The league-sync server function is not deployed yet, so the Campionato page stays empty until it is. The weekly limit was dropped on 28 October.
 
 ## Session log
 1. 21 October 2026, third session (local, Davide away):
@@ -44,7 +44,7 @@ Migrations up to 0015 are applied to the Supabase test project (0012 to 0015 on 
 4. Reminders, as decided on 21 October (see `DECISIONS.md`): push first, one reminder the day before a training, more frequent when time is short, managed by the board and managers, and a daily list of who has not answered for coaches. Push needs the service worker and push subscriptions (build step 9), so build that part together with the reminder rules. The coach list of who has not answered exists as a screen. A daily message with it comes with push.
 5. The per event attendance grid (every player by every date, spec section 5). The per player summary exists.
 6. Edit groups of an existing event, and change a whole series at once.
-7. Step 3: weekly limit and warnings.
+7. Ice hours per rink with a board recap and export (decided 28 October, replaces the weekly limit, which was dropped).
 
 ## Open problems
 0. Before moving the club from SportEasy: decide between single use invites (today) and a team link per group usable by many people for a limited time, revocable by the board. Recommended: team link for the move, single use for individual cases. Davide: not urgent, there is time before the move.

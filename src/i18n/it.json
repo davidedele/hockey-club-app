@@ -254,8 +254,6 @@
   "groups.picture": "Immagine del gruppo",
   "groups.ownColours": "Colori propri per il giorno di partita",
   "groups.clubColours": "Usa i colori del club.",
-  "groups.limit": "Allenamenti a settimana (facoltativo)",
-  "groups.limitHint": "Il limite di base per i giocatori del gruppo. Gli avvisi arriveranno con il limite settimanale.",
   "groups.delete": "Elimina gruppo",
   "groups.deleteConfirm": "Eliminare il gruppo {name}? I suoi {n} membri restano nel club ma escono dal gruppo. Gli inviti del gruppo non funzioneranno più.",
   "groups.deleteNow": "Elimina {name}",

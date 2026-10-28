@@ -3,14 +3,14 @@
 ## 1. Goal
 Replace SportEasy, which the club pays for, with an app the club owns.
 Keep what the club really uses (trainings, attendance, games, ratings, MVP, chat).
-Add what SportEasy lacks: line-ups per training, training plans and drills that players see before going on the ice, and a weekly training limit per player.
+Add what SportEasy lacks: line-ups per training, training plans and drills that players see before going on the ice, and a count of the ice hours the club uses.
 
 ## 2. Users and roles
 About 60 to 80 adults. No minors.
 Roles:
 1. Player.
 2. Coach (one per team). Creates trainings, sets line-ups, uploads training plans.
-3. Manager and president (board). Manage members, groups, weekly limits, and receive warnings.
+3. Manager and president (board). Manage members and groups, see the ice hours, and receive warnings.
 A person can have several roles and belong to several groups.
 Login: email and password, the same on the phone app and the website. Joining is by invite link.
 
@@ -36,11 +36,12 @@ The answer must be hard to ignore:
 After the event the coach can record who actually came (on time, late, excused, unexcused, injured, not called up).
 A season attendance summary per player, and a per event grid, are available to the coach and board.
 
-## 6. Weekly training limit
-Each player has a plan: the maximum number of trainings per week, set by the board according to what the player pays.
-It counts when the player answers "present" for a training. Games do not count.
-If a player answers "present" beyond the limit, the answer is still accepted and a warning goes to the board, the coach and the manager.
-Open points: which day the week starts (assume Monday), and how plans are edited.
+## 6. Ice hours
+The weekly training limit was dropped on 28 October (Davide), so there is no plan per player and no limit warning.
+In its place the board counts the ice the club uses, because the venue bills a monthly flat fee and does a real count with an adjustment at the end of the season, and the club has to compare its own hours with theirs.
+Every training and game has a rink (the club uses two). The booked ice is the event's own start and end time, so an event from 14:00 to 15:30 is 1.5 hours. Staff can adjust the times.
+An event with nobody present still counts, because the ice is paid for anyway. A cancelled event is kept and marked cancelled, and its hours are counted apart, so the board can see what was booked and then dropped. Deleting stays for mistakes and does not count.
+A recap page for the board shows the hours per rink, per month and for the season, the cancelled hours, and an export to a file that opens in Excel. An hourly price per rink is optional: if the board enters one, the page also shows the cost. Coaches and players never see prices.
 
 ## 7. Calendar feed
 Each user gets a private subscription link (an ICS feed).
@@ -78,11 +79,11 @@ No separate general chat in the first version.
 
 ## 12. Notifications
 Push notifications and email. Each user can choose what they receive.
-Needed first: new event, attendance reminder, change of time or venue, weekly limit warning (to staff).
+Needed first: new event, attendance reminder, change of time or venue.
 On iPhone, push notifications need the app to be added to the home screen.
 
 ## 13. Data and privacy
-Keep the minimum: name, email, phone (optional), jersey number, position, group membership, weekly plan, profile picture (optional, added by the person, decided 21 October), game numbers, ratings and MVP votes (decided 21 October), absence periods with an optional reason (22 October), medical certificate expiry and file, privacy consent date (22 October).
+Keep the minimum: name, email, phone (optional), jersey number, position, group membership, profile picture (optional, added by the person, decided 21 October), game numbers, ratings and MVP votes (decided 21 October), absence periods with an optional reason (22 October), medical certificate expiry and file, privacy consent date (22 October).
 Not needed: date of birth, height, weight, parent fields.
 Row level security in the database: players see their own groups' events, their own answers and who said present for those events (decided 21 October); ratings follow the rule above; only the board sees plans and warnings.
 The club holds members' data, so the board should agree to the move and members should be told what is stored.
@@ -96,7 +97,7 @@ The club holds members' data, so the board should agree to the move and members 
 ## 15. Build order
 1. Login, invite links, groups, members.
 2. Events with weekly repeat, and attendance with reminders.
-3. Weekly limit and warnings.
+3. Ice hours per rink, with export.
 4. Calendar subscription feed.
 5. Line-ups.
 6. Training plans, drill library and uploads.
@@ -112,6 +113,6 @@ Payments, parent accounts, sponsor pages. SportEasy has them and the club does n
 ## 17. Open questions
 1. Exactly what the manager role can see and do.
 2. Whether board members can see who rated whom.
-3. How weekly plans are set and changed (per person, per season, or per payment).
+3. Names of the two rinks, and whether the price per hour differs between them.
 4. Whether to show an event to all groups by default.
 5. Who decides to switch away from SportEasy, and when.
