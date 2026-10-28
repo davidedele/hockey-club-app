@@ -297,6 +297,7 @@ export default function Events() {
           {t(view === 'upcoming' ? 'events.showPast' : 'events.showUpcoming')}
         </button>
         {isStaff && <Link to="/events/unanswered">{t('events.unanswered')}</Link>}
+        {isStaff && <Link to="/drills">{t('drills.title')}</Link>}
       </div>
       </>)}
     </div>

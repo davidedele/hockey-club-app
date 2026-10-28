@@ -225,6 +225,34 @@ export interface LineupCandidate {
   answer: Answer | null
 }
 
+// A drill in the club's library, used in any number of training plans.
+export interface Drill {
+  id: string
+  title: string
+  notes: string | null
+  file_path: string | null
+  video_url: string | null
+  created_by: string | null
+  created_at: string
+}
+
+// The plan of one training: the coach's words and whether it stays up after the session.
+export interface EventPlan {
+  event_id: string
+  notes: string | null
+  visible_after: boolean
+}
+
+// One drill inside one plan, in its place in the order.
+export interface PlanDrill {
+  id: string
+  event_id: string
+  drill_id: string
+  step: number
+  minutes: number | null
+  drills: Drill | null
+}
+
 export interface Announcement {
   id: string
   author_id: string | null

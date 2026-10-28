@@ -570,3 +570,11 @@ textarea:focus-visible { border-color: var(--accent); outline-offset: 0; }
 .place .who { font-weight: 500; font-size: .9375rem; line-height: 1.15; overflow-wrap: anywhere; }
 .place .who.free { font-weight: 400; color: var(--muted); }
 button.place.on { border-color: var(--accent); background: var(--accent-soft); }
+
+/* Training plan: the drills in order */
+.plan-list { list-style: none; counter-reset: drill; margin: 1rem 0 0; padding: 0; display: grid; gap: .75rem; }
+.plan-list > li { counter-increment: drill; }
+.plan-list h3 { margin: 0; font-size: 1.0625rem; }
+.plan-list h3::before { content: counter(drill) ". "; color: var(--muted); }
+.plan-minutes { display: flex; align-items: center; gap: .5rem; margin: 0; font-size: .875rem; color: var(--muted); }
+.plan-minutes input { width: 5rem; margin: 0; }

@@ -27,8 +27,10 @@ import EventForm from './pages/EventForm'
 import Events from './pages/Events'
 import ForgotPassword from './pages/ForgotPassword'
 import Invites from './pages/Invites'
+import Drills from './pages/Drills'
 import Join from './pages/Join'
 import Lineup from './pages/Lineup'
+import Plan from './pages/Plan'
 import Login from './pages/Login'
 import MemberEdit from './pages/MemberEdit'
 import Members from './pages/Members'
@@ -187,6 +189,8 @@ export default function App() {
         <Route path="/events/:id" element={<EventDetail />} />
         <Route path="/events/:id/edit" element={<EventForm />} />
         <Route path="/events/:id/lineup" element={<Lineup />} />
+        <Route path="/events/:id/plan" element={<Plan />} />
+        <Route path="/drills" element={<Drills />} />
         <Route path="/members/:id" element={<MemberEdit />} />
         <Route path="/members/:id/documents" element={<Documents />} />
         <Route path="/documents" element={<Documents />} />
