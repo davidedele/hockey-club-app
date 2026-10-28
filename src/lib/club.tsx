@@ -37,8 +37,15 @@ export function ClubProvider({ children }: { children: ReactNode }) {
     })
   }, [])
 
+  // The club's details are only readable after signing in, so they are read again at every sign in
+  // and forgotten at sign out, which keeps the sign in pages neutral.
   useEffect(() => {
     void reload()
+    const { data } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'SIGNED_IN') setTimeout(() => void reload(), 0)
+      if (event === 'SIGNED_OUT') setClub(DEFAULT)
+    })
+    return () => data.subscription.unsubscribe()
   }, [reload])
 
   useEffect(() => {
