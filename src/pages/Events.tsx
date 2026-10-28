@@ -1,10 +1,12 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState, type CSSProperties } from 'react'
 import { Link } from 'react-router-dom'
 import { errorText, t } from '../i18n'
-import { useClub } from '../lib/club'
+import Crest from '../components/Crest'
+import { jerseyName, useClub } from '../lib/club'
+import { refreshLeague } from '../lib/league'
 import { useSession } from '../lib/session'
 import { supabase } from '../lib/supabase'
-import { dayKey, formatDay, formatMonth, formatShortDay, formatTime, weekOf } from '../lib/time'
+import { dayKey, formatDay, formatMonth, formatShortDay, formatTime, rangeParts, weekOf } from '../lib/time'
 import type { Answer, EventRow, Group } from '../lib/types'
 
 const Tick = () => (
@@ -26,17 +28,23 @@ export default function Events() {
   const [weekShift, setWeekShift] = useState(0)
   const [picked, setPicked] = useState<string | null>(null)
   const [loaded, setLoaded] = useState(false)
+  const [records, setRecords] = useState<Map<string, string>>(new Map())
+  const [memberCount, setMemberCount] = useState<number | null>(null)
   const [busy, setBusy] = useState('')
   const [error, setError] = useState('')
 
   const load = useCallback(async () => {
     if (!profile) return
-    const [e, g, m, a] = await Promise.all([
+    const [e, g, m, a, r, n] = await Promise.all([
       supabase.from('events').select('*, event_groups(group_id)').order('starts_at').limit(500),
       supabase.from('groups').select('*').order('id'),
       supabase.from('group_members').select('group_id').eq('user_id', profile.id),
       supabase.from('attendance_answers').select('event_id, answer').eq('user_id', profile.id),
+      supabase.from('attendance_records').select('event_id, status').eq('user_id', profile.id),
+      supabase.from('profiles').select('id', { count: 'exact', head: true }),
     ])
+    setRecords(new Map(((r.data ?? []) as { event_id: string; status: string }[]).map((x) => [x.event_id, x.status])))
+    setMemberCount(n.count ?? null)
     const rows = (e.data ?? []) as EventRow[]
     setEvents(rows)
     setGroups((g.data ?? []) as Group[])
@@ -55,6 +63,11 @@ export default function Events() {
     void load()
   }, [load])
 
+  // League games enter the calendar when the league's website is read; a stale reading is refreshed here.
+  useEffect(() => {
+    void refreshLeague().then((changed) => { if (changed) void load() })
+  }, [load])
+
   const groupName = useMemo(() => new Map(groups.map((g) => [g.id, g.name])), [groups])
   const now = Date.now()
   const upcoming = useMemo(() => events.filter((e) => new Date(e.ends_at).getTime() >= now), [events, now])
@@ -63,8 +76,27 @@ export default function Events() {
   const dayEvents = useMemo(() => (picked ? events.filter((e) => dayKey(e.starts_at) === picked) : []), [events, picked])
   const daysWithEvents = useMemo(() => new Set(events.map((e) => dayKey(e.starts_at))), [events])
   const todayKey = dayKey(new Date().toISOString())
+  const thisWeek = useMemo(() => weekOf(new Date().toISOString()), [])
+  const weekCount = events.filter((e) => { const k = dayKey(e.starts_at); return k >= thisWeek[0].date && k <= thisWeek[6].date }).length
+
+  // Own attendance this season (from 1 September): recorded as on time or late, or else answered present.
+  const season = useMemo(() => {
+    const d = new Date()
+    const start = new Date(Date.UTC(d.getMonth() >= 8 ? d.getFullYear() : d.getFullYear() - 1, 8, 1)).toISOString()
+    const mine = events.filter((e) => e.starts_at >= start && new Date(e.ends_at).getTime() < Date.now() && e.event_groups.some((x) => myGroups.includes(x.group_id)))
+    const came = mine.filter((e) => {
+      const r = records.get(e.id)
+      return r ? r === 'on_time' || r === 'late' : answers.get(e.id) === 'present'
+    }).length
+    return { came, total: mine.length }
+  }, [events, myGroups, records, answers])
 
   const canAnswer = (e: EventRow) => e.event_groups.some((x) => myGroups.includes(x.group_id))
+  // A game uses the colours of its first group that has its own; otherwise the club colours.
+  const teamColours = (e: EventRow): CSSProperties | undefined => {
+    const g = e.event_groups.map((x) => groups.find((y) => y.id === x.group_id)).find((y) => y?.game_dark && y?.game_light)
+    return g ? ({ '--team-dark': g.game_dark, '--team-light': g.game_light } as CSSProperties) : undefined
+  }
   const groupsOf = (e: EventRow) => e.event_groups.map((x) => groupName.get(x.group_id)).filter(Boolean).join(', ')
 
   async function answer(e: EventRow, value: Answer) {
@@ -81,6 +113,7 @@ export default function Events() {
   }
 
   const next = view === 'upcoming' ? upcoming[0] : undefined
+  const todo = upcoming.slice(1).filter((e) => e.event_groups.some((x) => myGroups.includes(x.group_id)) && !answers.has(e.id)).slice(0, 5)
   const rest = view === 'upcoming' ? upcoming.slice(1) : past
 
   function row(e: EventRow) {
@@ -112,14 +145,60 @@ export default function Events() {
     )
   }
 
+  function card(e: EventRow) {
+    const mine = answers.get(e.id)
+    const over = new Date(e.ends_at).getTime() < now
+    const title = e.type === 'game' && e.opponent ? t('events.vs', { club: club.name || t('app.name'), opponent: e.opponent }) : e.title
+    return (
+      <article key={e.id} className={e.type === 'game' ? 'cal-ev game' : 'cal-ev'} style={e.type === 'game' ? teamColours(e) : undefined}>
+        <Link to={`/events/${e.id}`}>
+          <span className="t">{formatTime(e.starts_at)}</span>
+          <span className="ti">{title}</span>
+          {e.venue && <span className="m">{e.venue}</span>}
+        </Link>
+        {!over && canAnswer(e) ? (
+          <div className="quick" role="group" aria-label={t('events.answerFor', { day: formatDay(e.starts_at) })}>
+            <button className={mine === 'present' ? 'on present' : ''} aria-pressed={mine === 'present'} aria-label={t('answer.present')} disabled={busy === e.id} onClick={() => void answer(e, 'present')}><Tick /></button>
+            <button className={mine === 'absent' ? 'on absent' : ''} aria-pressed={mine === 'absent'} aria-label={t('answer.absent')} disabled={busy === e.id} onClick={() => void answer(e, 'absent')}><Cross /></button>
+          </div>
+        ) : mine ? (
+          <span className="state">{t(mine === 'present' ? 'answer.present' : 'answer.absent')}</span>
+        ) : null}
+      </article>
+    )
+  }
+
+  const weekEvents = new Map(week.map((d) => [d.date, events.filter((e) => dayKey(e.starts_at) === d.date)]))
+  const weekEmpty = week.every((d) => (weekEvents.get(d.date) ?? []).length === 0)
+  const goWeek = (shift: number) => {
+    setWeekShift(shift)
+    setPicked(null)
+  }
+
   return (
     <div className="page wide">
-      <div className="row">
+      <div className="row phone-only">
         <h1>{formatMonth(`${week[3].date}T12:00:00Z`)}</h1>
         {isStaff && <Link className="button small" to="/events/new">{t('events.new')}</Link>}
       </div>
 
-      <section className="week" aria-label={t('events.week')}>
+      <section className="club-banner desk-only" aria-label={club.name || t('app.name')}>
+        <Crest />
+        <div className="cb-title">
+          <h1>{club.name || t('app.name')}</h1>
+          <span>{formatMonth(new Date().toISOString())}</span>
+        </div>
+        <dl className="cb-stats">
+          <div><dt>{t('dash.members')}</dt><dd>{memberCount ?? ''}</dd></div>
+          <div><dt>{t('dash.thisWeek')}</dt><dd>{weekCount}</dd></div>
+          <div><dt>{t('dash.myAttendance')}</dt><dd>{season.total ? t('dash.ofTotal', { n: String(season.came), total: String(season.total) }) : t('common.none')}</dd></div>
+        </dl>
+        {isStaff && <Link className="button small light" to="/events/new">{t('events.new')}</Link>}
+      </section>
+
+      
+
+      <section className="week phone-only" aria-label={t('events.week')}>
         <div className="week-bar">
           <button className="icon" aria-label={t('events.prevWeek')} onClick={() => { setWeekShift(weekShift - 1); setPicked(null) }}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6" /></svg>
@@ -155,7 +234,7 @@ export default function Events() {
       </section>
 
       {picked && (
-        <section className="dayview" aria-live="polite">
+        <section className="dayview phone-only" aria-live="polite">
           <div className="row">
             <h2>{formatDay(`${picked}T12:00:00Z`)}</h2>
             <button className="link" onClick={() => setPicked(null)}>{t('events.showAll')}</button>
@@ -169,16 +248,46 @@ export default function Events() {
       {loaded && view === 'upcoming' && upcoming.length === 0 && <p className="hint">{t('events.empty')}</p>}
       {loaded && view === 'past' && past.length === 0 && <p className="hint">{t('events.emptyPast')}</p>}
 
-      <div className="evgrid">
-        {next && <NextPanel club={club.name || t('app.name')} event={next} groups={groupsOf(next)} mine={answers.get(next.id) ?? null} count={counts.get(next.id)} canAnswer={canAnswer(next)} busy={busy === next.id} onAnswer={(v) => void answer(next, v)} />}
+      <div className="evgrid dash">
+        {next && <NextPanel club={club.name || t('app.name')} colours={teamColours(next)} event={next} groups={groupsOf(next)} mine={answers.get(next.id) ?? null} count={counts.get(next.id)} canAnswer={canAnswer(next)} busy={busy === next.id} onAnswer={(v) => void answer(next, v)} />}
+        {view === 'upcoming' && (
+          <section className="todo desk-only" aria-label={t('dash.todo')}>
+            <h2>{t('dash.todo')}{todo.length > 0 ? ` (${todo.length})` : ''}</h2>
+            {todo.length === 0 ? <p className="hint">{t('dash.allDone')}</p> : <ul className="evrows">{todo.map(row)}</ul>}
+          </section>
+        )}
         {rest.length > 0 && (
-          <div>
+          <div className={view === 'upcoming' ? 'phone-only' : undefined}>
             {view === 'upcoming' && <div className="nowline"><span>{t('events.then')}</span><i aria-hidden="true" /></div>}
             {view === 'past' && <h2>{t('events.past')}</h2>}
             <ul className="evrows">{rest.map(row)}</ul>
           </div>
         )}
       </div>
+
+      {!picked && view === 'upcoming' && <div className="cal-bar desk-only">
+        <button className="icon" aria-label={t('events.prevWeek')} onClick={() => goWeek(weekShift - 1)}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6" /></svg>
+        </button>
+        <span className="cal-range">{weekRange(week[0].date, week[6].date)}</span>
+        <button className="icon" aria-label={t('events.nextWeek')} onClick={() => goWeek(weekShift + 1)}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6" /></svg>
+        </button>
+        {weekShift !== 0 && <button className="link" onClick={() => goWeek(0)}>{t('events.backToToday')}</button>}
+      </div>}
+
+      {view === 'upcoming' && <div className="cal-week desk-only" aria-label={t('events.week')}>
+        {week.map((d) => (
+          <section key={d.date} className={d.date === todayKey ? 'cal-day today' : d.date < todayKey ? 'cal-day past' : 'cal-day'} aria-label={formatDay(`${d.date}T12:00:00Z`)}>
+            <header aria-hidden="true">
+              <span className="dow">{d.dow}</span>
+              <span className="n">{d.num}</span>
+            </header>
+            {(weekEvents.get(d.date) ?? []).map(card)}
+          </section>
+        ))}
+        {loaded && weekEmpty && <p className="cal-none">{t('events.weekEmpty')}</p>}
+      </div>}
 
       <div className="more">
         <button className="link" onClick={() => setView(view === 'upcoming' ? 'past' : 'upcoming')}>
@@ -191,13 +300,17 @@ export default function Events() {
   )
 }
 
-function NextPanel(props: { club: string;  event: EventRow; groups: string; mine: Answer | null; count: number | undefined; canAnswer: boolean; busy: boolean; onAnswer: (v: Answer) => void }) {
+// "dal 19 al 25 ottobre", or "dal 28 settembre al 4 ottobre" across two months.
+const weekRange = (from: string, to: string) => t('events.weekRange', rangeParts(from, to))
+
+function NextPanel(props: { club: string; colours: CSSProperties | undefined; event: EventRow; groups: string; mine: Answer | null; count: number | undefined; canAnswer: boolean; busy: boolean; onAnswer: (v: Answer) => void }) {
   const { event: e, mine } = props
+  const club = useClub()
   const game = e.type === 'game'
   const started = new Date(e.starts_at).getTime() <= Date.now()
   const label = started ? t('events.now') : t(game ? 'events.nextGame' : 'events.nextTraining')
   return (
-    <section className={game ? 'next game' : 'next'} aria-label={label}>
+    <section className={game ? 'next game' : 'next'} style={game ? props.colours : undefined} aria-label={label}>
       {game && <div className="stripes" aria-hidden="true"><span /><span /><span /><span /><span /><span /></div>}
       <div className="next-in">
         <div className="label">
@@ -205,9 +318,9 @@ function NextPanel(props: { club: string;  event: EventRow; groups: string; mine
           <span>{props.groups}</span>
         </div>
         {game && e.opponent && <div className="vs">{t('events.vs', { club: props.club, opponent: e.opponent })}</div>}
-        <div>{formatDay(e.starts_at)}</div>
+        <div className="day-line">{formatDay(e.starts_at)}</div>
         <div className="time">
-          <span className="big">{formatTime(e.starts_at)}</span>
+          <span className="big">{formatTime(e.starts_at)}</span>{' '}
           <span className="until">{t('events.until', { time: formatTime(e.ends_at) })}</span>
         </div>
         <dl className="pair">
@@ -219,6 +332,12 @@ function NextPanel(props: { club: string;  event: EventRow; groups: string; mine
             <dt>{t('event.venue')}</dt>
             <dd>{e.venue || t('common.none')}</dd>
           </div>
+          {game && e.jersey && (
+            <div>
+              <dt>{t('event.jersey')}</dt>
+              <dd>{jerseyName(club, e.jersey)}</dd>
+            </div>
+          )}
         </dl>
         {props.canAnswer && (
           <div className="answers">

@@ -11,6 +11,12 @@ import { useSession } from './lib/session'
 import { supabase } from './lib/supabase'
 import AttendanceSummary from './pages/AttendanceSummary'
 import ClubSettings from './pages/ClubSettings'
+import Documents from './pages/Documents'
+import Championship from './pages/Championship'
+import DocumentsBanner from './components/DocumentsBanner'
+import GroupSettings from './pages/GroupSettings'
+import Settings from './pages/Settings'
+import Stats from './pages/Stats'
 import EventDetail from './pages/EventDetail'
 import EventForm from './pages/EventForm'
 import Events from './pages/Events'
@@ -40,6 +46,7 @@ const ICONS = {
   ),
   invites: <path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3A4 4 0 0 0 11 18.7l1-1" />,
   attendance: <path d="M5 20V11M12 20V5M19 20v-6" />,
+  stats: <path d="M8 4h8v5a4 4 0 0 1-8 0V4zM8 6H5v1a3 3 0 0 0 3 3M16 6h3v1a3 3 0 0 1-3 3M12 13v4M8 20h8M10 17h4v3h-4z" />,
   settings: (
     <>
       <circle cx="12" cy="12" r="3" />
@@ -88,7 +95,7 @@ function PendingBanner() {
     return () => window.removeEventListener('attendance-changed', load)
   }, [load])
 
-  if (count === 0 || location.pathname === '/events') return null
+  if (count === 0 || location.pathname === '/events' || location.pathname.startsWith('/settings') || location.pathname === '/profile') return null
   return (
     <div className="banner" role="status">
       <span>{count === 1 ? t('banner.one') : t('banner.many', { n: String(count) })}</span>
@@ -99,9 +106,10 @@ function PendingBanner() {
 
 // Signed in people with a profile get the app. Everyone else is sent to log in.
 function Protected() {
-  const { loading, session, profile, isStaff } = useSession()
+  const { loading, session, profile, isStaff, isBoard } = useSession()
   const club = useClub()
   const mine = useAvatarUrls([profile?.avatar_path])
+  const { pathname } = useLocation()
   if (loading) return <p className="center">{t('common.loading')}</p>
   if (!session) return <Navigate to="/login" replace />
   if (!profile) {
@@ -114,33 +122,38 @@ function Protected() {
     <>
       <NavLink to="/events"><TabIcon name="events" />{t('nav.events')}</NavLink>
       <NavLink to="/" end><TabIcon name="members" />{t('nav.members')}</NavLink>
+      <NavLink to="/campionato" className={({ isActive }) => (isActive || pathname === '/stats' ? 'active' : undefined)}><TabIcon name="stats" />{t('nav.championship')}</NavLink>
       {isStaff && <NavLink to="/attendance"><TabIcon name="attendance" />{t('nav.attendance')}</NavLink>}
-      {isStaff && <NavLink to="/invites"><TabIcon name="invites" />{t('nav.invites')}</NavLink>}
     </>
   )
   return (
     <div className="shell">
+      <a className="skip" href="#main">{t('nav.skip')}</a>
       <aside className="side">
         <Link className="club" to="/events"><Crest /><span className="club-name">{club.name || t('app.name')}</span></Link>
         <nav aria-label={t('nav.main')}>{main}</nav>
         <nav className="side-foot" aria-label={t('nav.account')}>
-          {isStaff && <NavLink to="/club"><TabIcon name="settings" />{t('club.title')}</NavLink>}
+          {isBoard && <NavLink to="/settings"><TabIcon name="settings" />{t('settings.title')}</NavLink>}
+          {isStaff && !isBoard && <NavLink to="/settings/invites"><TabIcon name="invites" />{t('nav.invites')}</NavLink>}
           <NavLink to="/profile"><Avatar first={profile.first_name} last={profile.last_name} url={photo} size="small" />{fullName}</NavLink>
         </nav>
       </aside>
       <div className="body">
         <header className="top">
           <Link className="club" to="/events"><Crest /><span className="club-name">{club.name || t('app.name')}</span></Link>
+          <span className="top-actions">
+          {isStaff && <NavLink className="gear" to={isBoard ? '/settings' : '/settings/invites'} aria-label={t(isBoard ? 'settings.title' : 'nav.invites')}><TabIcon name={isBoard ? 'settings' : 'invites'} /></NavLink>}
           <NavLink className="me" to="/profile" aria-label={t('nav.profileOf', { name: fullName })}><Avatar first={profile.first_name} last={profile.last_name} url={photo} /></NavLink>
+          </span>
         </header>
         <PendingBanner />
-        <main>
+        <DocumentsBanner />
+        <main id="main" tabIndex={-1}>
           <Outlet />
         </main>
       </div>
       <nav className="tabs" aria-label={t('nav.main')}>
         {main}
-        <NavLink to="/profile"><TabIcon name="profile" />{t('nav.profile')}</NavLink>
       </nav>
     </div>
   )
@@ -160,12 +173,20 @@ export default function App() {
         <Route path="/events/new" element={<EventForm />} />
         <Route path="/events/unanswered" element={<Unanswered />} />
         <Route path="/attendance" element={<AttendanceSummary />} />
+        <Route path="/stats" element={<Stats />} />
+        <Route path="/campionato" element={<Championship />} />
         <Route path="/events/:id" element={<EventDetail />} />
         <Route path="/events/:id/edit" element={<EventForm />} />
         <Route path="/members/:id" element={<MemberEdit />} />
+        <Route path="/members/:id/documents" element={<Documents />} />
+        <Route path="/documents" element={<Documents />} />
         <Route path="/profile" element={<ProfilePage />} />
-        <Route path="/invites" element={<Invites />} />
-        <Route path="/club" element={<ClubSettings />} />
+        <Route path="/settings" element={<Settings />} />
+        <Route path="/settings/club" element={<ClubSettings />} />
+        <Route path="/settings/groups" element={<GroupSettings />} />
+        <Route path="/settings/invites" element={<Invites />} />
+        <Route path="/invites" element={<Navigate to="/settings/invites" replace />} />
+        <Route path="/club" element={<Navigate to="/settings/club" replace />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

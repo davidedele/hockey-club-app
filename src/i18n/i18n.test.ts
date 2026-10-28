@@ -19,6 +19,13 @@ describe('errorText', () => {
   it('explains a refused time or date', () => {
     expect(errorText({ code: '23514', message: 'new row violates check constraint "events_check"' })).toBe(t('error.check_violation'))
   })
+  it('explains refused goalie numbers', () => {
+    expect(errorText({ code: '23514', message: 'new row for relation "game_stats" violates check constraint "game_stats_check"' })).toBe(t('error.stats_check'))
+  })
+  it('maps the vote errors', () => {
+    expect(errorText({ message: 'already_voted' })).toBe(t('error.already_voted'))
+    expect(errorText({ message: 'game_not_over' })).toBe(t('error.game_not_over'))
+  })
   it('falls back to a generic message', () => {
     expect(errorText({ message: 'boom' })).toContain(t('common.error'))
     expect(errorText(null)).toBe(t('common.error'))

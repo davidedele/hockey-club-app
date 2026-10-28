@@ -4,7 +4,7 @@ Update this file at the end of every session, so the next session starts exactly
 Keep entries short and put the newest first.
 
 ## Current state
-Build step 1 works against the Supabase test project. Step 2 (events with weekly repeat, attendance answers, banner, staff attendance view) is written and tested locally, but its database migration has not been applied to the test project yet. Until it is, the new Events tab will show errors in the real app.
+Migrations up to 0015 are applied to the Supabase test project (0012 to 0015 on 22 October, by Davide in the SQL Editor, from one file with a check that stops on the wrong project or a second run). Security advisors after that: row level security on every table; `league_ignored` has no policies on purpose, since only the league function and triggers use it. The league-sync server function is not deployed yet, so the Campionato page stays empty until it is. Step 3 (weekly limit) waits, by Davide's choice.
 
 ## Session log
 1. 21 October 2026, third session (local, Davide away):
@@ -21,7 +21,13 @@ Build step 1 works against the Supabase test project. Step 2 (events with weekly
    11. Players see who said present (migration 0005). Staff can set the club name, logo and game day colours in the app (migration 0006, storage bucket `club`). Both applied to the test project. 191 database tests, all passing, and each new rule was checked to make its tests fail when broken.
    12. Club settings and profile moved to the bottom of the sidebar, the week strip became a working calendar, and players can add a profile picture (migration 0007, applied to the test project). 203 database tests, all passing.
    13. Full code and security review, see `docs/SECURITY_REVIEW.md`. Three app fixes and migration 0008 (faster rules, two indexes), applied to the test project.
-   14. `npm run test:db` now also finds Homebrew Postgres, or uses `PG_BIN`. The tests were run on a Linux copy because the shell used this session could not install Postgres in the usual way.
+   14. Settings area (club, groups, invites), group settings for the board with migration 0009, cleaner own picture, and a computer layout with a week calendar and a members table. 220 database tests, all passing.
+   15. UX and accessibility audit with fixes (`docs/UX_AUDIT.md`). Neutral sign in pages (migration 0010) and a club dashboard as the computer home with a dark sidebar. 221 database tests, all passing.
+   16. `npm run test:db` now also finds Homebrew Postgres, or uses `PG_BIN`. The tests were run on a Linux copy because the shell used this session could not install Postgres in the usual way.
+   20. Championship page and league games in the calendar (migration 0015, 46 tests, 406 in total, all passing; every new rule made a test fail when broken). Server function league-sync, with its page reading tried on the real league site in the browser. Migrations 0012 to 0015 and the function still need to go to the test project.
+   19. Bureaucracy page per member with the medical certificate and the privacy consent (migration 0014, 39 tests), the board's privacy notice upload, a status column for staff in the members list and a reminder line for the member. The board names the two jerseys. 370 database tests, all passing; every new rule made a test fail when broken, apart from delete rules already covered by the read rules. Migrations 0012 to 0014 are not applied to the test project yet.
+   18. Phone numbers shown as 333 123 4567. An idea board with 45 ideas and votes (an artifact on claude.ai). Jersey colour per game, absence periods (migration 0013, 35 new tests, 326 in total, all passing; each new rule made a test fail when broken, except the delete rule, which the select rule already covers) and WhatsApp sharing. Checked at 375 and 1280 pixels with the fake backend. Migrations 0012 and 0013 are not applied to the test project yet.
+   17. Game statistics, ratings and MVP (build step 7, brought forward by Davide; the weekly limit waits). Migration `0012_game_stats_ratings.sql` with 64 new tests (288 in total, all passing), and 24 broken rule checks that each made a test fail. Staff enter goals, assists, penalty minutes and goalie numbers on the game page; players who played vote after the game; a Statistiche tab shows the season. Checked at 375 and 1280 pixels, light and dark, with the fake backend: no sideways page scrolling, no contrast failures, tap targets at least 44 pixels. Applying the migration to the test project was cancelled at the approval prompt, so it is not applied yet.
 2. 21 October 2026, second session (cloud):
    1. Database migration for groups, members, contacts, roles and invites, with row level security. 70 access rule tests on a local Postgres (`npm run test:db`), all passing.
    2. App skeleton in React and TypeScript with the Italian text file: login, join by invite, password reset, members list, own profile, invite creation and revoking for staff.
@@ -31,6 +37,7 @@ Build step 1 works against the Supabase test project. Step 2 (events with weekly
 3. 21 October 2026, first session: specification, notes on the current app, decisions and working rules written. Repository created.
 
 ## Next
+0. Deploy the league-sync function to the test project, link each group to its league team in Impostazioni, Gruppi, then try a real game: record attendance, enter numbers, vote from two accounts, look at Statistiche and Campionato.
 1. Done by Davide: the step 2 migration is applied in the test project and was tried (events, answers exist). Security advisors checked: row level security is on for every table. The warnings about functions that signed in users can call are intended, since each function checks the caller itself. One setting to switch on in the dashboard: leaked password protection (Authentication, password security), if the plan allows it.
 2. Davide: the Resend domain `mail.onlyai.lol` is verified. Enter the SMTP details in Supabase yourself (the API key stays private, never in the repository), following `docs/SETUP_EMAIL.md`, then switch "Confirm email" on and test a sign up.
 3. Davide: click the "use this invite" button once as a signed in member (open an invite link while logged in).
@@ -40,6 +47,7 @@ Build step 1 works against the Supabase test project. Step 2 (events with weekly
 7. Step 3: weekly limit and warnings.
 
 ## Open problems
+0. Before moving the club from SportEasy: decide between single use invites (today) and a team link per group usable by many people for a limited time, revocable by the board. Recommended: team link for the move, single use for individual cases. Davide: not urgent, there is time before the move.
 1. In the Supabase test project, "Confirm email" is switched OFF for testing, because the built in email service allows only a few emails per hour. It must be switched on again and a custom email sender connected before real use. The confirmation email path has therefore not been tested yet.
 2. The app is not yet installable as a real PWA: there is a manifest and icons but no service worker. The service worker comes with push notifications (step 9).
 3. Signing up again with an address that already has an account (from an earlier attempt) sends no new email, and the resend button sends nothing either. The auth log shows a repeated sign up for that address and expired links from the first email. To look at later with Davide: probably the account is already confirmed, so the person should log in or reset the password, and the screen should say so.

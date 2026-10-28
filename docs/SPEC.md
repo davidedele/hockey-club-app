@@ -67,9 +67,10 @@ A player cannot rate themself.
 The MVP is the player with the most votes.
 Players see the ratings only after they have voted.
 The overall result shows the average per player.
-Open point: whether board members can see who gave which rating. This is a privacy choice for the club, to be confirmed with the board.
+Open point: whether board members can see who gave which rating. This is a privacy choice for the club, to be confirmed with the board. Until then nobody sees it (decided 21 October).
 There are no training ratings.
-Optional stats (goals, assists, penalties) can come later. The club uses little of this.
+Championship (decided 22 October): a page with the standings, next games and results of each competition the club's teams play, read from the league's website, and the club's league games added to the calendar of the right group.
+Game statistics (decided 21 October): staff enter goals, assists and penalty minutes per player, and shots against and saves for goalies. The whole club sees them per game and per season.
 
 ## 11. Discussion
 Each event has its own discussion thread, with read receipts, archived after a period without messages.
@@ -81,7 +82,7 @@ Needed first: new event, attendance reminder, change of time or venue, weekly li
 On iPhone, push notifications need the app to be added to the home screen.
 
 ## 13. Data and privacy
-Keep the minimum: name, email, phone (optional), jersey number, position, group membership, weekly plan, profile picture (optional, added by the person, decided 21 October).
+Keep the minimum: name, email, phone (optional), jersey number, position, group membership, weekly plan, profile picture (optional, added by the person, decided 21 October), game numbers, ratings and MVP votes (decided 21 October), absence periods with an optional reason (22 October), medical certificate expiry and file, privacy consent date (22 October).
 Not needed: date of birth, height, weight, parent fields.
 Row level security in the database: players see their own groups' events, their own answers and who said present for those events (decided 21 October); ratings follow the rule above; only the board sees plans and warnings.
 The club holds members' data, so the board should agree to the move and members should be told what is stored.
@@ -106,7 +107,7 @@ The club holds members' data, so the board should agree to the move and members 
 Move the club over only when steps 1 to 4 have been used by a small group of real players for a few weeks.
 
 ## 16. Out of scope
-Payments, championships and standings, parent accounts, sponsor pages. SportEasy has them and the club does not use them.
+Payments, parent accounts, sponsor pages. SportEasy has them and the club does not use them. Championships and standings were out of scope too, until Davide asked on 22 October for a championship page fed by the league's website.
 
 ## 17. Open questions
 1. Exactly what the manager role can see and do.

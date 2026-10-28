@@ -8,13 +8,16 @@ export interface Club {
   logoUrl: string | null
   gameDark: string
   gameLight: string
+  privacyNoticePath: string | null
+  jerseyLight: string
+  jerseyDark: string
 }
 
 interface ClubState extends Club {
   reload: () => Promise<void>
 }
 
-const DEFAULT: Club = { name: '', logoPath: null, logoUrl: null, gameDark: '#111111', gameLight: '#ffd400' }
+const DEFAULT: Club = { name: '', logoPath: null, logoUrl: null, gameDark: '#111111', gameLight: '#ffd400', privacyNoticePath: null, jerseyLight: 'Chiara', jerseyDark: 'Scura' }
 const Ctx = createContext<ClubState | null>(null)
 
 export function logoUrl(path: string | null): string | null {
@@ -25,10 +28,13 @@ export function ClubProvider({ children }: { children: ReactNode }) {
   const [club, setClub] = useState<Club>(DEFAULT)
 
   const reload = useCallback(async () => {
-    const { data } = await supabase.from('club_settings').select('name, logo_path, game_dark, game_light').maybeSingle()
-    const row = data as { name: string; logo_path: string | null; game_dark: string; game_light: string } | null
+    const { data } = await supabase.from('club_settings').select('name, logo_path, game_dark, game_light, privacy_notice_path, jersey_light_name, jersey_dark_name').maybeSingle()
+    const row = data as { name: string; logo_path: string | null; game_dark: string; game_light: string; privacy_notice_path: string | null; jersey_light_name: string; jersey_dark_name: string } | null
     if (!row) return
-    setClub({ name: row.name, logoPath: row.logo_path, logoUrl: logoUrl(row.logo_path), gameDark: row.game_dark, gameLight: row.game_light })
+    setClub({
+      name: row.name, logoPath: row.logo_path, logoUrl: logoUrl(row.logo_path), gameDark: row.game_dark, gameLight: row.game_light,
+      privacyNoticePath: row.privacy_notice_path, jerseyLight: row.jersey_light_name, jerseyDark: row.jersey_dark_name,
+    })
   }, [])
 
   useEffect(() => {
@@ -50,3 +56,6 @@ export function useClub(): ClubState {
   if (!value) throw new Error('useClub must be used inside ClubProvider')
   return value
 }
+
+// The name the board gave to one of the club's two jerseys.
+export const jerseyName = (club: Club, slot: 'light' | 'dark') => (slot === 'dark' ? club.jerseyDark : club.jerseyLight)

@@ -1,14 +1,18 @@
 import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react'
-import { Link } from 'react-router-dom'
 import { errorText, t, type MessageKey } from '../i18n'
 import Avatar from '../components/Avatar'
 import { shrinkPhoto, useAvatarUrls } from '../lib/avatars'
 import { signOut, useSession } from '../lib/session'
 import { supabase } from '../lib/supabase'
-import type { Position } from '../lib/types'
+import { formatPhone } from '../lib/phone'
+import AbsencePeriods from '../components/AbsencePeriods'
+import { useClub } from '../lib/club'
+import { summary } from '../lib/documents'
+import type { MemberDocument, Position } from '../lib/types'
+import { Link } from 'react-router-dom'
 
 export default function ProfilePage() {
-  const { profile, roles, reload, isStaff } = useSession()
+  const { profile, roles, reload } = useSession()
   const [firstName, setFirstName] = useState(profile?.first_name ?? '')
   const [lastName, setLastName] = useState(profile?.last_name ?? '')
   const [jersey, setJersey] = useState(profile?.jersey_number?.toString() ?? '')
@@ -19,21 +23,26 @@ export default function ProfilePage() {
   const [photoBusy, setPhotoBusy] = useState(false)
   const [photoError, setPhotoError] = useState('')
   const photos = useAvatarUrls([profile?.avatar_path])
+  const club = useClub()
+  const [docs, setDocs] = useState<MemberDocument[] | null>(null)
 
   useEffect(() => {
     if (!profile) return
     void (async () => {
-      const [c, g] = await Promise.all([
+      const [c, g, d] = await Promise.all([
         supabase.from('profile_contacts').select('phone').eq('user_id', profile.id).maybeSingle(),
         supabase.from('group_members').select('groups(name)').eq('user_id', profile.id),
+        supabase.from('member_documents').select('*').eq('user_id', profile.id),
       ])
-      setPhone((c.data as { phone: string | null } | null)?.phone ?? '')
+      setDocs((d.data ?? []) as MemberDocument[])
+      setPhone(formatPhone((c.data as { phone: string | null } | null)?.phone))
       const rows = (g.data ?? []) as unknown as { groups: { name: string } | null }[]
       setMyGroups(rows.flatMap((r) => (r.groups ? [r.groups.name] : [])))
     })()
   }, [profile])
 
   if (!profile) return null
+  const docState = docs ? summary(docs, club.privacyNoticePath) : null
 
   async function setPhoto(path: string | null) {
     const { data, error } = await supabase.from('profiles').update({ avatar_path: path }).eq('id', profile!.id).select()
@@ -94,7 +103,7 @@ export default function ProfilePage() {
         position: position === '' ? null : position,
       })
       .eq('id', profile!.id)
-    const b = await supabase.from('profile_contacts').update({ phone: phone.trim() || null }).eq('user_id', profile!.id)
+    const b = await supabase.from('profile_contacts').update({ phone: formatPhone(phone) || null }).eq('user_id', profile!.id)
     const error = a.error ?? b.error
     if (error) {
       setMessage(errorText(error))
@@ -129,24 +138,27 @@ export default function ProfilePage() {
         <label>{t('common.jersey')}
           <input type="number" inputMode="numeric" min={0} max={99} value={jersey} onChange={(e) => setJersey(e.target.value)} />
         </label>
-        <label>{t('common.position')}
-          <select value={position} onChange={(e) => setPosition(e.target.value as Position | '')}>
+        <label htmlFor="position">{t('common.position')}</label>
+          <select id="position" value={position} onChange={(e) => setPosition(e.target.value as Position | '')}>
             <option value="">{t('position.none')}</option>
             <option value="goalie">{t('position.goalie')}</option>
             <option value="defence">{t('position.defence')}</option>
             <option value="forward">{t('position.forward')}</option>
           </select>
-        </label>
+        
         <label>{t('common.phone')}
-          <input type="tel" autoComplete="tel" maxLength={30} value={phone} onChange={(e) => setPhone(e.target.value)} />
+          <input type="tel" autoComplete="tel" maxLength={30} placeholder="333 123 4567" value={phone} onChange={(e) => setPhone(e.target.value)} onBlur={() => setPhone(formatPhone(phone))} />
         </label>
         <button type="submit">{t('common.save')}</button>
         {message && <p className="hint">{message}</p>}
       </form>
+      <h2>{t('docs.title')}</h2>
+      {docState && <p className={`doc-status ${docState.level}`}><span className="dot" aria-hidden="true" />{docState.text}</p>}
+      <p><Link className="button secondary small" to="/documents">{t('docs.open')}</Link></p>
+      <AbsencePeriods userId={profile.id} />
       <h2>{t('profile.groups')}</h2>
       <p>{myGroups.length ? myGroups.join(', ') : t('profile.noGroups')}</p>
       {roles.length > 0 && <p className="hint">{roles.map((r) => t(`role.${r}` as MessageKey)).join(', ')}</p>}
-      {isStaff && <p><Link to="/club">{t('club.title')}</Link></p>}
       <button className="link" onClick={() => void signOut()}>{t('common.signOut')}</button>
     </div>
   )

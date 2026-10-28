@@ -26,6 +26,14 @@ const CODES = [
   'weak_password',
   'user_already_exists',
   'signup_disabled',
+  'not_a_game',
+  'not_in_game',
+  'stats_invalid',
+  'game_not_over',
+  'already_voted',
+  'mvp_invalid',
+  'rating_invalid',
+  'period_past',
 ]
 
 // Database errors carry a short code in their message, and sign in errors in their code.
@@ -35,6 +43,7 @@ export function errorText(error: { message?: string; code?: string } | null | un
   for (const code of CODES) {
     if (text.includes(code)) return t(`error.${code}` as MessageKey)
   }
+  if (/game_stats.*check|check.*game_stats/.test(text)) return t('error.stats_check')
   if (/23514|violates check constraint/.test(text)) return t('error.check_violation')
   const raw = import.meta.env?.DEV && text.trim() ? ` (${text.trim()})` : ''
   return t('common.error') + raw
