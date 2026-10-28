@@ -204,6 +204,7 @@ export default function EventDetail() {
         )}
       </dl>
       <div className="actions share-row">
+        {!cancelled && <Link className="button secondary small" to={`/events/${id}/lineup`}>{t('lineup.open')}</Link>}
         {!over && !cancelled && <a className="button secondary small" href={whatsappLink(shareText)} target="_blank" rel="noopener noreferrer">{t('share.whatsapp')}</a>}
         {hasScore && <a className="button secondary small" href={whatsappLink(resultText)} target="_blank" rel="noopener noreferrer">{t('share.result')}</a>}
       </div>

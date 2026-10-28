@@ -205,6 +205,26 @@ export interface RinkPrice {
   price_cents: number
 }
 
+export type LineupSlot = 'left_wing' | 'centre' | 'right_wing' | 'left_defence' | 'right_defence' | 'goalie'
+
+// One place in the line-up of one event, with the player who holds it.
+export interface LineupPlace {
+  slot: LineupSlot
+  unit: number
+  user_id: string
+  profiles: { first_name: string; last_name: string; jersey_number: number | null } | null
+}
+
+// Somebody the event is shown to, as the coach sees them while picking.
+export interface LineupCandidate {
+  user_id: string
+  first_name: string
+  last_name: string
+  jersey_number: number | null
+  position: Position | null
+  answer: Answer | null
+}
+
 export interface Announcement {
   id: string
   author_id: string | null
