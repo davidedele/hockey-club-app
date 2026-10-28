@@ -4,6 +4,7 @@
 // Deploy with "Verify JWT" off. Secrets needed: REMINDER_SECRET, RESEND_API_KEY, REMINDER_FROM, APP_URL.
 import { createClient } from 'npm:@supabase/supabase-js@2.118.0'
 import { buildAnnouncement } from './announcement.ts'
+import { buildCertificate, type CertificateRow } from './certificate.ts'
 import { buildEventNotice, type NoticeRow } from './eventnotice.ts'
 import { buildReminder, type ReminderEvent } from './reminder.ts'
 
@@ -33,6 +34,8 @@ type DueAnnouncement = {
 }
 
 type DueNotice = NoticeRow & { user_id: string; email: string; first_name: string }
+
+type DueCertificate = CertificateRow & { user_id: string; email: string; first_name: string }
 
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } })
@@ -135,6 +138,30 @@ Deno.serve(async (req: Request) => {
       if (!mail.empty) await new Promise((r) => setTimeout(r, 600))
     }
   }
+  // The medical certificate running out, at five moments before and after the date.
+  let certificatesSent = 0
+  let certificatesFailed = 0
+  const certificates = await admin.rpc('certificates_due')
+  if (!certificates.error) {
+    for (const row of (certificates.data ?? []) as DueCertificate[]) {
+      if (sent + failed + announcementsSent + announcementsFailed + noticesSent + noticesFailed
+          + certificatesSent + certificatesFailed >= MAX_EMAILS) break
+      const mail = buildCertificate(row.first_name, row, appUrl)
+      const res = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ from, to: [row.email], subject: mail.subject, text: mail.text, html: mail.html }),
+      })
+      if (!res.ok) {
+        certificatesFailed++
+        continue
+      }
+      certificatesSent++
+      await admin.rpc('certificates_mark_sent', { p_user: row.user_id, p_valid_until: row.valid_until, p_stage: row.stage })
+      await new Promise((r) => setTimeout(r, 600))
+    }
+  }
+
   // Only counts are returned and logged, never names or addresses.
-  return json({ people: byUser.size, sent, failed, announcements: announcementsSent, announcementsFailed, notices: noticesSent, noticesFailed })
+  return json({ people: byUser.size, sent, failed, announcements: announcementsSent, announcementsFailed, notices: noticesSent, noticesFailed, certificates: certificatesSent, certificatesFailed })
 })

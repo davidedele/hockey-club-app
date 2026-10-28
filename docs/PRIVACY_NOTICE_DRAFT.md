@@ -32,7 +32,7 @@ Non chiediamo data di nascita, altezza, peso o dati dei genitori.
 5. Il link di calendario personale mostra solo gli eventi delle tue squadre, senza nomi né presenze.
 
 ## 5. Certificato medico
-Il certificato medico contiene dati sulla salute. Lo conserviamo solo per verificare che sia valido e per ricordarti la scadenza. Il file è in uno spazio privato, si apre con collegamenti che durano dieci minuti e non è mai pubblico. Lo carichi tu o lo staff, solo se ci dai il consenso, che puoi ritirare in ogni momento: in tal caso il file viene cancellato e ti chiederemo un altro modo di mostrare il certificato.
+Il certificato medico contiene dati sulla salute. Lo conserviamo solo per verificare che sia valido e per ricordarti la scadenza. Il file è in uno spazio privato, si apre con collegamenti che durano dieci minuti e non è mai pubblico. Lo carichi tu o lo staff, solo se ci dai il consenso, che puoi ritirare in ogni momento: in tal caso il file viene cancellato e ti chiederemo un altro modo di mostrare il certificato. Dalla sola data di scadenza l'app ti manda una email due mesi prima, un mese prima, una settimana prima, il giorno della scadenza e, se non risulta rinnovato, un mese dopo. Le email non contengono dati sanitari oltre alla data, e si spengono dal profilo come tutte le altre email del club.
 
 ## 6. Chi tratta i dati per nostro conto
 1. Supabase, per database, accesso e archivio dei file. Il progetto del club è nella regione Unione Europea.

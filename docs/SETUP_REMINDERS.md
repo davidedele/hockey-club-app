@@ -14,7 +14,7 @@ How it works: every hour a scheduled job in the database calls the function `sen
    2. `RESEND_API_KEY`: the key from step 3.
    3. `REMINDER_FROM`: the sender, for example `Sgularat Milano <club@email.onlyai.lol>`.
    4. `APP_URL`: the address of the app, `https://app.onlyai.lol`.
-5. Create the function `send-reminders` from the editor: paste `index.ts` into the main file (the file `send-reminders_index.ts` I sent) and add three more files named `reminder.ts`, `announcement.ts` and `eventnotice.ts` with their content. Switch Verify JWT off. Deploy. When a new version of these files comes, paste them again and deploy; check that Verify JWT is still off.
+5. Create the function `send-reminders` from the editor: paste `index.ts` into the main file (the file `send-reminders_index.ts` I sent) and add four more files named `reminder.ts`, `announcement.ts`, `eventnotice.ts` and `certificate.ts` with their content. Switch Verify JWT off. Deploy. When a new version of these files comes, paste them again and deploy; check that Verify JWT is still off.
 6. In the SQL Editor open `schedule_reminders.sql`, replace `PUT_THE_SECRET_HERE` with the secret from step 2 and run it. Do not save that edited file in the repository. The call waits up to 60 seconds for the function (`timeout_milliseconds := 60000`). The default wait of 5 seconds is too short, because the function can need longer when it wakes up and sends emails, and then the hourly run sends nothing.
 
 ## Trying it
