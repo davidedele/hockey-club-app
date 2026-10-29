@@ -76,11 +76,21 @@ export default function Documents() {
     setBusy(false)
   }
 
+  // Change the row if there is one, otherwise add it. The database lets a member change only the
+  // value columns of an existing row, which a combined insert or update would not respect.
+  async function saveDocument(kind: 'medical_certificate' | 'privacy_consent', values: Record<string, string | null>) {
+    const changed = await supabase.from('member_documents').update(values).eq('user_id', userId).eq('kind', kind).select()
+    if (changed.error || (changed.data && changed.data.length > 0)) return changed.error
+    const added = await supabase.from('member_documents').insert({ user_id: userId, kind, ...values }).select()
+    return added.error
+  }
+
   async function writeCertificate(values: { valid_until?: string | null; file_path?: string | null }) {
-    const { error } = await supabase
-      .from('member_documents')
-      .upsert({ user_id: userId, kind: 'medical_certificate', valid_until: cert?.valid_until ?? null, file_path: cert?.file_path ?? null, ...values }, { onConflict: 'user_id,kind' })
-      .select()
+    const error = await saveDocument('medical_certificate', {
+      valid_until: cert?.valid_until ?? null,
+      file_path: cert?.file_path ?? null,
+      ...values,
+    })
     return error ? errorText(error) : ''
   }
 
@@ -147,10 +157,7 @@ export default function Documents() {
 
   async function accept() {
     setBusy(true)
-    const { error } = await supabase
-      .from('member_documents')
-      .upsert({ user_id: userId, kind: 'privacy_consent', accepted_at: new Date().toISOString(), file_path: club.privacyNoticePath }, { onConflict: 'user_id,kind' })
-      .select()
+    const error = await saveDocument('privacy_consent', { accepted_at: new Date().toISOString(), file_path: club.privacyNoticePath })
     await finish(error ? errorText(error) : '')
   }
 

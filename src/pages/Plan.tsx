@@ -60,12 +60,11 @@ export default function Plan() {
   async function write(values: { notes?: string | null; visible_after?: boolean }) {
     setBusy(true)
     setError('')
-    const { data, error } = await supabase.from('event_plan').upsert({
-      event_id: id,
-      notes: plan?.notes ?? null,
-      visible_after: plan?.visible_after ?? false,
-      ...values,
-    }, { onConflict: 'event_id' }).select()
+    const merged = { notes: plan?.notes ?? null, visible_after: plan?.visible_after ?? false, ...values }
+    let { data, error } = await supabase.from('event_plan').update(merged).eq('event_id', id).select()
+    if (!error && (!data || data.length === 0)) {
+      ;({ data, error } = await supabase.from('event_plan').insert({ event_id: id, ...merged }).select())
+    }
     if (error || !data || data.length === 0) setError(errorText(error ?? { message: 'forbidden' }))
     await load()
     setBusy(false)
