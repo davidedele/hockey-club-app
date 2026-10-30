@@ -1,11 +1,14 @@
 import { useEffect, useMemo, useState, type CSSProperties } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
 import { errorText, locale, t } from '../i18n'
 import Avatar from '../components/Avatar'
 import GroupBadge from '../components/GroupBadge'
 import SeasonTabs from '../components/SeasonTabs'
 import { useAvatarUrls } from '../lib/avatars'
+import TeamStats from '../components/TeamStats'
 import { useGroupFilter } from '../lib/groupfilter'
 import { useSession } from '../lib/session'
+import type { Result } from '../lib/teamstats'
 import { supabase } from '../lib/supabase'
 import { seasonLabel, seasonOf } from '../lib/time'
 import type { Group, SeasonRecord, SeasonStatRow } from '../lib/types'
@@ -26,6 +29,9 @@ export default function Stats() {
   const { groupId: group, setGroupId: setGroup } = useGroupFilter()
   const [rows, setRows] = useState<SeasonStatRow[]>([])
   const [record, setRecord] = useState<SeasonRecord | null>(null)
+  const [results, setResults] = useState<Result[]>([])
+  const [params] = useSearchParams()
+  const tab = params.get('tab') === 'players' ? 'players' : 'team'
   const [avatars, setAvatars] = useState<Map<string, string | null>>(new Map())
   const [loaded, setLoaded] = useState(false)
   const [error, setError] = useState('')
@@ -46,11 +52,13 @@ export default function Stats() {
     if (!profile) return
     setLoaded(false)
     void (async () => {
-      const [s, r] = await Promise.all([
+      const [s, r, g] = await Promise.all([
         supabase.rpc('season_player_stats', { p_season: season, p_group_id: group }),
         supabase.rpc('season_record', { p_season: season, p_group_id: group }),
+        supabase.rpc('season_results', { p_season: season, p_group_id: group }),
       ])
-      setError(s.error || r.error ? errorText(s.error ?? r.error) : '')
+      setError(s.error || r.error || g.error ? errorText(s.error ?? r.error ?? g.error) : '')
+      setResults((g.data ?? []) as Result[])
       setRows((s.data ?? []) as SeasonStatRow[])
       setRecord((((r.data ?? []) as SeasonRecord[])[0]) ?? null)
       setLoaded(true)
@@ -105,83 +113,94 @@ export default function Stats() {
 
       {error && <p className="error" role="alert">{error}</p>}
 
-      <dl className="record" style={colours} aria-label={t('stats.record')}>
-        <div><dt>{t('stats.games')}</dt><dd>{record?.games ?? 0}</dd></div>
-        <div><dt>{t('stats.wins')}</dt><dd>{record?.wins ?? 0}</dd></div>
-        <div><dt>{t('stats.draws')}</dt><dd>{record?.draws ?? 0}</dd></div>
-        <div><dt>{t('stats.losses')}</dt><dd>{record?.losses ?? 0}</dd></div>
-        <div className="wide"><dt>{t('stats.goalsForAgainst')}</dt><dd>{t('stats.goalsValue', { for: String(record?.goals_for ?? 0), against: String(record?.goals_against ?? 0) })}</dd></div>
-      </dl>
+      <nav className="ev-tabs" aria-label={t('stats.tabs')}>
+        <Link to={{ search: '' }} replace aria-current={tab === 'team' ? 'page' : undefined}>{t('stats.tabTeam')}</Link>
+        <Link to={{ search: '?tab=players' }} replace aria-current={tab === 'players' ? 'page' : undefined}>{t('stats.tabPlayers')}</Link>
+      </nav>
 
-      <h2>{t('stats.players')}</h2>
-      {skaters.length > 0 && <p className="hint phone-only">{t('summary.scrollHint')}</p>}
-      <div className="scroll">
-        <table className="stats-table">
-          <thead>
-            <tr>
-              <th scope="col">{t('stats.colPlayer')}</th>
-              <th scope="col">{t('stats.colGames')}</th>
-              <th scope="col">{t('stats.colGoals')}</th>
-              <th scope="col">{t('stats.colAssists')}</th>
-              <th scope="col">{t('stats.colPoints')}</th>
-              <th scope="col">{t('stats.colPim')}</th>
-              <th scope="col">{t('stats.colMvp')}</th>
-              <th scope="col">{t('stats.colRating')}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {skaters.map((r) => (
-              <tr key={r.user_id}>
-                {who(r)}
-                <td>{r.games}</td>
-                <td>{r.goals}</td>
-                <td>{r.assists}</td>
-                <td className="strong">{r.points}</td>
-                <td>{r.penalty_minutes}</td>
-                <td>{r.mvp}</td>
-                <td>{one(r.rating_avg)}</td>
-              </tr>
-            ))}
-            {loaded && skaters.length === 0 && (
-              <tr><td colSpan={8} className="empty-cell">{t('stats.empty')}</td></tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+      {tab === 'team' && <div style={colours}><TeamStats results={results} loaded={loaded} /></div>}
 
-      {goalies.length > 0 && (
+      {tab === 'players' && (
         <>
-          <h2>{t('stats.goalies')}</h2>
-          <div className="scroll">
-            <table className="stats-table">
-              <thead>
-                <tr>
-                  <th scope="col">{t('stats.colPlayer')}</th>
-                  <th scope="col">{t('stats.colGames')}</th>
-                  <th scope="col">{t('stats.colShots')}</th>
-                  <th scope="col">{t('stats.colSaves')}</th>
-                  <th scope="col">{t('stats.colSavePct')}</th>
-                  <th scope="col">{t('stats.colAgainst')}</th>
-                  <th scope="col">{t('stats.colMvp')}</th>
-                  <th scope="col">{t('stats.colRating')}</th>
+        <dl className="record" style={colours} aria-label={t('stats.record')}>
+          <div><dt>{t('stats.games')}</dt><dd>{record?.games ?? 0}</dd></div>
+          <div><dt>{t('stats.wins')}</dt><dd>{record?.wins ?? 0}</dd></div>
+          <div><dt>{t('stats.draws')}</dt><dd>{record?.draws ?? 0}</dd></div>
+          <div><dt>{t('stats.losses')}</dt><dd>{record?.losses ?? 0}</dd></div>
+          <div className="wide"><dt>{t('stats.goalsForAgainst')}</dt><dd>{t('stats.goalsValue', { for: String(record?.goals_for ?? 0), against: String(record?.goals_against ?? 0) })}</dd></div>
+        </dl>
+
+        <h2>{t('stats.players')}</h2>
+        {skaters.length > 0 && <p className="hint phone-only">{t('summary.scrollHint')}</p>}
+        <div className="scroll">
+          <table className="stats-table">
+            <thead>
+              <tr>
+                <th scope="col">{t('stats.colPlayer')}</th>
+                <th scope="col">{t('stats.colGames')}</th>
+                <th scope="col">{t('stats.colGoals')}</th>
+                <th scope="col">{t('stats.colAssists')}</th>
+                <th scope="col">{t('stats.colPoints')}</th>
+                <th scope="col">{t('stats.colPim')}</th>
+                <th scope="col">{t('stats.colMvp')}</th>
+                <th scope="col">{t('stats.colRating')}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {skaters.map((r) => (
+                <tr key={r.user_id}>
+                  {who(r)}
+                  <td>{r.games}</td>
+                  <td>{r.goals}</td>
+                  <td>{r.assists}</td>
+                  <td className="strong">{r.points}</td>
+                  <td>{r.penalty_minutes}</td>
+                  <td>{r.mvp}</td>
+                  <td>{one(r.rating_avg)}</td>
                 </tr>
-              </thead>
-              <tbody>
-                {goalies.map((r) => (
-                  <tr key={r.user_id}>
-                    {who(r)}
-                    <td>{r.games}</td>
-                    <td>{r.shots_against ?? ''}</td>
-                    <td>{r.saves ?? ''}</td>
-                    <td className="strong">{r.shots_against ? one((100 * (r.saves ?? 0)) / r.shots_against) : ''}</td>
-                    <td>{r.shots_against !== null && r.saves !== null ? r.shots_against - r.saves : ''}</td>
-                    <td>{r.mvp}</td>
-                    <td>{one(r.rating_avg)}</td>
+              ))}
+              {loaded && skaters.length === 0 && (
+                <tr><td colSpan={8} className="empty-cell">{t('stats.empty')}</td></tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {goalies.length > 0 && (
+          <>
+            <h2>{t('stats.goalies')}</h2>
+            <div className="scroll">
+              <table className="stats-table">
+                <thead>
+                  <tr>
+                    <th scope="col">{t('stats.colPlayer')}</th>
+                    <th scope="col">{t('stats.colGames')}</th>
+                    <th scope="col">{t('stats.colShots')}</th>
+                    <th scope="col">{t('stats.colSaves')}</th>
+                    <th scope="col">{t('stats.colSavePct')}</th>
+                    <th scope="col">{t('stats.colAgainst')}</th>
+                    <th scope="col">{t('stats.colMvp')}</th>
+                    <th scope="col">{t('stats.colRating')}</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {goalies.map((r) => (
+                    <tr key={r.user_id}>
+                      {who(r)}
+                      <td>{r.games}</td>
+                      <td>{r.shots_against ?? ''}</td>
+                      <td>{r.saves ?? ''}</td>
+                      <td className="strong">{r.shots_against ? one((100 * (r.saves ?? 0)) / r.shots_against) : ''}</td>
+                      <td>{r.shots_against !== null && r.saves !== null ? r.shots_against - r.saves : ''}</td>
+                      <td>{r.mvp}</td>
+                      <td>{one(r.rating_avg)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
+        )}
         </>
       )}
     </div>
