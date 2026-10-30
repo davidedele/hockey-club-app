@@ -13,8 +13,7 @@ import { useNotifications } from './lib/notifications'
 import { getPendingInvite } from './lib/invite'
 import { useSession } from './lib/session'
 import Announcements from './pages/Announcements'
-import AttendanceGrid from './pages/AttendanceGrid'
-import AttendanceSummary from './pages/AttendanceSummary'
+import Attendance from './pages/Attendance'
 import ClubSettings from './pages/ClubSettings'
 import Documents from './pages/Documents'
 import Championship from './pages/Championship'
@@ -197,8 +196,8 @@ export default function App() {
         <Route path="/events/new" element={<EventForm />} />
         <Route path="/events/unanswered" element={<Unanswered />} />
         <Route path="/announcements" element={<Announcements />} />
-        <Route path="/attendance" element={<AttendanceSummary />} />
-        <Route path="/attendance/grid" element={<AttendanceGrid />} />
+        <Route path="/attendance" element={<Attendance />} />
+        <Route path="/attendance/grid" element={<Navigate to="/attendance?tab=events" replace />} />
         <Route path="/stats" element={<Stats />} />
         <Route path="/campionato" element={<Championship />} />
         <Route path="/events/:id" element={<EventDetail />} />

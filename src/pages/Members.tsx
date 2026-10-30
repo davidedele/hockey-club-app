@@ -6,11 +6,16 @@ import GroupBadge from '../components/GroupBadge'
 import { useAvatarUrls } from '../lib/avatars'
 import { formatPhone, phoneLink } from '../lib/phone'
 import { useGroupFilter } from '../lib/groupfilter'
+import SortHeader from '../components/SortHeader'
+import TablePager from '../components/TablePager'
+import { downloadCsv, pageOf, sortRows, useSort, type Cell } from '../lib/table'
 import { useSession } from '../lib/session'
 import { supabase } from '../lib/supabase'
 import type { Contact, Group, MemberDocument, Profile } from '../lib/types'
 import { useClub } from '../lib/club'
 import { summary } from '../lib/documents'
+
+type MemberKey = 'name' | 'number' | 'position' | 'groups' | 'email' | 'phone' | 'docs'
 
 export default function Members() {
   const { isStaff } = useSession()
@@ -22,6 +27,9 @@ export default function Members() {
   const club = useClub()
   const { groupId: filter, setGroupId: setFilter } = useGroupFilter()
   const [query, setQuery] = useState('')
+  const [page, setPage] = useState(1)
+  const [size, setSize] = useState(25)
+  const sort = useSort<MemberKey>('name')
 
   useEffect(() => {
     void (async () => {
@@ -49,6 +57,30 @@ export default function Members() {
       (filter === null || memberships.some((m) => m.user_id === p.id && m.group_id === filter)) &&
       (!q || `${p.first_name} ${p.last_name}`.toLowerCase().includes(q) || `${p.last_name} ${p.first_name}`.toLowerCase().includes(q)),
   )
+  const groupsOf = (id: string) => memberships.filter((m) => m.user_id === id).map((m) => codeById.get(m.group_id)).filter(Boolean).join(', ')
+  const positionText = (p: Profile) => (p.position ? t(`position.${p.position}` as MessageKey) : '')
+  const sorted = sortRows(visible, (p): Cell => {
+    switch (sort.key) {
+      case 'number': return p.jersey_number
+      case 'position': return positionText(p)
+      case 'groups': return groupsOf(p.id)
+      case 'email': return contactById.get(p.id)?.email ?? ''
+      case 'phone': return contactById.get(p.id)?.phone ?? ''
+      case 'docs': return summary(docs.filter((d) => d.user_id === p.id), club.privacyNoticePath).text
+      default: return `${p.last_name} ${p.first_name}`
+    }
+  }, sort.dir)
+  const rows = pageOf(sorted, page, size)
+  const resetPage = () => setPage(1)
+  function exportCsv() {
+    downloadCsv('membri', [
+      [t('common.lastName'), t('common.firstName'), t('members.colNumber'), t('members.colPosition'), t('members.colGroups'), t('members.colEmail'), t('members.colPhone'), t('members.colDocs')],
+      ...sorted.map((p) => {
+        const c = contactById.get(p.id)
+        return [p.last_name, p.first_name, p.jersey_number, positionText(p), groupsOf(p.id), c?.email ?? '', formatPhone(c?.phone), summary(docs.filter((d) => d.user_id === p.id), club.privacyNoticePath).text]
+      }),
+    ])
+  }
   // Staff see each member's paperwork at a glance, linked to their documents page.
   function docCell(id: string) {
     const state = summary(docs.filter((d) => d.user_id === id), club.privacyNoticePath)
@@ -58,36 +90,41 @@ export default function Members() {
       </Link>
     )
   }
-  const groupsOf = (id: string) => memberships.filter((m) => m.user_id === id).map((m) => codeById.get(m.group_id)).filter(Boolean).join(', ')
 
   return (
     <div className="page wide">
       <h1>{t('members.title')}</h1>
       <label className="search">
         <span>{t('members.search')}</span>
-        <input type="search" placeholder={t('members.searchHint')} value={query} onChange={(e) => setQuery(e.target.value)} />
+        <input type="search" placeholder={t('members.searchHint')} value={query} onChange={(e) => { setQuery(e.target.value); resetPage() }} />
       </label>
+      <div className="members-bar">
       <div className="chips">
-        <button className={filter === null ? 'chip on' : 'chip'} onClick={() => setFilter(null)}>{t('members.filterAll')}</button>
+        <button className={filter === null ? 'chip on' : 'chip'} onClick={() => { setFilter(null); resetPage() }}>{t('members.filterAll')}</button>
         {groups.map((g) => (
-          <button key={g.id} className={filter === g.id ? 'chip on' : 'chip'} onClick={() => setFilter(g.id)}><GroupBadge group={g} size="small" />{g.name}</button>
+          <button key={g.id} className={filter === g.id ? 'chip on' : 'chip'} onClick={() => { setFilter(g.id); resetPage() }}><GroupBadge group={g} size="small" />{g.name}</button>
         ))}
+      </div>
+      <div className="att-actions desk-only">
+        <button className="chip" onClick={() => window.print()}>{t('table.print')}</button>
+        {isStaff && <button className="chip" onClick={exportCsv} disabled={sorted.length === 0}>{t('table.export')}</button>}
+      </div>
       </div>
       <div className="scroll desk-only">
         <table className="members-table">
           <thead>
             <tr>
-              <th scope="col">{t('members.colName')}</th>
-              <th scope="col">{t('members.colNumber')}</th>
-              <th scope="col">{t('members.colPosition')}</th>
-              <th scope="col">{t('members.colGroups')}</th>
-              {isStaff && <th scope="col">{t('members.colEmail')}</th>}
-              {isStaff && <th scope="col">{t('members.colPhone')}</th>}
-              {isStaff && <th scope="col">{t('members.colDocs')}</th>}
+              <SortHeader label={t('members.colName')} active={sort.key === 'name'} dir={sort.dir} onSort={() => { sort.toggle('name'); resetPage() }} />
+              <SortHeader label={t('members.colNumber')} active={sort.key === 'number'} dir={sort.dir} onSort={() => { sort.toggle('number'); resetPage() }} />
+              <SortHeader label={t('members.colPosition')} active={sort.key === 'position'} dir={sort.dir} onSort={() => { sort.toggle('position'); resetPage() }} />
+              <SortHeader label={t('members.colGroups')} active={sort.key === 'groups'} dir={sort.dir} onSort={() => { sort.toggle('groups'); resetPage() }} />
+              {isStaff && <SortHeader label={t('members.colEmail')} active={sort.key === 'email'} dir={sort.dir} onSort={() => { sort.toggle('email'); resetPage() }} />}
+              {isStaff && <SortHeader label={t('members.colPhone')} active={sort.key === 'phone'} dir={sort.dir} onSort={() => { sort.toggle('phone'); resetPage() }} />}
+              {isStaff && <SortHeader label={t('members.colDocs')} active={sort.key === 'docs'} dir={sort.dir} onSort={() => { sort.toggle('docs'); resetPage() }} />}
             </tr>
           </thead>
           <tbody>
-            {visible.map((p) => {
+            {rows.map((p) => {
               const contact = contactById.get(p.id)
               return (
                 <tr key={p.id}>
@@ -111,6 +148,9 @@ export default function Members() {
             )}
           </tbody>
         </table>
+      </div>
+      <div className="desk-only">
+        <TablePager total={sorted.length} page={page} size={size} onPage={setPage} onSize={(n) => { setSize(n); setPage(1) }} />
       </div>
       {visible.length === 0 && <p className="hint phone-only">{q ? t('members.noMatch') : t('members.empty')}</p>}
       <ul className="list phone-only">
