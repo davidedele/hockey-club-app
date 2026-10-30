@@ -57,9 +57,9 @@ export default function TeamStats({ results, loaded }: { results: Result[]; load
         <h2>{t('stats.resultTitle')}</h2>
         <div className="result-row">
           <div className="big-number"><strong>{s.games}</strong><span>{t(s.games === 1 ? 'stats.gameOne' : 'stats.gameMany')}</span></div>
-          <Ring value={s.wins} total={s.games} label={t('stats.winsLabel')} tone="ok" />
-          <Ring value={s.draws} total={s.games} label={t('stats.drawsLabel')} tone="neutral" />
-          <Ring value={s.losses} total={s.games} label={t('stats.lossesLabel')} tone="bad" />
+          <Ring value={s.wins} total={s.games} label={t(s.wins === 1 ? 'stats.winsLabelOne' : 'stats.winsLabel')} tone="ok" />
+          <Ring value={s.draws} total={s.games} label={t(s.draws === 1 ? 'stats.drawsLabelOne' : 'stats.drawsLabel')} tone="neutral" />
+          <Ring value={s.losses} total={s.games} label={t(s.losses === 1 ? 'stats.lossesLabelOne' : 'stats.lossesLabel')} tone="bad" />
         </div>
       </section>
 

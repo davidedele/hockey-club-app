@@ -42,6 +42,7 @@ export function useSort<K extends string>(initial: K, dir: Dir = 'asc') {
   const [state, setState] = useState<{ key: K; dir: Dir }>({ key: initial, dir })
   return {
     ...state,
+    set: (key: K, dir: Dir) => setState({ key, dir }),
     toggle: (key: K) => setState((s) => (s.key === key ? { key, dir: s.dir === 'asc' ? 'desc' : 'asc' } : { key, dir: 'asc' })),
   }
 }

@@ -126,8 +126,9 @@ export default function Documents() {
     else if (cert?.file_path) await supabase.storage.from('documents').remove([cert.file_path])
     // A file without a date tells nobody anything and no warning email can be sent, so ask for it.
     const needsDate = !cert?.valid_until || cert.valid_until < today()
-    await finish(problem, needsDate ? t('docs.certNowDate') : t('common.saved'))
-    if (!problem && !pdf && needsDate) await propose(body)
+    await finish(problem, needsDate ? t('docs.certNowDate') : t('docs.certNewFile'))
+    // A new photo is always read, because it is usually a new certificate with a later date.
+    if (!problem && !pdf) await propose(body)
   }
 
   // The photo is read here on the phone to save the member typing the date. The picture is not
@@ -139,9 +140,12 @@ export default function Documents() {
       if (found) {
         setDate(found)
         setMessage(t('docs.certDateRead'))
+      } else {
+        setMessage(t('docs.certDateNotRead'))
       }
     } catch {
       // The reading engine could not be fetched or made nothing of the photo. The member types it.
+      setMessage(t('docs.certDateNotRead'))
     }
     setReading(false)
   }
@@ -171,7 +175,7 @@ export default function Documents() {
   const noticeLink = club.privacyNoticePath ? links.get(club.privacyNoticePath) : undefined
 
   return (
-    <div className="page narrow">
+    <div className="page narrow two-col">
       <p><Link to={own ? '/profile' : `/members/${userId}`}>{own ? t('profile.title') : name}</Link></p>
       <h1>{own ? t('docs.title') : t('docs.titleOf', { name })}</h1>
       <p className="hint">{own ? t('docs.intro') : t('docs.introStaff', { name: person?.first_name ?? '' })}</p>
@@ -185,7 +189,7 @@ export default function Documents() {
           <label>
             {t('docs.certDate')}
             <input type="date" required value={date} onChange={(e) => setDate(e.target.value)} />
-            <span className="hint">{t('docs.certDateHint')}</span>
+            <span className="hint">{t('docs.certDateHint')}</span>{' '}
             <span className="hint">{t('docs.certWarnHint')}</span>
           </label>
           <button type="submit" className="secondary" disabled={busy || !date || date === cert?.valid_until}>{t('docs.certSaveDate')}</button>

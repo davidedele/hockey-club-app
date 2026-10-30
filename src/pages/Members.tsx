@@ -2,13 +2,13 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { t, type MessageKey } from '../i18n'
 import Avatar from '../components/Avatar'
-import GroupBadge from '../components/GroupBadge'
 import { useAvatarUrls } from '../lib/avatars'
 import { formatPhone, phoneLink } from '../lib/phone'
 import { useGroupFilter } from '../lib/groupfilter'
 import SortHeader from '../components/SortHeader'
 import TablePager from '../components/TablePager'
 import { downloadCsv, pageOf, sortRows, useSort, type Cell } from '../lib/table'
+import OutputAction from '../components/OutputAction'
 import { useSession } from '../lib/session'
 import { supabase } from '../lib/supabase'
 import type { Contact, Group, MemberDocument, Profile } from '../lib/types'
@@ -25,7 +25,7 @@ export default function Members() {
   const [contacts, setContacts] = useState<Contact[]>([])
   const [docs, setDocs] = useState<MemberDocument[]>([])
   const club = useClub()
-  const { groupId: filter, setGroupId: setFilter } = useGroupFilter()
+  const { groupId: filter } = useGroupFilter()
   const [query, setQuery] = useState('')
   const [page, setPage] = useState(1)
   const [size, setSize] = useState(25)
@@ -99,15 +99,9 @@ export default function Members() {
         <input type="search" placeholder={t('members.searchHint')} value={query} onChange={(e) => { setQuery(e.target.value); resetPage() }} />
       </label>
       <div className="members-bar">
-      <div className="chips">
-        <button className={filter === null ? 'chip on' : 'chip'} onClick={() => { setFilter(null); resetPage() }}>{t('members.filterAll')}</button>
-        {groups.map((g) => (
-          <button key={g.id} className={filter === g.id ? 'chip on' : 'chip'} onClick={() => { setFilter(g.id); resetPage() }}><GroupBadge group={g} size="small" />{g.name}</button>
-        ))}
-      </div>
       <div className="att-actions desk-only">
-        <button className="chip" onClick={() => window.print()}>{t('table.print')}</button>
-        {isStaff && <button className="chip" onClick={exportCsv} disabled={sorted.length === 0}>{t('table.export')}</button>}
+        <OutputAction kind="print" label={t('table.print')} onRun={() => window.print()} />
+        {isStaff && <OutputAction kind="csv" label={t('table.export')} rows={sorted.length} personal disabled={sorted.length === 0} onRun={exportCsv} />}
       </div>
       </div>
       <div className="scroll desk-only">

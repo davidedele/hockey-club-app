@@ -15,6 +15,7 @@ Bozza da far approvare dal consiglio prima che entrino i giocatori veri. Non è 
 7. Statistiche di gara (gol, assist, minuti di penalità, parate), voti ai compagni e voto MVP.
 8. Certificato medico: data di scadenza e file caricato. È un dato relativo alla salute, trattato con particolare cautela (punto 5).
 9. Data in cui hai dato il consenso a questa informativa.
+10. I messaggi che scrivi nella discussione di un evento (fino a 1000 caratteri), con l'indicazione di chi li ha letti.
 
 Non chiediamo data di nascita, altezza, peso o dati dei genitori.
 
@@ -30,6 +31,7 @@ Non chiediamo data di nascita, altezza, peso o dati dei genitori.
 3. Il certificato medico (file e scadenza) è visibile solo a te, agli allenatori e al consiglio.
 4. Chi ha votato chi non lo vede nessuno, nemmeno il consiglio.
 5. Il link di calendario personale mostra solo gli eventi delle tue squadre, senza nomi né presenze.
+6. I messaggi della discussione di un evento li leggono tutti quelli che vedono quell'evento e si vede chi li ha letti. Li può togliere chi li ha scritti, l'allenatore e il consiglio.
 
 ## 5. Certificato medico
 Il certificato medico contiene dati sulla salute. Lo conserviamo solo per verificare che sia valido e per ricordarti la scadenza. Il file è in uno spazio privato, si apre con collegamenti che durano dieci minuti e non è mai pubblico. Lo carichi tu o lo staff, solo se ci dai il consenso, che puoi ritirare in ogni momento: in tal caso il file viene cancellato e ti chiederemo un altro modo di mostrare il certificato. Dalla sola data di scadenza l'app ti manda una email due mesi prima, un mese prima, una settimana prima, il giorno della scadenza e, se non risulta rinnovato, un mese dopo. Le email non contengono dati sanitari oltre alla data, e si spengono dal profilo come tutte le altre email del club. Se carichi una foto, l'app legge la data di scadenza sul tuo telefono per proportela: la foto non viene inviata a nessuno per questa lettura, e la data la confermi tu. Il programma che legge viene scaricato da una libreria pubblica di codice e non contiene nulla di tuo.

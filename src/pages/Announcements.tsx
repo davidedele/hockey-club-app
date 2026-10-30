@@ -81,7 +81,7 @@ export default function Announcements() {
     groups.filter((g) => a.announcement_groups.some((x) => x.group_id === g.id)).map((g) => g.name).join(', ')
 
   return (
-    <div className="page narrow">
+    <div className="page narrow two-col">
       <p><Link to="/events">{t('ann.back')}</Link></p>
       <h1>{t('ann.title')}</h1>
       <p className="hint">{t('ann.intro')}</p>

@@ -4,9 +4,19 @@ Update this file at the end of every session, so the next session starts exactly
 Keep entries short and put the newest first.
 
 ## Current state
-Migrations up to 0015 are applied to the Supabase test project (0012 to 0015 on 22 October, by Davide in the SQL Editor, from one file with a check that stops on the wrong project or a second run). Security advisors after that: row level security on every table; `league_ignored` has no policies on purpose, since only the league function and triggers use it. The league-sync server function is not deployed yet, so the Campionato page stays empty until it is. The weekly limit was dropped on 28 October.
+Migration 0032 is written and waits to be applied to the test project (apply_0032.sql). Older note: migrations up to 0015 are applied to the Supabase test project (0012 to 0015 on 22 October, by Davide in the SQL Editor, from one file with a check that stops on the wrong project or a second run). Security advisors after that: row level security on every table; `league_ignored` has no policies on purpose, since only the league function and triggers use it. The league-sync server function is not deployed yet, so the Campionato page stays empty until it is. The weekly limit was dropped on 28 October.
 
 ## Session log
+0. 31 October 2026, audit fixes, certificate reading, desktop layout, group selector and print/export windows (branch `claude/audit-fixes-and-ocr`):
+   1. Certificate reading: a new photo is always read, a transparent PNG is filled white first (it turned black before), month names and digit lookalikes (O for 0, l for 1) are understood, and a visible message says when no date was found. Tests added for the new date forms.
+   2. Print and CSV export now open a window first (`OutputAction`): it says what will happen, how many rows, and that a CSV holds personal data. Escape and Annulla do nothing.
+   3. Calendar list view shows Prossimi by default, with Passati and Tutta la stagione as chips.
+   4. Group selector: chips Tutti, A, B, C1, C2 in the sidebar, a compact list in the phone header. The duplicate chips on Members are gone.
+   5. Desktop layout: narrow pages stop at 44rem and sit on the left, Impostazioni, Documenti, Esercizi and Annunci use two columns from 1024 pixels, the championship standings stay in view while scrolling. Not yet looked at in a browser after publishing.
+   6. Audit items: darker table headers, 44 pixel targets on sort buttons and chips, singular labels (1 vittoria), en dash instead of 0 while the events page loads, board names no longer break letter by letter, banners wrap side by side, an event that ends before it starts shows "Finisce il giorno dopo" and events over 12 hours are refused.
+   7. Migration 0032: people not called up for an event get no reminder email and are left out of the staff list of non answers, and the banner, bell and Da rispondere list in the app follow the same rule. 952 database tests, 7 of them new, all pass. Dry run on the test project done and rolled back. Apply file: `apply_0032.sql`.
+   8. Checked here: tsc clean, 115 unit tests, production build. Not checked here: the new layouts and windows in a browser, and a real PDF certificate upload.
+   9. `scripts/test-db.sh` stops without output on Linux when the Homebrew folders do not exist. Workaround: `PG_BIN=/usr/lib/postgresql/16/bin`.
 0. 30 October 2026, board, discussion, shell, calendar, tables and team statistics (after the phone layout and the SportEasy notes):
    1. Migrations 0028 to 0031 (staff set a person's state for an event, event discussion, attendance summary filters, season results), 945 database tests with every new rule broken on purpose (13, 20, 12 and 7 of 8 breaks caught; the one not caught is the row order of a query without sorting, so the page sorts itself). `scripts/test-db.sh` stops on Linux when only one Postgres folder exists, so it was run with `PG_BIN=/usr/lib/postgresql/16/bin`.
    2. Event page: drag between the four attendance columns with a menu as the way for phones and keyboards, and a Discussione tab with read marks.

@@ -19,6 +19,9 @@ const KEYWORDS = [
 
 // 12/03/2027, 12.3.27, 12-03-2027
 const DAY_FIRST = /(\d{1,2})\s*[/.\-]\s*(\d{1,2})\s*[/.\-]\s*(\d{2,4})/g
+// 12 marzo 2027, 12 mar 2027
+const MONTHS = ['gennaio', 'febbraio', 'marzo', 'aprile', 'maggio', 'giugno', 'luglio', 'agosto', 'settembre', 'ottobre', 'novembre', 'dicembre']
+const MONTH_NAMED = new RegExp(`(\\d{1,2})\\s*(?:°|o)?\\s*(${MONTHS.join('|')}|${MONTHS.map((m) => m.slice(0, 3)).join('|')})\\.?\\s*(\\d{4})`, 'g')
 // 2027-03-12
 const YEAR_FIRST = /(\d{4})\s*[/.\-]\s*(\d{1,2})\s*[/.\-]\s*(\d{1,2})/g
 
@@ -33,6 +36,13 @@ export function flatten(text: string): string {
     .normalize('NFD')
     .replace(/[̀-ͯ]/g, '')
     .replace(/\s+/g, ' ')
+    .replace(/(?<![a-z0-9])[0-9oli]{1,2}\s*[/.\-]\s*[0-9oli]{1,2}\s*[/.\-]\s*[0-9oli]{2,4}(?![a-z0-9])/g, fixDigits)
+}
+
+// The reading often takes a 0 for an O and a 1 for an l or an i. Inside something shaped like a date
+// that is certainly a digit.
+function fixDigits(token: string): string {
+  return token.replace(/o/g, '0').replace(/[li]/g, '1')
 }
 
 function iso(year: number, month: number, day: number): string | null {
@@ -52,6 +62,12 @@ export function dates(flat: string): { at: number; value: string }[] {
   }
   for (const m of flat.matchAll(DAY_FIRST)) {
     const value = iso(Number(m[3]), Number(m[2]), Number(m[1]))
+    if (value && m.index !== undefined && !found.some((f) => f.at === m.index)) found.push({ at: m.index, value })
+  }
+  for (const m of flat.matchAll(MONTH_NAMED)) {
+    const name = m[2]
+    const month = MONTHS.findIndex((x) => x === name || x.slice(0, 3) === name) + 1
+    const value = iso(Number(m[3]), month, Number(m[1]))
     if (value && m.index !== undefined && !found.some((f) => f.at === m.index)) found.push({ at: m.index, value })
   }
   return found.sort((a, b) => a.at - b.at)

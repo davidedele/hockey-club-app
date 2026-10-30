@@ -155,7 +155,7 @@ export default function Drills() {
   }
 
   return (
-    <div className="page narrow">
+    <div className="page narrow two-col">
       <p><Link to="/events">{t('drills.back')}</Link></p>
       <h1>{t('drills.title')}</h1>
       <p className="hint">{t('drills.intro')}</p>
@@ -226,7 +226,7 @@ export default function Drills() {
                 {link && <a href={link} target="_blank" rel="noopener noreferrer">{t('drills.open')}</a>}
                 {d.video_url && <a href={d.video_url} target="_blank" rel="noopener noreferrer">{t('drills.watch')}</a>}
               </div>
-              <p className="hint">{count === 0 ? t('drills.usedNever') : t('drills.used', { n: String(count) })}</p>
+              <p className="hint">{count === 0 ? t('drills.usedNever') : t(count === 1 ? 'drills.usedOne' : 'drills.used', { n: String(count) })}</p>
               <div className="actions">
                 <button type="button" className="link" disabled={busy} onClick={() => startEdit(d)}>{t('drills.edit')}</button>
                 {confirming === d.id ? (
@@ -238,7 +238,7 @@ export default function Drills() {
                   <button type="button" className="link" disabled={busy} onClick={() => setConfirming(d.id)}>{t('drills.delete')}</button>
                 )}
               </div>
-              {confirming === d.id && count > 0 && <p className="hint">{t('drills.deleteWarning', { n: String(count) })}</p>}
+              {confirming === d.id && count > 0 && <p className="hint">{t(count === 1 ? 'drills.deleteWarningOne' : 'drills.deleteWarning', { n: String(count) })}</p>}
             </li>
           )
         })}

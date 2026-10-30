@@ -45,4 +45,14 @@ describe('reading the expiry date', () => {
   it('accepts a certificate that runs out today', () => {
     expect(findExpiry('scadenza 28/10/2026', today)).toBe('2026-10-28')
   })
+
+  it('reads a date written with the month in words', () => {
+    expect(findExpiry('Il certificato è valido fino al 30 gennaio 2027', today)).toBe('2027-01-30')
+    expect(findExpiry('scadenza 5 mar. 2027', today)).toBe('2027-03-05')
+  })
+
+  it('fixes an O or an l that the reading took for a digit', () => {
+    expect(findExpiry('Scadenza: 3O/Ol/2027', today)).toBe('2027-01-30')
+    expect(findExpiry('scadenza l2/03/2O27', today)).toBe('2027-03-12')
+  })
 })

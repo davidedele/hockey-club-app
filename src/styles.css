@@ -736,15 +736,31 @@ details > summary { display: flex; align-items: center; min-height: 44px; font-w
 .board .person-actions { flex: none; justify-content: flex-end; }
 .board .person-actions select { max-width: 8.5rem; }
 
+/* Computers: pages use the width. Forms stay a readable column on the left, lists and cards fill the rest. */
+@media (min-width: 768px) {
+  .shell .page.narrow { max-width: 44rem; margin-left: 0; }
+  .shell .page.narrow.settings-page, .shell .page.narrow.two-col { max-width: 76rem; }
+  .settings-page .list.settings { display: grid; grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr)); gap: 1rem; background: none; border: 0; overflow: visible; }
+  .settings-page .list.settings li, .settings-page .list.settings li:last-child { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
+}
+@media (min-width: 1024px) {
+  .page.two-col { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 2rem; align-items: start; }
+  .page.two-col > * { grid-column: 1 / -1; }
+  .page.two-col > form, .page.two-col > .ann-list, .page.two-col > .doc-card { grid-column: auto; }
+  .page.two-col > form > h2:first-child { margin-top: 0; }
+}
+
 /* The group switcher, the top bar of computers and the bell */
 .group-switch { display: block; min-width: 0; }
 .group-switch select { width: 100%; max-width: none; min-height: 44px; margin: 0; padding: 0 2rem 0 .75rem; font: 500 1rem/1 var(--font-body); }
 .top-switch { flex: 1; min-width: 0; }
 .top-switch select { background: var(--surface-2); border-color: transparent; }
 .side-switch { margin: -.5rem 0 0; }
+.group-chips { display: flex; flex-wrap: wrap; gap: .375rem; margin: -.5rem 0 0; }
+.group-chips button { min-height: 44px; min-width: 44px; padding: 0 .875rem; font: 500 .9375rem/1 var(--font-body); color: var(--side-ink); background: rgba(255, 255, 255, .06); border: 1px solid rgba(255, 255, 255, .16); border-radius: 999px; }
+.group-chips button:hover { background: rgba(255, 255, 255, .14); color: #fff; }
+.group-chips button[aria-pressed="true"] { color: var(--side); background: #fff; border-color: #fff; }
 @media (min-width: 768px) {
-  .side .side-switch select { background: rgba(255, 255, 255, .08); border-color: rgba(255, 255, 255, .18); color: #fff; }
-  .side .side-switch option { color: #0e2236; }
   .crumbbar { position: sticky; top: 0; z-index: 4; display: flex; align-items: center; justify-content: space-between; gap: 1rem; min-height: 56px; padding: 0 1.5rem; background: var(--canvas); border-bottom: 1px solid var(--line); }
 }
 .crumbs ol { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; align-items: center; gap: .25rem .5rem; font-size: .9375rem; color: var(--muted); }
@@ -910,3 +926,34 @@ button.sort { display: inline-flex; align-items: center; min-height: 44px; paddi
 .bar span { display: block; height: 100%; border-radius: 5px; }
 .bar.ok span { background: var(--ok); }
 .bar.bad span { background: var(--now); }
+
+/* Window that asks before a print or an export */
+.output-dialog { width: min(26rem, calc(100vw - 2rem)); padding: 1.25rem 1.5rem; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: 0 12px 40px rgba(14, 34, 54, .25); }
+.output-dialog::backdrop { background: rgba(14, 34, 54, .45); }
+.output-dialog h2 { margin: 0 0 .5rem; }
+.output-dialog p { margin: 0 0 .75rem; }
+.output-dialog .actions { margin-top: 1rem; }
+@media print { .output-dialog { display: none; } }
+.cal-scope { margin-bottom: .75rem; }
+
+/* Banners share one strip on computers instead of stacking */
+.banners { display: contents; }
+@media (min-width: 768px) {
+  .banners { display: flex; flex-wrap: wrap; }
+  .banners .banner { flex: 1 1 22rem; }
+}
+
+/* Table headers: full ink on the tinted cells, and a sort button never narrower than the minimum target */
+.att-table thead th, .att-table thead button.sort, .members-table thead button.sort { color: var(--ink); }
+button.sort { min-width: 24px; }
+
+/* Event board: a name keeps its words together, the answer menu moves below it when the column is narrow */
+.board .row { flex-wrap: wrap; row-gap: .25rem; }
+.board .row > span:first-child { flex: 1 1 9rem; overflow-wrap: normal; }
+.board .person-actions { flex: 1 1 100%; justify-content: flex-start; margin-left: 0; }
+.board .person-actions select { flex: 1 1 7rem; min-width: 0; max-width: 100%; }
+
+/* Championship: the standings stay in view while the long list of games scrolls */
+@media (min-width: 1024px) {
+  .league > section:first-child { position: sticky; top: 4.5rem; align-self: start; }
+}

@@ -104,9 +104,15 @@ export default function EventForm() {
       setError(t('form.groupsRequired'))
       return
     }
-    setBusy(true)
     const startsAt = italyToIso(date, startTime)
     const endsAt = endIso(date, startTime, shownEnd)
+    // An end time earlier than the start means the next day, which is right for a late session but
+    // wrong for a typo, so a very long event is not saved.
+    if (Date.parse(endsAt) - Date.parse(startsAt) > 12 * 3600000) {
+      setError(t('form.tooLong'))
+      return
+    }
+    setBusy(true)
     const meetupAt = shownMeetup ? meetupIso(date, startTime, shownMeetup) : null
     const isGame = type === 'game'
 
@@ -212,6 +218,7 @@ export default function EventForm() {
         <label>
           {t('form.end')}
           <input type="time" required value={shownEnd} onChange={(e) => { setEndTime(e.target.value); setEndTouched(true) }} />
+          {startTime && shownEnd && shownEnd <= startTime && <span className="hint">{t('form.endNextDay')}</span>}
         </label>
         <label>
           {t('form.meetup')}
