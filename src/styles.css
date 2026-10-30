@@ -853,3 +853,60 @@ button.sort { display: inline-flex; align-items: center; min-height: 44px; paddi
 .att-table thead th { padding: .375rem .25rem; }
 .att-table thead button.sort { white-space: normal; text-align: center; justify-content: center; min-height: 44px; line-height: 1.2; }
 .att-table th.att-name button.sort { text-align: left; justify-content: flex-start; white-space: nowrap; }
+
+/* Team statistics */
+.team-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; }
+.team-stats .card { margin: 0; }
+.team-stats .span-2 { grid-column: span 2; }
+.team-stats .span-3 { grid-column: span 3; }
+@media (max-width: 899.98px) { .team-stats { grid-template-columns: minmax(0, 1fr); } .team-stats .span-2, .team-stats .span-3 { grid-column: auto; } }
+.result-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem; }
+.big-number { display: flex; flex-direction: column; }
+.big-number strong { font: 600 4rem/1 var(--font-display); }
+.big-number span { color: var(--muted); }
+.ring { margin: 0; display: grid; justify-items: center; gap: .25rem; position: relative; width: 6.5rem; }
+.ring svg { width: 6.5rem; height: 6.5rem; }
+.ring circle { fill: none; stroke-width: 8; }
+.ring .track { stroke: var(--surface-2); }
+.ring.ok .fill { stroke: var(--ok); }
+.ring.neutral .fill { stroke: var(--muted); }
+.ring.bad .fill { stroke: var(--now); }
+.ring figcaption { position: absolute; top: 0; left: 0; width: 6.5rem; height: 6.5rem; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.ring figcaption strong { font: 600 1.75rem/1 var(--font-display); }
+.ring figcaption span { font-size: .75rem; color: var(--muted); }
+.goals-row { display: flex; align-items: center; gap: 1.5rem; }
+.donut { width: 7.5rem; height: 7.5rem; flex: none; }
+.donut circle { fill: none; stroke-width: 14; }
+.donut .against { stroke: var(--now); }
+.donut .for { stroke: var(--ok); }
+.goals-legend { display: grid; gap: .75rem; margin: 0; }
+.goals-legend div { display: flex; flex-direction: column; }
+.goals-legend dt { color: var(--muted); font-size: .875rem; }
+.goals-legend dd { margin: 0; font: 600 2rem/1 var(--font-display); }
+.goals-legend .ok dd { color: var(--ok); }
+.goals-legend .bad dd { color: var(--now); }
+.diff-chart, .avg-chart { display: flex; align-items: flex-end; gap: .5rem; height: 12rem; }
+.diff, .avg { flex: 1; min-width: 0; height: 100%; display: grid; grid-template-rows: 1.25rem 1fr 1.5rem; justify-items: center; align-items: end; }
+.diff .col, .avg .col { width: 70%; max-width: 3rem; min-height: 2px; border-radius: 4px 4px 0 0; align-self: end; }
+.diff.ok .col, .avg.ok .col { background: var(--ok); }
+.diff.bad .col, .avg.bad .col { background: var(--now); }
+.diff.neutral .col { background: var(--muted); }
+.diff .count, .avg .count { font-weight: 600; font-size: .875rem; }
+.diff .label, .avg .label { font-size: .8125rem; color: var(--muted); }
+.last-games { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 1rem; }
+.last-games li { display: grid; justify-items: center; gap: .125rem; }
+.last-games .badge { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; color: #fff; font: 600 1.25rem/1 var(--font-display); }
+.last-games .ok .badge { background: var(--ok); }
+.last-games .bad .badge { background: var(--now); }
+.last-games .neutral .badge { background: var(--muted); }
+.last-games .score { font-weight: 500; }
+.last-games .hint { margin: 0; }
+.streaks { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2rem; }
+@media (max-width: 899.98px) { .streaks { grid-template-columns: minmax(0, 1fr); } }
+.streak { margin-bottom: 1rem; }
+.streak-head { display: flex; justify-content: space-between; gap: 1rem; }
+.streak .hint { margin: .25rem 0 0; font-size: .8125rem; }
+.bar { height: 10px; margin-top: .25rem; background: var(--surface-2); border-radius: 5px; overflow: hidden; }
+.bar span { display: block; height: 100%; border-radius: 5px; }
+.bar.ok span { background: var(--ok); }
+.bar.bad span { background: var(--now); }
