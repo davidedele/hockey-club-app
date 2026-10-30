@@ -698,5 +698,20 @@
   "event.countAbsent": "Assenti",
   "event.countNotCalled": "Non convocati",
   "event.notCalledList": "Non convocati ({n})",
-  "event.manage": "Gestisci le presenze"
+  "event.manage": "Gestisci le presenze",
+  "event.tabDiscussion": "Discussione",
+  "event.move": "Sposta {name}",
+  "event.dragHint": "Trascina una persona in un'altra colonna, oppure usa il menu accanto al nome.",
+  "thread.empty": "Nessun messaggio. Scrivi il primo.",
+  "thread.label": "Il tuo messaggio",
+  "thread.send": "Invia messaggio",
+  "thread.delete": "Elimina",
+  "thread.deleteConfirm": "Conferma eliminazione",
+  "thread.readBy": "Letto da {n}",
+  "thread.nobody": "Non ancora letto",
+  "thread.archived": "Discussione archiviata: nessun messaggio da {days} giorni. Un nuovo messaggio la riapre.",
+  "thread.you": "Tu",
+  "error.message_empty": "Scrivi qualcosa prima di inviare.",
+  "error.message_too_long": "Il messaggio è troppo lungo, al massimo 1000 caratteri.",
+  "error.not_in_event": "Questa persona non fa parte dei gruppi dell'evento."
 }

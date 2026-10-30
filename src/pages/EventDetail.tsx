@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { Link, Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { errorText, t, type MessageKey } from '../i18n'
 import EventGame from './EventGame'
+import EventThread from '../components/EventThread'
 import Lineup from './Lineup'
 import Plan from './Plan'
 import { jerseyName, useClub } from '../lib/club'
@@ -15,7 +16,8 @@ import type { Answer, AttendanceRow, EventRow, Group, Rink, Status } from '../li
 const STATUSES: Status[] = ['on_time', 'late', 'excused', 'unexcused', 'injured', 'not_called_up']
 
 type NearEvent = Pick<EventRow, 'id' | 'type' | 'title' | 'starts_at' | 'opponent' | 'score_for' | 'score_against' | 'cancelled_at'>
-type Tab = 'info' | 'presence' | 'game' | 'lineup' | 'plan'
+type Tab = 'info' | 'presence' | 'game' | 'discussion' | 'lineup' | 'plan'
+type State = 'present' | 'absent' | 'waiting' | 'not_called_up'
 
 export default function EventDetail() {
   const { id = '' } = useParams()
@@ -36,6 +38,8 @@ export default function EventDetail() {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const [near, setNear] = useState<NearEvent[]>([])
+  const [dragging, setDragging] = useState<string | null>(null)
+  const [hoverState, setHoverState] = useState<State | null>(null)
   const [params] = useSearchParams()
 
   const refresh = useCallback(async () => {
@@ -139,6 +143,11 @@ export default function EventDetail() {
     return guarded(() => supabase.from('events').update({ score_for: us, score_against: them }).eq('id', id).select())
   }
 
+  // Staff change what a person is for this event: it changes the person's own answer.
+  function moveTo(userId: string, state: State) {
+    return guarded(() => supabase.rpc('set_player_state', { p_event_id: id, p_user_id: userId, p_state: state }) as unknown as PromiseLike<{ error: { message?: string; code?: string } | null }>)
+  }
+
   function setCancelled(value: boolean) {
     return guarded(() => supabase.from('events').update({ cancelled_at: value ? new Date().toISOString() : null }).eq('id', id).select())
   }
@@ -169,32 +178,65 @@ export default function EventDetail() {
   const notCalled = rows.filter((r) => !called(r))
   const game = event.type === 'game'
 
+  const stateOf = (r: AttendanceRow): State => (!called(r) ? 'not_called_up' : r.answer === 'present' ? 'present' : r.answer === 'absent' ? 'absent' : 'waiting')
+
   function person(r: AttendanceRow) {
+    const full = `${r.first_name} ${r.last_name}`
     return (
-      <li key={r.user_id}>
+      <li
+        key={r.user_id}
+        className={dragging === r.user_id ? 'dragging' : undefined}
+        draggable={!busy}
+        onDragStart={(e) => { e.dataTransfer.setData('text/plain', r.user_id); e.dataTransfer.effectAllowed = 'move'; setDragging(r.user_id) }}
+        onDragEnd={() => { setDragging(null); setHoverState(null) }}
+      >
         <div className="row">
           <span>{r.last_name} {r.first_name}</span>
-          {started && (
-            <select
-              aria-label={t('event.record', { name: `${r.first_name} ${r.last_name}` })}
-              value={r.status ?? ''}
-              disabled={busy}
-              onChange={(e) => void record(r.user_id, e.target.value)}
-            >
-              <option value="">{t('status.none')}</option>
-              {STATUSES.map((s) => <option key={s} value={s}>{t(`status.${s}` as MessageKey)}</option>)}
+          <span className="person-actions">
+            <select aria-label={t('event.move', { name: full })} value={stateOf(r)} disabled={busy} onChange={(e) => void moveTo(r.user_id, e.target.value as State)}>
+              <option value="present">{t('answer.present')}</option>
+              <option value="waiting">{t('event.countWaiting')}</option>
+              <option value="absent">{t('answer.absent')}</option>
+              <option value="not_called_up">{t('status.not_called_up')}</option>
             </select>
-          )}
+            {started && (
+              <select
+                aria-label={t('event.record', { name: full })}
+                value={r.status ?? ''}
+                disabled={busy}
+                onChange={(e) => void record(r.user_id, e.target.value)}
+              >
+                <option value="">{t('status.none')}</option>
+                {STATUSES.map((s) => <option key={s} value={s}>{t(`status.${s}` as MessageKey)}</option>)}
+              </select>
+            )}
+          </span>
         </div>
       </li>
     )
   }
+
+  // A column of the board accepts a person dropped on it.
+  const dropProps = (state: State) => ({
+    onDragOver: (e: React.DragEvent) => { if (dragging) { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; setHoverState(state) } },
+    onDragLeave: () => setHoverState((h) => (h === state ? null : h)),
+    onDrop: (e: React.DragEvent) => {
+      e.preventDefault()
+      const who = e.dataTransfer.getData('text/plain') || dragging
+      setDragging(null)
+      setHoverState(null)
+      const row = rows.find((r) => r.user_id === who)
+      if (who && row && stateOf(row) !== state) void moveTo(who, state)
+    },
+    className: `col ${state === 'present' ? 'present' : state === 'waiting' ? 'pending' : state === 'absent' ? 'absent' : 'notcalled'}${hoverState === state ? ' drop' : ''}`,
+  })
 
   // The tabs of the page. A tab that does not apply to this event is not offered.
   const tabs: { key: Tab; label: string }[] = [
     { key: 'info', label: t('event.tabInfo') },
     { key: 'presence', label: t('event.tabPresence') },
     ...(game ? [{ key: 'game' as Tab, label: t('event.tabGame') }] : []),
+    { key: 'discussion' as Tab, label: t('event.tabDiscussion') },
     ...(!cancelled ? [{ key: 'lineup' as Tab, label: t('lineup.open') }] : []),
     ...(!cancelled && event.type === 'training' ? [{ key: 'plan' as Tab, label: t('plan.open') }] : []),
   ]
@@ -387,13 +429,14 @@ export default function EventDetail() {
       {tab === 'presence' && (
         isStaff ? (
           <>
+            <p className="hint">{t('event.dragHint')}</p>
             {!started && <p className="hint">{t('event.recordHint')}</p>}
             <div className="board">
-              <section className="col present">
+              <section {...dropProps('present')}>
                 <h2>{t('event.presentList', { n: String(present.length) })}</h2>
                 <ul className="list">{present.map(person)}</ul>
               </section>
-              <section className="col pending">
+              <section {...dropProps('waiting')}>
                 <h2>{t('event.noAnswer', { n: String(pending.length) })}</h2>
                 <ul className="list">{pending.map(person)}</ul>
                 {!over && !cancelled && pending.length > 0 && (
@@ -409,11 +452,11 @@ export default function EventDetail() {
                   </div>
                 )}
               </section>
-              <section className="col notcalled">
+              <section {...dropProps('not_called_up')}>
                 <h2>{t('event.notCalledList', { n: String(notCalled.length) })}</h2>
                 <ul className="list">{notCalled.map(person)}</ul>
               </section>
-              <section className="col absent">
+              <section {...dropProps('absent')}>
                 <h2>{t('event.absentList', { n: String(absent.length) })}</h2>
                 <ul className="list">{absent.map(person)}</ul>
               </section>
@@ -441,6 +484,7 @@ export default function EventDetail() {
         </>
       )}
 
+      {tab === 'discussion' && <EventThread eventId={id} />}
       {tab === 'lineup' && <Lineup embedded />}
       {tab === 'plan' && <Plan embedded />}
     </div>
