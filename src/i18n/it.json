@@ -713,5 +713,13 @@
   "thread.you": "Tu",
   "error.message_empty": "Scrivi qualcosa prima di inviare.",
   "error.message_too_long": "Il messaggio è troppo lungo, al massimo 1000 caratteri.",
-  "error.not_in_event": "Questa persona non fa parte dei gruppi dell'evento."
+  "error.not_in_event": "Questa persona non fa parte dei gruppi dell'evento.",
+  "group.switch": "Gruppo",
+  "group.all": "Tutti i gruppi",
+  "bell.title": "Novità",
+  "bell.withCount": "Novità: {n}",
+  "bell.none": "Niente di nuovo.",
+  "bell.thread": "{title}: {n} nuovi messaggi",
+  "crumb.label": "Dove sei",
+  "group.allShort": "Tutti"
 }
