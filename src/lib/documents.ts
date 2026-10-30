@@ -51,6 +51,9 @@ export async function shrinkDocument(file: File): Promise<Blob> {
   canvas.height = Math.round(bitmap.height * scale)
   const ctx = canvas.getContext('2d')
   if (!ctx) throw new Error('document')
+  // A PNG can be transparent, which a JPEG turns black, and black behind black text reads as nothing.
+  ctx.fillStyle = '#fff'
+  ctx.fillRect(0, 0, canvas.width, canvas.height)
   ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height)
   bitmap.close()
   return new Promise((resolve, reject) => canvas.toBlob((b) => (b ? resolve(b) : reject(new Error('document'))), 'image/jpeg', 0.85))

@@ -146,7 +146,7 @@ function Protected() {
       <a className="skip" href="#main">{t('nav.skip')}</a>
       <aside className="side">
         <Link className="club" to="/events"><Crest /><span className="club-name">{club.name || t('app.name')}</span></Link>
-        <GroupSwitch className="side-switch" />
+        <GroupSwitch className="side-switch" chips />
         <nav aria-label={t('nav.main')}>{main}</nav>
         <nav className="side-foot" aria-label={t('nav.account')}>
           {isBoard && <NavLink to="/settings"><TabIcon name="settings" />{t('settings.title')}</NavLink>}
@@ -168,9 +168,11 @@ function Protected() {
           <NavLink className="me" to="/profile" aria-label={t('nav.profileOf', { name: fullName })}><Avatar first={profile.first_name} last={profile.last_name} url={photo} /></NavLink>
           </span>
         </header>
-        <UpdateBanner />
-        <PendingBanner count={note.pending} />
-        <DocumentsBanner />
+        <div className="banners">
+          <UpdateBanner />
+          <PendingBanner count={note.pending} />
+          <DocumentsBanner />
+        </div>
         <main id="main" tabIndex={-1}>
           <Outlet />
         </main>

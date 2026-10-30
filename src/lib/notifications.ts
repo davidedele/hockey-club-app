@@ -31,15 +31,17 @@ export function useNotifications(): Notifications {
     if (!profile) return
     const now = new Date()
     const until = new Date(now.getTime() + BANNER_DAYS * 86400000)
-    const [e, a, mine, ann, seen, th] = await Promise.all([
+    const [e, a, mine, ann, seen, th, off] = await Promise.all([
       supabase.from('events').select('id, event_groups(group_id)').is('cancelled_at', null).gt('ends_at', now.toISOString()).lt('starts_at', until.toISOString()),
       supabase.from('attendance_answers').select('event_id').eq('user_id', profile.id),
       supabase.from('group_members').select('group_id').eq('user_id', profile.id),
       supabase.from('announcements').select('created_at').order('created_at', { ascending: false }).limit(50),
       supabase.from('announcement_seen').select('seen_at').eq('user_id', profile.id).maybeSingle(),
       supabase.rpc('my_event_threads'),
+      supabase.from('attendance_records').select('event_id').eq('user_id', profile.id).eq('status', 'not_called_up'),
     ])
-    const answered = new Set(((a.data ?? []) as { event_id: string }[]).map((x) => x.event_id))
+    // Someone staff did not call up for an event is not waited for.
+    const answered = new Set([...((a.data ?? []) as { event_id: string }[]), ...((off.data ?? []) as { event_id: string }[])].map((x) => x.event_id))
     const myGroups = new Set(((mine.data ?? []) as { group_id: number }[]).map((x) => x.group_id))
     const events = (e.data ?? []) as unknown as { id: string; event_groups: { group_id: number }[] }[]
     const pending = events.filter((x) => !answered.has(x.id) && x.event_groups.some((g) => myGroups.has(g.group_id))).length

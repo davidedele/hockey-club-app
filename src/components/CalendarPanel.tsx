@@ -5,11 +5,13 @@ import { downloadCsv, pageOf, sortRows, useSort, type Cell } from '../lib/table'
 import { addDays, dayKey, formatDay, formatMonth, formatShortDay, formatTime, seasonLabel, seasonOf, weekOf } from '../lib/time'
 import type { Answer, EventRow } from '../lib/types'
 import SortHeader from './SortHeader'
+import OutputAction from './OutputAction'
 import TablePager from './TablePager'
 
 type View = 'week' | 'month' | 'list'
 type Cat = 'training' | 'friendly' | 'league'
 type ListKey = 'date' | 'event' | 'place' | 'answer'
+type Scope = 'upcoming' | 'past' | 'all'
 
 const CATS: Cat[] = ['training', 'friendly', 'league']
 const FIRST_SEASON = 2026
@@ -41,6 +43,8 @@ export default function CalendarPanel(props: {
   const [page, setPage] = useState(1)
   const [size, setSize] = useState(25)
   const sort = useSort<ListKey>('date')
+  // The list opens on what is still to come, so the next event is the first row.
+  const [scope, setScope] = useState<Scope>('upcoming')
 
   const title = (e: EventRow) => (e.type === 'game' && e.opponent ? t('events.vs', { club: clubName, opponent: e.opponent }) : e.title)
   const typeName = (c: Cat) => t(`cal.${c}` as MessageKey)
@@ -69,6 +73,8 @@ export default function CalendarPanel(props: {
   function pickSeason(s: number) {
     setSeason(s)
     setPage(1)
+    setScope(s === currentSeason ? 'upcoming' : 'all')
+    sort.set('date', 'asc')
     const start = s === currentSeason ? today : `${s}-09-01`
     setMonth(start.slice(0, 7))
     const monday = (d: string) => weekOf(`${d}T12:00:00Z`)[0].date
@@ -112,9 +118,10 @@ export default function CalendarPanel(props: {
   const answerText = (e: EventRow) => (answers.has(e.id) ? t(`answer.${answers.get(e.id)}` as MessageKey) : '')
   const listRows = useMemo(() => {
     const get = (e: EventRow): Cell => (sort.key === 'date' ? e.starts_at : sort.key === 'event' ? title(e) : sort.key === 'place' ? e.venue : answerText(e))
-    return sortRows(inSeason.filter(keep), get, sort.dir)
+    const inScope = (e: EventRow) => scope === 'all' || (scope === 'upcoming' ? dayKey(e.starts_at) >= today : dayKey(e.starts_at) < today)
+    return sortRows(inSeason.filter(keep).filter(inScope), get, sort.dir)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [inSeason, types, text, sort.key, sort.dir, answers])
+  }, [inSeason, types, text, sort.key, sort.dir, answers, scope])
   const pages = pageOf(listRows, page, size)
 
   function exportList() {
@@ -123,6 +130,16 @@ export default function CalendarPanel(props: {
       ...listRows.map((e) => [dayKey(e.starts_at), formatTime(e.starts_at), typeName(catOf(e)), title(e), e.venue, groupName(e)]),
     ])
   }
+
+  function pickScope(next: Scope) {
+    setScope(next)
+    setPage(1)
+    // Past events read best with the latest first, the others with the next first.
+    sort.set('date', next === 'past' ? 'desc' : 'asc')
+  }
+  const scopeButton = (v: Scope, label: string) => (
+    <button className={scope === v ? 'chip on' : 'chip'} aria-pressed={scope === v} onClick={() => pickScope(v)}>{label}</button>
+  )
 
   const viewButton = (v: View, label: string) => (
     <button className={view === v ? 'chip on' : 'chip'} aria-pressed={view === v} onClick={() => setView(v)}>{label}</button>
@@ -182,8 +199,8 @@ export default function CalendarPanel(props: {
               {viewButton('month', t('cal.month'))}
               {viewButton('list', t('cal.list'))}
             </div>
-            <button className="chip" onClick={() => window.print()}>{t('cal.print')}</button>
-            {isStaff && view === 'list' && <button className="chip" onClick={exportList}>{t('cal.export')}</button>}
+            <OutputAction kind="print" label={t('cal.print')} onRun={() => window.print()} />
+            {isStaff && view === 'list' && <OutputAction kind="csv" label={t('cal.export')} rows={listRows.length} disabled={listRows.length === 0} onRun={exportList} />}
           </div>
         </div>
 
@@ -219,6 +236,11 @@ export default function CalendarPanel(props: {
 
         {view === 'list' && (
           <>
+            <div role="group" aria-label={t('cal.scope')} className="cal-views cal-scope">
+              {scopeButton('upcoming', t('cal.scopeUpcoming'))}
+              {scopeButton('past', t('cal.scopePast'))}
+              {scopeButton('all', t('cal.scopeAll'))}
+            </div>
             <div className="table-wrap">
               <table className="list-table">
                 <thead>

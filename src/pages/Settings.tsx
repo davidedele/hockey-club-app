@@ -15,7 +15,7 @@ export default function Settings() {
     { to: '/settings/invites', key: 'invites', show: true },
   ]
   return (
-    <div className="page narrow">
+    <div className="page narrow settings-page">
       <h1>{t('settings.title')}</h1>
       <ul className="list settings">
         {items.filter((i) => i.show).map((i) => (

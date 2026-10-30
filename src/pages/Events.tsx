@@ -123,7 +123,7 @@ export default function Events() {
   // The phone home shows one week at a time: this week by default, other weeks with the arrows.
   const inWeek = (e: EventRow) => { const k = dayKey(e.starts_at); return k >= week[0].date && k <= week[6].date }
   const next = view === 'upcoming' && weekShift === 0 ? live[0] : undefined
-  const todo = live.slice(1).filter((e) => e.event_groups.some((x) => myGroups.includes(x.group_id)) && !answers.has(e.id)).slice(0, 5)
+  const todo = live.slice(1).filter((e) => e.event_groups.some((x) => myGroups.includes(x.group_id)) && !answers.has(e.id) && records.get(e.id) !== 'not_called_up').slice(0, 5)
   const weekRest = upcoming.filter((e) => e !== next && inWeek(e))
   // This week in full; when it has fewer than 5 events, the next ones fill it up to 5. "Show more" adds 5 at a time.
   const PHONE_MIN = 5
@@ -207,8 +207,8 @@ export default function Events() {
         </div>
         <dl className="cb-stats">
           <div><dt>{t('dash.members')}</dt><dd>{memberCount ?? ''}</dd></div>
-          <div><dt>{t('dash.thisWeek')}</dt><dd>{weekCount}</dd></div>
-          <div><dt>{t('dash.myAttendance')}</dt><dd>{season.total ? t('dash.ofTotal', { n: String(season.came), total: String(season.total) }) : t('common.none')}</dd></div>
+          <div><dt>{t('dash.thisWeek')}</dt><dd>{loaded ? weekCount : '\u2013'}</dd></div>
+          <div><dt>{t('dash.myAttendance')}</dt><dd>{!loaded ? '\u2013' : season.total ? t('dash.ofTotal', { n: String(season.came), total: String(season.total) }) : t('common.none')}</dd></div>
         </dl>
         {isStaff && <Link className="button small light" to="/events/new">{t('events.new')}</Link>}
       </section>

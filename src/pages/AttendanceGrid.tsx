@@ -5,6 +5,7 @@ import { useGroupFilter } from '../lib/groupfilter'
 import { useSession } from '../lib/session'
 import { supabase } from '../lib/supabase'
 import { downloadCsv } from '../lib/table'
+import OutputAction from '../components/OutputAction'
 import { dayKey, dayParts, formatMonth, italyToIso } from '../lib/time'
 import type { Group } from '../lib/types'
 
@@ -112,8 +113,8 @@ export default function AttendanceGrid({ embedded = false }: { embedded?: boolea
         <button className="chip" onClick={() => setMonth(shiftMonth(month, -1))}>{t('grid.prev')}</button>
         <strong aria-live="polite">{formatMonth(monthStart)}</strong>
         <button className="chip" onClick={() => setMonth(shiftMonth(month, 1))}>{t('grid.next')}</button>
-        <button className="chip" onClick={() => window.print()}>{t('table.print')}</button>
-        <button className="chip" disabled={events.length === 0 || people.length === 0} onClick={exportGrid}>{t('table.export')}</button>
+        <OutputAction kind="print" label={t('table.print')} onRun={() => window.print()} />
+        <OutputAction kind="csv" label={t('table.export')} rows={people.length} disabled={events.length === 0 || people.length === 0} onRun={exportGrid} />
       </div>
       {error && <p className="error" role="alert">{error}</p>}
       {loaded && !error && events.length === 0 && <p className="hint">{t('grid.empty')}</p>}

@@ -5,6 +5,7 @@ import { errorText, t, type MessageKey } from '../i18n'
 import { useGroupFilter } from '../lib/groupfilter'
 import { supabase } from '../lib/supabase'
 import { downloadCsv, pageOf, sortRows, useSort, type Cell } from '../lib/table'
+import OutputAction from '../components/OutputAction'
 import { italyToIso, seasonLabel, seasonOf } from '../lib/time'
 import type { SummaryRow } from '../lib/types'
 
@@ -123,8 +124,8 @@ export default function AttendanceSummary() {
           <input type="search" value={query} onChange={(e) => { setQuery(e.target.value); setPage(1) }} />
         </label>
         <div className="att-actions">
-          <button className="chip" onClick={() => window.print()}>{t('table.print')}</button>
-          <button className="chip" onClick={exportCsv} disabled={shown.length === 0}>{t('table.export')}</button>
+          <OutputAction kind="print" label={t('table.print')} onRun={() => window.print()} />
+          <OutputAction kind="csv" label={t('table.export')} rows={shown.length} disabled={shown.length === 0} onRun={exportCsv} />
         </div>
       </div>
       {error && <p className="error" role="alert">{error}</p>}
