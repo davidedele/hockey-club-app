@@ -5,6 +5,7 @@ import Avatar from '../components/Avatar'
 import GroupBadge from '../components/GroupBadge'
 import { useAvatarUrls } from '../lib/avatars'
 import { formatPhone, phoneLink } from '../lib/phone'
+import { useGroupFilter } from '../lib/groupfilter'
 import { useSession } from '../lib/session'
 import { supabase } from '../lib/supabase'
 import type { Contact, Group, MemberDocument, Profile } from '../lib/types'
@@ -19,7 +20,7 @@ export default function Members() {
   const [contacts, setContacts] = useState<Contact[]>([])
   const [docs, setDocs] = useState<MemberDocument[]>([])
   const club = useClub()
-  const [filter, setFilter] = useState<number | null>(null)
+  const { groupId: filter, setGroupId: setFilter } = useGroupFilter()
   const [query, setQuery] = useState('')
 
   useEffect(() => {

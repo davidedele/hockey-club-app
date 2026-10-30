@@ -6,6 +6,7 @@ import EventThread from '../components/EventThread'
 import Lineup from './Lineup'
 import Plan from './Plan'
 import { jerseyName, useClub } from '../lib/club'
+import { useCrumb } from '../lib/crumb'
 import { useSession } from '../lib/session'
 import type { CSSProperties } from 'react'
 import { whatsappLink } from '../lib/whatsapp'
@@ -76,6 +77,8 @@ export default function EventDetail() {
   useEffect(() => {
     void refresh()
   }, [refresh])
+
+  useCrumb(event?.title ?? '')
 
   if (loaded && !event) return <Navigate to="/events" replace />
   if (!event) return <p className="center">{t('common.loading')}</p>

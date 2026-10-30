@@ -713,5 +713,13 @@
   "thread.you": "You",
   "error.message_empty": "Write something before sending.",
   "error.message_too_long": "The message is too long, 1000 characters at most.",
-  "error.not_in_event": "This person is not in the groups of the event."
+  "error.not_in_event": "This person is not in the groups of the event.",
+  "group.switch": "Group",
+  "group.all": "All groups",
+  "bell.title": "News",
+  "bell.withCount": "News: {n}",
+  "bell.none": "Nothing new.",
+  "bell.thread": "{title}: {n} new messages",
+  "crumb.label": "Where you are",
+  "group.allShort": "All"
 }

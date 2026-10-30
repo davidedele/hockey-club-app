@@ -1,14 +1,17 @@
-import { useCallback, useEffect, useState } from 'react'
 import { Link, NavLink, Navigate, Outlet, Route, Routes, useLocation } from 'react-router-dom'
-import { t } from './i18n'
+import { t, type MessageKey } from './i18n'
 import { isConfigured } from './lib/supabase'
 import Avatar from './components/Avatar'
+import Bell from './components/Bell'
+import GroupSwitch from './components/GroupSwitch'
 import Crest from './components/Crest'
 import { useAvatarUrls } from './lib/avatars'
 import { useClub } from './lib/club'
+import { useCrumbLeaf } from './lib/crumb'
+import { useGroupFilter } from './lib/groupfilter'
+import { useNotifications } from './lib/notifications'
 import { getPendingInvite } from './lib/invite'
 import { useSession } from './lib/session'
-import { supabase } from './lib/supabase'
 import Announcements from './pages/Announcements'
 import AttendanceGrid from './pages/AttendanceGrid'
 import AttendanceSummary from './pages/AttendanceSummary'
@@ -71,38 +74,9 @@ function TabIcon({ name }: { name: keyof typeof ICONS }) {
   )
 }
 
-const BANNER_DAYS = 14
-
 // A banner on every screen while an event in the next two weeks has no answer yet.
-function PendingBanner() {
-  const { profile } = useSession()
+function PendingBanner({ count }: { count: number }) {
   const location = useLocation()
-  const [count, setCount] = useState(0)
-
-  const load = useCallback(async () => {
-    if (!profile) return
-    const now = new Date()
-    const until = new Date(now.getTime() + BANNER_DAYS * 86400000)
-    const [e, a] = await Promise.all([
-      supabase.from('events').select('id, event_groups(group_id)').is('cancelled_at', null).gt('ends_at', now.toISOString()).lt('starts_at', until.toISOString()),
-      supabase.from('attendance_answers').select('event_id').eq('user_id', profile.id),
-    ])
-    const answered = new Set(((a.data ?? []) as { event_id: string }[]).map((x) => x.event_id))
-    const mine = await supabase.from('group_members').select('group_id').eq('user_id', profile.id)
-    const myGroups = new Set(((mine.data ?? []) as { group_id: number }[]).map((x) => x.group_id))
-    const events = (e.data ?? []) as unknown as { id: string; event_groups: { group_id: number }[] }[]
-    setCount(events.filter((x) => !answered.has(x.id) && x.event_groups.some((g) => myGroups.has(g.group_id))).length)
-  }, [profile])
-
-  useEffect(() => {
-    void load()
-  }, [load, location.pathname])
-
-  useEffect(() => {
-    window.addEventListener('attendance-changed', load)
-    return () => window.removeEventListener('attendance-changed', load)
-  }, [load])
-
   if (count === 0 || location.pathname === '/events' || location.pathname.startsWith('/settings') || location.pathname.startsWith('/profile')) return null
   return (
     <div className="banner" role="status">
@@ -112,12 +86,46 @@ function PendingBanner() {
   )
 }
 
+const SECTION: Record<string, MessageKey> = {
+  '': 'nav.members',
+  members: 'nav.members',
+  events: 'nav.events',
+  campionato: 'nav.championship',
+  stats: 'nav.stats',
+  attendance: 'nav.attendance',
+  profile: 'nav.profile',
+  settings: 'settings.title',
+  announcements: 'ann.title',
+  documents: 'docs.title',
+  drills: 'drills.title',
+}
+
+// Where the person is: the club, the section, and the page when it names itself.
+function Crumbs() {
+  const { pathname } = useLocation()
+  const club = useClub()
+  const leaf = useCrumbLeaf()
+  const first = pathname.split('/')[1] ?? ''
+  const key = SECTION[first]
+  return (
+    <nav className="crumbs" aria-label={t('crumb.label')}>
+      <ol>
+        <li>{club.name || t('app.name')}</li>
+        {key && <li>{leaf ? <Link to={first ? `/${first}` : '/'}>{t(key)}</Link> : <span aria-current="page">{t(key)}</span>}</li>}
+        {key && leaf && <li><span aria-current="page">{leaf}</span></li>}
+      </ol>
+    </nav>
+  )
+}
+
 // Signed in people with a profile get the app. Everyone else is sent to log in.
 function Protected() {
   const { loading, session, profile, isStaff, isBoard } = useSession()
   const club = useClub()
   const mine = useAvatarUrls([profile?.avatar_path])
   const { pathname } = useLocation()
+  const note = useNotifications()
+  const { groups } = useGroupFilter()
   if (loading) return <p className="center">{t('common.loading')}</p>
   if (!session) return <Navigate to="/login" replace />
   if (!profile) {
@@ -139,6 +147,7 @@ function Protected() {
       <a className="skip" href="#main">{t('nav.skip')}</a>
       <aside className="side">
         <Link className="club" to="/events"><Crest /><span className="club-name">{club.name || t('app.name')}</span></Link>
+        <GroupSwitch className="side-switch" />
         <nav aria-label={t('nav.main')}>{main}</nav>
         <nav className="side-foot" aria-label={t('nav.account')}>
           {isBoard && <NavLink to="/settings"><TabIcon name="settings" />{t('settings.title')}</NavLink>}
@@ -147,15 +156,21 @@ function Protected() {
         </nav>
       </aside>
       <div className="body">
+        <div className="crumbbar desk-only">
+          <Crumbs />
+          <Bell note={note} />
+        </div>
         <header className="top">
-          <Link className="club" to="/events"><Crest /><span className="club-name">{club.name || t('app.name')}</span></Link>
+          <Link className="club" to="/events" aria-label={club.name || t('app.name')}><Crest />{groups.length < 2 && <span className="club-name">{club.name || t('app.name')}</span>}</Link>
+          <GroupSwitch className="top-switch" short />
           <span className="top-actions">
+          <Bell note={note} />
           {isStaff && <NavLink className="gear" to={isBoard ? '/settings' : '/settings/invites'} aria-label={t(isBoard ? 'settings.title' : 'nav.invites')}><TabIcon name={isBoard ? 'settings' : 'invites'} /></NavLink>}
           <NavLink className="me" to="/profile" aria-label={t('nav.profileOf', { name: fullName })}><Avatar first={profile.first_name} last={profile.last_name} url={photo} /></NavLink>
           </span>
         </header>
         <UpdateBanner />
-        <PendingBanner />
+        <PendingBanner count={note.pending} />
         <DocumentsBanner />
         <main id="main" tabIndex={-1}>
           <Outlet />

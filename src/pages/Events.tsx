@@ -5,6 +5,7 @@ import AnnouncementsLink from '../components/AnnouncementsLink'
 import Crest from '../components/Crest'
 import { jerseyName, useClub } from '../lib/club'
 import { refreshLeague } from '../lib/league'
+import { useGroupFilter } from '../lib/groupfilter'
 import { useSession } from '../lib/session'
 import { supabase } from '../lib/supabase'
 import { dayKey, formatDay, formatMonth, formatShortDay, formatTime, rangeParts, weekOf } from '../lib/time'
@@ -20,7 +21,10 @@ const Cross = () => (
 export default function Events() {
   const { isStaff, profile } = useSession()
   const club = useClub()
-  const [events, setEvents] = useState<EventRow[]>([])
+  const [allEvents, setEvents] = useState<EventRow[]>([])
+  const { groupId } = useGroupFilter()
+  // The group chosen in the switcher narrows the events shown.
+  const events = useMemo(() => (groupId === null ? allEvents : allEvents.filter((e) => e.event_groups.some((x) => x.group_id === groupId))), [allEvents, groupId])
   const [groups, setGroups] = useState<Group[]>([])
   const [myGroups, setMyGroups] = useState<number[]>([])
   const [answers, setAnswers] = useState<Map<string, Answer>>(new Map())

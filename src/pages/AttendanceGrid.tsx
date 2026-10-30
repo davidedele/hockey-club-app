@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, Navigate } from 'react-router-dom'
 import { errorText, t, type MessageKey } from '../i18n'
+import { useGroupFilter } from '../lib/groupfilter'
 import { useSession } from '../lib/session'
 import { supabase } from '../lib/supabase'
 import { dayKey, dayParts, formatMonth, italyToIso } from '../lib/time'
@@ -38,7 +39,9 @@ function shiftMonth(month: string, by: number) {
 export default function AttendanceGrid() {
   const { isStaff } = useSession()
   const [groups, setGroups] = useState<Group[]>([])
-  const [groupId, setGroupId] = useState<number | null>(null)
+  const { groupId: chosen, setGroupId } = useGroupFilter()
+  // The grid is for one group: the one chosen in the switcher, or the first.
+  const groupId = chosen ?? groups[0]?.id ?? null
   const [month, setMonth] = useState(() => monthOf(new Date().toISOString()))
   const [rows, setRows] = useState<GridRow[]>([])
   const [loaded, setLoaded] = useState(false)
@@ -49,7 +52,6 @@ export default function AttendanceGrid() {
       const { data } = await supabase.from('groups').select('*').order('id')
       const list = (data ?? []) as Group[]
       setGroups(list)
-      setGroupId((current) => current ?? list[0]?.id ?? null)
     })()
   }, [])
 

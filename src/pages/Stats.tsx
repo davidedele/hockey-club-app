@@ -4,6 +4,7 @@ import Avatar from '../components/Avatar'
 import GroupBadge from '../components/GroupBadge'
 import SeasonTabs from '../components/SeasonTabs'
 import { useAvatarUrls } from '../lib/avatars'
+import { useGroupFilter } from '../lib/groupfilter'
 import { useSession } from '../lib/session'
 import { supabase } from '../lib/supabase'
 import { seasonLabel, seasonOf } from '../lib/time'
@@ -22,31 +23,27 @@ export default function Stats() {
   const seasons = useMemo(() => Array.from({ length: Math.max(1, current - FIRST_SEASON + 1) }, (_, i) => current - i), [current])
   const [season, setSeason] = useState(current)
   const [groups, setGroups] = useState<Group[]>([])
-  const [group, setGroup] = useState<number | null | undefined>(undefined)
+  const { groupId: group, setGroupId: setGroup } = useGroupFilter()
   const [rows, setRows] = useState<SeasonStatRow[]>([])
   const [record, setRecord] = useState<SeasonRecord | null>(null)
   const [avatars, setAvatars] = useState<Map<string, string | null>>(new Map())
   const [loaded, setLoaded] = useState(false)
   const [error, setError] = useState('')
 
-  // Start on the person's own first group, or on all groups if they have none.
   useEffect(() => {
     if (!profile) return
     void (async () => {
-      const [g, m, p] = await Promise.all([
+      const [g, p] = await Promise.all([
         supabase.from('groups').select('*').order('id'),
-        supabase.from('group_members').select('group_id').eq('user_id', profile.id),
         supabase.from('profiles').select('id, avatar_path'),
       ])
       setGroups((g.data ?? []) as Group[])
-      const mine = ((m.data ?? []) as { group_id: number }[]).map((x) => x.group_id).sort((a, b) => a - b)
-      setGroup(mine[0] ?? null)
       setAvatars(new Map(((p.data ?? []) as { id: string; avatar_path: string | null }[]).map((x) => [x.id, x.avatar_path])))
     })()
   }, [profile])
 
   useEffect(() => {
-    if (group === undefined) return
+    if (!profile) return
     setLoaded(false)
     void (async () => {
       const [s, r] = await Promise.all([
@@ -58,7 +55,7 @@ export default function Stats() {
       setRecord((((r.data ?? []) as SeasonRecord[])[0]) ?? null)
       setLoaded(true)
     })()
-  }, [season, group])
+  }, [season, group, profile])
 
   const photos = useAvatarUrls(rows.map((r) => avatars.get(r.user_id) ?? null))
   const skaters = rows.filter((r) => r.position !== 'goalie')
