@@ -10,7 +10,7 @@ const LINK_SECONDS = 600
 
 // The plan of one training: the coach's words and the drills in order. Players read it before
 // they go on the ice, and afterwards only if the coach left it up.
-export default function Plan() {
+export default function Plan({ embedded = false }: { embedded?: boolean }) {
   const { id = '' } = useParams()
   const { isStaff } = useSession()
   const [event, setEvent] = useState<EventRow | null>(null)
@@ -121,10 +121,10 @@ export default function Plan() {
   const inPlan = new Set(rows.map((r) => r.drill_id))
 
   return (
-    <div className="page narrow">
-      <p><Link to={`/events/${id}`}>{t('plan.back')}</Link></p>
-      <h1>{t('plan.title')}</h1>
-      <p className="hint">{event.title}, {formatDay(event.starts_at)} {formatTime(event.starts_at)}</p>
+    <div className={embedded ? undefined : 'page narrow'}>
+      {!embedded && <p><Link to={`/events/${id}`}>{t('plan.back')}</Link></p>}
+      {!embedded && <h1>{t('plan.title')}</h1>}
+      {!embedded && <p className="hint">{event.title}, {formatDay(event.starts_at)} {formatTime(event.starts_at)}</p>}
       {error && <p className="error" role="alert">{error}</p>}
 
       {isStaff ? (

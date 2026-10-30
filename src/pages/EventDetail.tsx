@@ -1,15 +1,21 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Link, Navigate, useNavigate, useParams } from 'react-router-dom'
+import { Link, Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { errorText, t, type MessageKey } from '../i18n'
 import EventGame from './EventGame'
+import Lineup from './Lineup'
+import Plan from './Plan'
 import { jerseyName, useClub } from '../lib/club'
 import { useSession } from '../lib/session'
+import type { CSSProperties } from 'react'
 import { whatsappLink } from '../lib/whatsapp'
 import { supabase } from '../lib/supabase'
-import { formatDay, formatTime } from '../lib/time'
+import { formatDay, formatShortDay, formatTime } from '../lib/time'
 import type { Answer, AttendanceRow, EventRow, Group, Rink, Status } from '../lib/types'
 
 const STATUSES: Status[] = ['on_time', 'late', 'excused', 'unexcused', 'injured', 'not_called_up']
+
+type NearEvent = Pick<EventRow, 'id' | 'type' | 'title' | 'starts_at' | 'opponent' | 'score_for' | 'score_against' | 'cancelled_at'>
+type Tab = 'info' | 'presence' | 'game' | 'lineup' | 'plan'
 
 export default function EventDetail() {
   const { id = '' } = useParams()
@@ -29,16 +35,20 @@ export default function EventDetail() {
   const [confirming, setConfirming] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
+  const [near, setNear] = useState<NearEvent[]>([])
+  const [params] = useSearchParams()
 
   const refresh = useCallback(async () => {
     if (!profile) return
-    const [e, g, m, a, rk] = await Promise.all([
+    const [e, g, m, a, rk, nb] = await Promise.all([
       supabase.from('events').select('*, event_groups(group_id)').eq('id', id).maybeSingle(),
       supabase.from('groups').select('*').order('id'),
       supabase.from('group_members').select('group_id').eq('user_id', profile.id),
       supabase.from('attendance_answers').select('answer').eq('event_id', id).eq('user_id', profile.id).maybeSingle(),
       supabase.from('rinks').select('id, name'),
+      supabase.from('events').select('id, type, title, starts_at, opponent, score_for, score_against, cancelled_at').order('starts_at').limit(500),
     ])
+    setNear((nb.data ?? []) as NearEvent[])
     const row = (e.data as EventRow | null) ?? null
     setEvent(row)
     setGroups((g.data ?? []) as Group[])
@@ -151,9 +161,13 @@ export default function EventDetail() {
     navigate('/events', { replace: true })
   }
 
-  const pending = rows.filter((r) => !r.answer)
-  const present = rows.filter((r) => r.answer === 'present')
-  const absent = rows.filter((r) => r.answer === 'absent')
+
+  const called = (r: AttendanceRow) => r.status !== 'not_called_up'
+  const present = rows.filter((r) => r.answer === 'present' && called(r))
+  const pending = rows.filter((r) => !r.answer && called(r))
+  const absent = rows.filter((r) => r.answer === 'absent' && called(r))
+  const notCalled = rows.filter((r) => !called(r))
+  const game = event.type === 'game'
 
   function person(r: AttendanceRow) {
     return (
@@ -176,147 +190,259 @@ export default function EventDetail() {
     )
   }
 
-  return (
-    <div className="page">
-      <p><Link to="/events">{t('event.back')}</Link></p>
-      <div className="hero">
-        <h1>{event.title}</h1>
-        <div className="slot-meta">
-          {[event.title === t(`eventType.${event.type}` as MessageKey) ? null : t(`eventType.${event.type}` as MessageKey), groupNames].filter(Boolean).join(' · ')}
-        </div>
-        <div className="day-text">{dayLabel}</div>
-        <div className="when">
-          {formatTime(event.starts_at)}{' '}
-          <small>{t('event.until', { end: formatTime(event.ends_at) })}</small>
-        </div>
+  // The tabs of the page. A tab that does not apply to this event is not offered.
+  const tabs: { key: Tab; label: string }[] = [
+    { key: 'info', label: t('event.tabInfo') },
+    { key: 'presence', label: t('event.tabPresence') },
+    ...(game ? [{ key: 'game' as Tab, label: t('event.tabGame') }] : []),
+    ...(!cancelled ? [{ key: 'lineup' as Tab, label: t('lineup.open') }] : []),
+    ...(!cancelled && event.type === 'training' ? [{ key: 'plan' as Tab, label: t('plan.open') }] : []),
+  ]
+  const asked = params.get('tab')
+  const tab: Tab = tabs.some((x) => x.key === asked) ? (asked as Tab) : 'info'
+
+  // The neighbouring events, to move between them without going back to the list.
+  const at = near.findIndex((x) => x.id === id)
+  const strip = at < 0 ? [] : near.slice(Math.max(0, at - 2), at + 3)
+  const nearTitle = (x: NearEvent) => (x.type === 'game' && x.opponent ? t('events.vs', { club: club.name || t('app.name'), opponent: x.opponent }) : x.title)
+
+  // A game uses the colours of its first group that has its own; otherwise the club colours.
+  const teamGroup = event.event_groups.map((x) => groups.find((y) => y.id === x.group_id)).find((y) => y?.game_dark && y?.game_light)
+  const bandStyle = game && teamGroup ? ({ '--team-dark': teamGroup.game_dark, '--team-light': teamGroup.game_light } as CSSProperties) : undefined
+  const clubName = club.name || t('app.name')
+  const away = event.home_away === 'away'
+  const sides = game && event.opponent ? (away ? [event.opponent, clubName] : [clubName, event.opponent]) : null
+  const scores = hasScore ? (away ? [event.score_against, event.score_for] : [event.score_for, event.score_against]) : null
+  const typeLabel = event.title === t(`eventType.${event.type}` as MessageKey) ? '' : t(`eventType.${event.type}` as MessageKey)
+
+  const scoreForm = isStaff && game && (
+    <section className="card">
+      <h2>{t('event.scoreTitle')}</h2>
+      <div className="score">
+        <label>
+          {t('event.scoreUs')}
+          <input type="number" inputMode="numeric" min={0} value={scoreUs} onChange={(e) => setScoreUs(e.target.value)} />
+        </label>
+        <label>
+          {t('event.scoreThem')}
+          <input type="number" inputMode="numeric" min={0} value={scoreThem} onChange={(e) => setScoreThem(e.target.value)} />
+        </label>
       </div>
+      <button disabled={busy || scoreUs === '' || scoreThem === ''} onClick={() => void saveScore()}>{t('common.save')}</button>
+    </section>
+  )
+
+  const presentNames = isStaff ? present.map((r) => ({ user_id: r.user_id, first_name: r.first_name, last_name: r.last_name })) : going
+
+  return (
+    <div className="page wide event-page">
+      <p className="back-row"><Link to="/events">{t('event.back')}</Link></p>
+
+      {strip.length > 0 && (
+        <nav className="ev-strip desk-only" aria-label={t('event.near')}>
+          {at > 0 ? <Link className="ev-step" to={`/events/${near[at - 1].id}`} aria-label={t('event.prevEvent')}>‹</Link> : <span className="ev-step off" aria-hidden="true">‹</span>}
+          <ul>
+            {strip.map((x) => (
+              <li key={x.id}>
+                <Link className={x.id === id ? 'on' : undefined} aria-current={x.id === id ? 'page' : undefined} to={`/events/${x.id}`}>
+                  <span className="when">{formatShortDay(x.starts_at)}</span>
+                  <span className="what">{nearTitle(x)}</span>
+                  {x.score_for !== null && x.score_against !== null && <span className="res">{x.score_for} : {x.score_against}</span>}
+                </Link>
+              </li>
+            ))}
+          </ul>
+          {at < near.length - 1 ? <Link className="ev-step" to={`/events/${near[at + 1].id}`} aria-label={t('event.nextEvent')}>›</Link> : <span className="ev-step off" aria-hidden="true">›</span>}
+        </nav>
+      )}
+
+      <header className={`ev-band ${event.type}${cancelled ? ' cancelled' : ''}`} style={bandStyle}>
+        <div className="ev-band-top">
+          <p className="ev-day">{dayLabel}</p>
+          <p className="ev-sub">{[typeLabel, groupNames].filter(Boolean).join(' · ')}</p>
+          {isStaff && (
+            <details className="ev-menu">
+              <summary aria-label={t('event.menu')}>
+                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.8" /><circle cx="12" cy="12" r="1.8" /><circle cx="19" cy="12" r="1.8" /></svg>
+              </summary>
+              <div className="ev-menu-list">
+                <Link to={`/events/${id}/edit`}>{t('event.edit')}</Link>
+                <button disabled={busy} onClick={() => void setCancelled(!cancelled)}>{cancelled ? t('event.restore') : t('event.cancel')}</button>
+                <button className="danger-text" disabled={busy} onClick={() => setConfirming(true)}>{t('event.deleteStart')}</button>
+              </div>
+            </details>
+          )}
+        </div>
+        {sides ? (
+          <>
+            <h1 className="sr-only">{matchName}</h1>
+            <div className="ev-match">
+              <p className="ev-team">{sides[0]}</p>
+              <div className="ev-time">
+                <strong>{formatTime(event.starts_at)}</strong>
+                <small>{t('event.until', { end: formatTime(event.ends_at) })}</small>
+                {scores && <span className="ev-score">{scores[0]} : {scores[1]}</span>}
+              </div>
+              <p className="ev-team">{sides[1]}</p>
+            </div>
+          </>
+        ) : (
+          <div className="ev-match single">
+            <h1 className="ev-team">{event.title}</h1>
+            <div className="ev-time">
+              <strong>{formatTime(event.starts_at)}</strong>
+              <small>{t('event.until', { end: formatTime(event.ends_at) })}</small>
+              {scores && <span className="ev-score">{scores[0]} : {scores[1]}</span>}
+            </div>
+          </div>
+        )}
+        {(event.venue || rinkName) && <p className="ev-venue">{[event.venue, rinkName].filter(Boolean).join(' · ')}</p>}
+      </header>
+
       {error && <p className="error" role="alert">{error}</p>}
       {cancelled && <p className="box cancelled-note" role="status">{t('event.cancelledBanner')}</p>}
-
-      <dl className="facts">
-        {event.meetup_at && (<><dt>{t('event.meetup')}</dt><dd>{formatTime(event.meetup_at)}</dd></>)}
-        {event.venue && (<><dt>{t('event.venue')}</dt><dd>{event.venue}</dd></>)}
-        {rinkName && (<><dt>{t('event.rink')}</dt><dd>{rinkName}</dd></>)}
-        {event.opponent && (<><dt>{t('event.opponent')}</dt><dd>{event.opponent}{event.home_away ? ` · ${t(event.home_away === 'home' ? 'event.home' : 'event.away')}` : ''}</dd></>)}
-        {event.jersey && (<><dt>{t('event.jersey')}</dt><dd>{jerseyLabel}</dd></>)}
-        {event.score_for !== null && event.score_against !== null && (
-          <><dt>{t('event.scoreTitle')}</dt><dd>{t('event.scoreValue', { us: String(event.score_for), them: String(event.score_against) })}</dd></>
-        )}
-      </dl>
-      <div className="actions share-row">
-        {!cancelled && <Link className="button secondary small" to={`/events/${id}/lineup`}>{t('lineup.open')}</Link>}
-        {!cancelled && event.type === 'training' && <Link className="button secondary small" to={`/events/${id}/plan`}>{t('plan.open')}</Link>}
-        {!over && !cancelled && <a className="button secondary small" href={whatsappLink(shareText)} target="_blank" rel="noopener noreferrer">{t('share.whatsapp')}</a>}
-        {hasScore && <a className="button secondary small" href={whatsappLink(resultText)} target="_blank" rel="noopener noreferrer">{t('share.result')}</a>}
-      </div>
-
-      {event.type === 'game' && profile && (
-        <EventGame
-          eventId={id}
-          myId={profile.id}
-          isStaff={isStaff}
-          started={started}
-          over={over}
-          reloadKey={rows.map((r) => `${r.user_id}:${r.answer}:${r.status}`).join(',')}
-        />
-      )}
-
-      {inMyGroups && !cancelled && (
-        <>
-          <h2>{t('event.myAnswer')}</h2>
-          {over ? (
-            <p className="hint">{mine ? t(`answer.${mine}` as MessageKey) : ''} {t('event.over')}</p>
-          ) : (
-            <>
-              <div className="answers">
-                {(['present', 'absent'] as const).map((a) => (
-                  <button key={a} className={mine === a ? `answer on ${a}` : 'answer'} aria-pressed={mine === a} disabled={busy} onClick={() => void answer(a)}>
-                    {t(`answer.${a}` as MessageKey)}
-                  </button>
-                ))}
-              </div>
-              <p className="hint">{t('event.answerHint')}</p>
-            </>
-          )}
-        </>
-      )}
-      {!inMyGroups && isStaff && <p className="hint">{t('event.notYours')}</p>}
-
-      {!isStaff && (
-        <>
-          <h2>{t('event.presentList', { n: String(going.length) })}</h2>
-          {going.length === 0 ? (
-            <p className="hint">{t('event.nobodyYet')}</p>
-          ) : (
-            <ul className="list">{going.map((p) => <li key={p.user_id}>{p.last_name} {p.first_name}</li>)}</ul>
-          )}
-        </>
-      )}
-
-      {isStaff && (
-        <>
-          <h2>{t('event.attendance')}</h2>
-          {!started && <p className="hint">{t('event.recordHint')}</p>}
-          <h3>{t('event.noAnswer', { n: String(pending.length) })}</h3>
-          <ul className="list">{pending.map(person)}</ul>
-          {!over && !cancelled && pending.length > 0 && (
-            <div className="actions share-row">
-              <a
-                className="button secondary small"
-                href={whatsappLink(t('share.missingText', { title: matchName, day: dayLabel, names: pending.map((r) => `${r.first_name} ${r.last_name}`).join(', '), url: link }))}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                {t('share.missing')}
-              </a>
-            </div>
-          )}
-          <h3>{t('event.presentList', { n: String(present.length) })}</h3>
-          <ul className="list">{present.map(person)}</ul>
-          <h3>{t('event.absentList', { n: String(absent.length) })}</h3>
-          <ul className="list">{absent.map(person)}</ul>
-
-          {event.type === 'game' && (
-            <>
-              <h2>{t('event.scoreTitle')}</h2>
-              <div className="score">
-                <label>
-                  {t('event.scoreUs')}
-                  <input type="number" inputMode="numeric" min={0} value={scoreUs} onChange={(e) => setScoreUs(e.target.value)} />
-                </label>
-                <label>
-                  {t('event.scoreThem')}
-                  <input type="number" inputMode="numeric" min={0} value={scoreThem} onChange={(e) => setScoreThem(e.target.value)} />
-                </label>
-              </div>
-              <button disabled={busy || scoreUs === '' || scoreThem === ''} onClick={() => void saveScore()}>{t('common.save')}</button>
-            </>
-          )}
-
-          <div className="actions spaced">
-            <Link className="button" to={`/events/${id}/edit`}>{t('event.edit')}</Link>
-            <button className="secondary" disabled={busy} onClick={() => void setCancelled(!cancelled)}>{cancelled ? t('event.restore') : t('event.cancel')}</button>
-            {!confirming && (
-              <button className="danger" disabled={busy} onClick={() => setConfirming(true)}>{t('event.deleteStart')}</button>
+      {confirming && (
+        <div className="box" role="alertdialog" aria-label={t('event.delete')}>
+          <p>{t('event.deleteConfirm', { title: event.title, date: dayLabel })}</p>
+          <div className="actions">
+            <button className="danger" disabled={busy} onClick={() => void remove(false)}>
+              {event.series_id ? t('event.deleteOne') : t('event.deleteThis')}
+            </button>
+            {event.series_id && (
+              <button className="danger" disabled={busy} onClick={() => void remove(true)}>{t('event.deleteFollowing')}</button>
             )}
+            <button className="link" disabled={busy} onClick={() => setConfirming(false)}>{t('common.cancel')}</button>
           </div>
-          {!cancelled && <p className="hint">{t('event.cancelHint')}</p>}
-          {confirming && (
-            <div className="box" role="alertdialog" aria-label={t('event.delete')}>
-              <p>{t('event.deleteConfirm', { title: event.title, date: dayLabel })}</p>
-              <div className="actions">
-                <button className="danger" disabled={busy} onClick={() => void remove(false)}>
-                  {event.series_id ? t('event.deleteOne') : t('event.deleteThis')}
-                </button>
-                {event.series_id && (
-                  <button className="danger" disabled={busy} onClick={() => void remove(true)}>{t('event.deleteFollowing')}</button>
+        </div>
+      )}
+
+      <nav className="ev-tabs" aria-label={t('event.tabs')}>
+        {tabs.map((x) => (
+          <Link key={x.key} to={{ search: x.key === 'info' ? '' : `?tab=${x.key}` }} replace aria-current={x.key === tab ? 'page' : undefined}>{x.label}</Link>
+        ))}
+      </nav>
+
+      {tab === 'info' && (
+        <div className="ev-cols">
+          <div className="ev-aside">
+            {inMyGroups && !cancelled && (
+              <section className="card">
+                <h2>{t('event.myAnswer')}</h2>
+                {over ? (
+                  <p className="hint">{mine ? t(`answer.${mine}` as MessageKey) : ''} {t('event.over')}</p>
+                ) : (
+                  <>
+                    <div className="answers">
+                      {(['present', 'absent'] as const).map((a) => (
+                        <button key={a} className={mine === a ? `answer on ${a}` : 'answer'} aria-pressed={mine === a} disabled={busy} onClick={() => void answer(a)}>
+                          {t(`answer.${a}` as MessageKey)}
+                        </button>
+                      ))}
+                    </div>
+                    <p className="hint">{t('event.answerHint')}</p>
+                  </>
                 )}
-                <button className="link" disabled={busy} onClick={() => setConfirming(false)}>{t('common.cancel')}</button>
-              </div>
+              </section>
+            )}
+            {!inMyGroups && isStaff && <p className="hint">{t('event.notYours')}</p>}
+            <section className="card">
+              <h2>{t('event.attendance')}</h2>
+              <ul className="counters">
+                <li className="ok"><b>{presentNames.length}</b><span>{t('event.countPresent')}</span></li>
+                {isStaff && <li><b>{pending.length}</b><span>{t('event.countWaiting')}</span></li>}
+                {isStaff && <li className="bad"><b>{notCalled.length}</b><span>{t('event.countNotCalled')}</span></li>}
+                {isStaff && <li className="bad"><b>{absent.length}</b><span>{t('event.countAbsent')}</span></li>}
+              </ul>
+              {isStaff && <p><Link to={{ search: '?tab=presence' }} replace>{t('event.manage')}</Link></p>}
+              <details open>
+                <summary>{t('event.presentList', { n: String(presentNames.length) })}</summary>
+                {presentNames.length === 0 ? (
+                  <p className="hint">{t('event.nobodyYet')}</p>
+                ) : (
+                  <ul className="list">{presentNames.map((p) => <li key={p.user_id}>{p.last_name} {p.first_name}</li>)}</ul>
+                )}
+              </details>
+            </section>
+          </div>
+          <div className="ev-main">
+            <dl className="facts">
+              {event.meetup_at && (<><dt>{t('event.meetup')}</dt><dd>{formatTime(event.meetup_at)}</dd></>)}
+              {event.venue && (<><dt>{t('event.venue')}</dt><dd>{event.venue}</dd></>)}
+              {rinkName && (<><dt>{t('event.rink')}</dt><dd>{rinkName}</dd></>)}
+              {event.opponent && (<><dt>{t('event.opponent')}</dt><dd>{event.opponent}{event.home_away ? ` · ${t(event.home_away === 'home' ? 'event.home' : 'event.away')}` : ''}</dd></>)}
+              {event.jersey && (<><dt>{t('event.jersey')}</dt><dd>{jerseyLabel}</dd></>)}
+              {hasScore && (
+                <><dt>{t('event.scoreTitle')}</dt><dd>{t('event.scoreValue', { us: String(event.score_for), them: String(event.score_against) })}</dd></>
+              )}
+            </dl>
+            <div className="actions share-row">
+              {!over && !cancelled && <a className="button secondary small" href={whatsappLink(shareText)} target="_blank" rel="noopener noreferrer">{t('share.whatsapp')}</a>}
+              {hasScore && <a className="button secondary small" href={whatsappLink(resultText)} target="_blank" rel="noopener noreferrer">{t('share.result')}</a>}
             </div>
-          )}
+            {!cancelled && isStaff && <p className="hint">{t('event.cancelHint')}</p>}
+          </div>
+        </div>
+      )}
+
+      {tab === 'presence' && (
+        isStaff ? (
+          <>
+            {!started && <p className="hint">{t('event.recordHint')}</p>}
+            <div className="board">
+              <section className="col present">
+                <h2>{t('event.presentList', { n: String(present.length) })}</h2>
+                <ul className="list">{present.map(person)}</ul>
+              </section>
+              <section className="col pending">
+                <h2>{t('event.noAnswer', { n: String(pending.length) })}</h2>
+                <ul className="list">{pending.map(person)}</ul>
+                {!over && !cancelled && pending.length > 0 && (
+                  <div className="actions share-row">
+                    <a
+                      className="button secondary small"
+                      href={whatsappLink(t('share.missingText', { title: matchName, day: dayLabel, names: pending.map((r) => `${r.first_name} ${r.last_name}`).join(', '), url: link }))}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      {t('share.missing')}
+                    </a>
+                  </div>
+                )}
+              </section>
+              <section className="col notcalled">
+                <h2>{t('event.notCalledList', { n: String(notCalled.length) })}</h2>
+                <ul className="list">{notCalled.map(person)}</ul>
+              </section>
+              <section className="col absent">
+                <h2>{t('event.absentList', { n: String(absent.length) })}</h2>
+                <ul className="list">{absent.map(person)}</ul>
+              </section>
+            </div>
+          </>
+        ) : (
+          <section className="card">
+            <h2>{t('event.presentList', { n: String(going.length) })}</h2>
+            {going.length === 0 ? <p className="hint">{t('event.nobodyYet')}</p> : <ul className="list">{going.map((p) => <li key={p.user_id}>{p.last_name} {p.first_name}</li>)}</ul>}
+          </section>
+        )
+      )}
+
+      {tab === 'game' && profile && (
+        <>
+          {scoreForm}
+          <EventGame
+            eventId={id}
+            myId={profile.id}
+            isStaff={isStaff}
+            started={started}
+            over={over}
+            reloadKey={rows.map((r) => `${r.user_id}:${r.answer}:${r.status}`).join(',')}
+          />
         </>
       )}
+
+      {tab === 'lineup' && <Lineup embedded />}
+      {tab === 'plan' && <Plan embedded />}
     </div>
   )
 }
