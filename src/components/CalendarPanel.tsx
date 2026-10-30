@@ -1,5 +1,6 @@
-import { useMemo, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
+import { useGroupFilter } from '../lib/groupfilter'
 import { t, type MessageKey } from '../i18n'
 import { downloadCsv, pageOf, sortRows, useSort, type Cell } from '../lib/table'
 import { addDays, dayKey, formatDay, formatMonth, formatShortDay, formatTime, seasonLabel, seasonOf, weekOf } from '../lib/time'
@@ -41,6 +42,9 @@ export default function CalendarPanel(props: {
   const [types, setTypes] = useState<Set<Cat>>(new Set(CATS))
   const [query, setQuery] = useState('')
   const [page, setPage] = useState(1)
+  const { groupId } = useGroupFilter()
+  // Another group has fewer events, so go back to the first page rather than land on an empty one.
+  useEffect(() => { setPage(1) }, [groupId])
   const [size, setSize] = useState(25)
   const sort = useSort<ListKey>('date')
   // The list opens on what is still to come, so the next event is the first row.

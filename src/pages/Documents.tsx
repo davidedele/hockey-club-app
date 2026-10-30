@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, type ChangeEvent, type FormEvent } from 'react'
+import { useCallback, useEffect, useRef, useState, type ChangeEvent, type FormEvent } from 'react'
 import { Link, Navigate, useParams } from 'react-router-dom'
 import { errorText, t } from '../i18n'
 import { useClub } from '../lib/club'
@@ -33,6 +33,8 @@ export default function Documents() {
   const [reading, setReading] = useState(false)
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
+  // True once the person typed a date, so a late reading of the photo does not replace it.
+  const typed = useRef(false)
 
   const load = useCallback(async () => {
     if (!userId) return
@@ -110,6 +112,7 @@ export default function Documents() {
     if (pdf && file.size > MAX_BYTES) return setError(t('docs.fileTooBig'))
     setBusy(true)
     setError('')
+    typed.current = false
     let body: Blob = file
     if (!pdf) {
       try {
@@ -137,7 +140,9 @@ export default function Documents() {
     setReading(true)
     try {
       const found = findExpiry(await readText(image), today())
-      if (found) {
+      if (found && typed.current) {
+        setMessage('')
+      } else if (found) {
         setDate(found)
         setMessage(t('docs.certDateRead'))
       } else {
@@ -188,7 +193,7 @@ export default function Documents() {
         <form onSubmit={saveDate}>
           <label>
             {t('docs.certDate')}
-            <input type="date" required value={date} onChange={(e) => setDate(e.target.value)} />
+            <input type="date" required value={date} onChange={(e) => { typed.current = true; setDate(e.target.value) }} />
             <span className="hint">{t('docs.certDateHint')}</span>{' '}
             <span className="hint">{t('docs.certWarnHint')}</span>
           </label>

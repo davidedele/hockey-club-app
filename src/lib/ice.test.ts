@@ -54,6 +54,12 @@ describe('ice hours', () => {
     expect(lines[2]).toBe('05/11/2026;22:30;00:00;"Giovedì; ""tardi""";Allenamento;Pista grande;1,5;Svolto;225')
   })
 
+  it('keeps a title that looks like a formula as text', () => {
+    const labels = { header: ['Data'], cancelled: 'Annullato', took: 'Svolto', noRink: 'Senza pista', training: 'Allenamento', game: 'Partita' }
+    const csv = iceCsv([ev('=SOMMA(1;2)', '2026-11-05T21:30:00Z', '2026-11-05T23:00:00Z', 1)], [{ id: 1, name: 'Pista' }], new Map([[1, 15000]]), labels)
+    expect(csv).toContain(";\"'=SOMMA(1;2)\";")
+  })
+
   it('reads prices in euros', () => {
     expect(euroToCents('150')).toBe(15000)
     expect(euroToCents(' 150,5 ')).toBe(15050)

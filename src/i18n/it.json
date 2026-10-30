@@ -669,6 +669,7 @@
   "plan.drills": "Esercizi",
   "plan.minutes": "{n} minuti",
   "plan.howLong": "Minuti",
+  "plan.minutesInvalid": "I minuti devono essere un numero intero da 1 a 180. Il valore precedente è stato mantenuto.",
   "plan.up": "Su",
   "plan.down": "Giù",
   "plan.remove": "Togli",

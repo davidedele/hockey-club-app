@@ -28,6 +28,8 @@ export default function Members() {
   const { groupId: filter } = useGroupFilter()
   const [query, setQuery] = useState('')
   const [page, setPage] = useState(1)
+  // Another group has fewer people, so go back to the first page rather than land on an empty one.
+  useEffect(() => { setPage(1) }, [filter])
   const [size, setSize] = useState(25)
   const sort = useSort<MemberKey>('name')
 
