@@ -831,3 +831,25 @@ button.sort { display: inline-flex; align-items: center; min-height: 44px; paddi
 }
 .list-table td:nth-child(3) { max-width: 16rem; overflow-wrap: anywhere; }
 .list-table td:nth-child(2) { white-space: nowrap; }
+
+/* Attendance tables */
+.att-filters { display: flex; flex-wrap: wrap; align-items: flex-end; gap: .5rem 1rem; margin-bottom: 1rem; }
+.att-filters .cal-field { flex: 0 1 12rem; }
+.att-filters .cal-field select, .att-filters .cal-field input { width: 100%; max-width: none; margin: 0; }
+.att-actions { display: flex; gap: .5rem; margin-left: auto; }
+.att-table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+.att-table th, .att-table td { padding: .375rem .5rem; border-bottom: 1px solid var(--line); text-align: center; vertical-align: middle; }
+.att-table .att-name { text-align: left; white-space: nowrap; position: sticky; left: 0; background: var(--surface); z-index: 1; }
+.att-table thead th { font-weight: 500; font-size: .875rem; background: var(--surface-2); }
+.att-table thead th.att-name { background: var(--surface-2); }
+.att-table th.g-answers, .att-table td.g-answers { background-color: transparent; }
+.att-table thead .g-present { background: color-mix(in srgb, var(--ok) 16%, var(--surface)); }
+.att-table thead .g-absent { background: color-mix(in srgb, var(--now) 14%, var(--surface)); }
+.att-table thead .g-other { background: color-mix(in srgb, var(--warn) 16%, var(--surface)); }
+.att-table td.zero { color: var(--muted); }
+.att-table td.g-percent, .att-table td.g-calls { font-weight: 500; }
+.members-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .5rem 1rem; }
+.members-table th button.sort { font-weight: 500; }
+.att-table thead th { padding: .375rem .25rem; }
+.att-table thead button.sort { white-space: normal; text-align: center; justify-content: center; min-height: 44px; line-height: 1.2; }
+.att-table th.att-name button.sort { text-align: left; justify-content: flex-start; white-space: nowrap; }

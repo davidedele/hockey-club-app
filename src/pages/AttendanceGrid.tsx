@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link, Navigate } from 'react-router-dom'
+import { Navigate } from 'react-router-dom'
 import { errorText, t, type MessageKey } from '../i18n'
 import { useGroupFilter } from '../lib/groupfilter'
 import { useSession } from '../lib/session'
 import { supabase } from '../lib/supabase'
+import { downloadCsv } from '../lib/table'
 import { dayKey, dayParts, formatMonth, italyToIso } from '../lib/time'
 import type { Group } from '../lib/types'
 
@@ -36,7 +37,7 @@ function shiftMonth(month: string, by: number) {
 }
 
 // One group and one month: every member by every event, for coaches and the board.
-export default function AttendanceGrid() {
+export default function AttendanceGrid({ embedded = false }: { embedded?: boolean }) {
   const { isStaff } = useSession()
   const [groups, setGroups] = useState<Group[]>([])
   const { groupId: chosen, setGroupId } = useGroupFilter()
@@ -92,10 +93,15 @@ export default function AttendanceGrid() {
     return { short: t('grid.none'), label: t('grid.noneLabel') }
   }
 
+  function exportGrid() {
+    downloadCsv(`presenze-${month}`, [
+      [t('summary.player'), ...events.map((e) => `${dayKey(e.starts_at)} ${e.title}${e.cancelled ? ` (${t('grid.cancelled')})` : ''}`)],
+      ...people.map((p) => [p.name, ...events.map((e) => (e.cancelled ? '' : symbol(cells.get(`${e.id}:${p.id}`)).label))]),
+    ])
+  }
+
   return (
-    <div className="page wide">
-      <p><Link to="/attendance">{t('grid.back')}</Link></p>
-      <h1>{t('grid.title')}</h1>
+    <div className={embedded ? undefined : 'page wide'}>
       <p className="hint">{t('grid.intro')}</p>
       <div className="chips">
         {groups.map((g) => (
@@ -106,6 +112,8 @@ export default function AttendanceGrid() {
         <button className="chip" onClick={() => setMonth(shiftMonth(month, -1))}>{t('grid.prev')}</button>
         <strong aria-live="polite">{formatMonth(monthStart)}</strong>
         <button className="chip" onClick={() => setMonth(shiftMonth(month, 1))}>{t('grid.next')}</button>
+        <button className="chip" onClick={() => window.print()}>{t('table.print')}</button>
+        <button className="chip" disabled={events.length === 0 || people.length === 0} onClick={exportGrid}>{t('table.export')}</button>
       </div>
       {error && <p className="error" role="alert">{error}</p>}
       {loaded && !error && events.length === 0 && <p className="hint">{t('grid.empty')}</p>}
