@@ -1,7 +1,8 @@
 import { useEffect, useState, type FormEvent } from 'react'
-import { Link, Navigate, useNavigate, useParams } from 'react-router-dom'
+import { Link, Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { errorText, t } from '../i18n'
 import { jerseyName, useClub } from '../lib/club'
+import { useGroupFilter } from '../lib/groupfilter'
 import { useSession } from '../lib/session'
 import { supabase } from '../lib/supabase'
 import { endIso, isoToItaly, italyToIso, meetupIso, shiftClock } from '../lib/time'
@@ -15,6 +16,8 @@ export default function EventForm() {
   const navigate = useNavigate()
   const { isStaff } = useSession()
   const club = useClub()
+  const [params] = useSearchParams()
+  const { groupId: chosenGroup } = useGroupFilter()
   const [groups, setGroups] = useState<Group[]>([])
   const [rinks, setRinks] = useState<Rink[]>([])
   const [rinkId, setRinkId] = useState<number | null>(null)
@@ -23,7 +26,8 @@ export default function EventForm() {
   const [type, setType] = useState<EventType>('training')
   const [title, setTitle] = useState('')
   const [titleTouched, setTitleTouched] = useState(false)
-  const [date, setDate] = useState('')
+  // A date can come from the calendar, by pressing the plus of a day.
+  const [date, setDate] = useState(() => (!id && /^\d{4}-\d{2}-\d{2}$/.test(params.get('date') ?? '') ? (params.get('date') as string) : ''))
   const [startTime, setStartTime] = useState('')
   const [endTime, setEndTime] = useState('')
   const [endTouched, setEndTouched] = useState(false)
@@ -48,7 +52,11 @@ export default function EventForm() {
       const [g, r] = await Promise.all([supabase.from('groups').select('*').order('id'), supabase.from('rinks').select('id, name').order('name')])
       setGroups((g.data ?? []) as Group[])
       setRinks((r.data ?? []) as Rink[])
-      if (!id) return
+      if (!id) {
+        // A new event starts on the group chosen in the switcher.
+        if (chosenGroup !== null) setGroupIds((current) => (current.length === 0 ? [chosenGroup] : current))
+        return
+      }
       const { data } = await supabase.from('events').select('*, event_groups(group_id)').eq('id', id).maybeSingle()
       const e = data as EventRow | null
       if (e) {
@@ -75,7 +83,7 @@ export default function EventForm() {
       }
       setLoaded(true)
     })()
-  }, [id])
+  }, [id, chosenGroup])
 
   if (!isStaff) return <Navigate to="/events" replace />
   if (!loaded) return null
