@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState, type CSSProperties } from 'r
 import { Link } from 'react-router-dom'
 import { errorText, t } from '../i18n'
 import AnnouncementsLink from '../components/AnnouncementsLink'
+import CalendarPanel from '../components/CalendarPanel'
 import Crest from '../components/Crest'
 import { jerseyName, useClub } from '../lib/club'
 import { refreshLeague } from '../lib/league'
@@ -184,8 +185,6 @@ export default function Events() {
     )
   }
 
-  const weekEvents = new Map(week.map((d) => [d.date, events.filter((e) => dayKey(e.starts_at) === d.date)]))
-  const weekEmpty = week.every((d) => (weekEvents.get(d.date) ?? []).length === 0)
   const goWeek = (shift: number) => {
     setExtra(0)
     setWeekShift(shift)
@@ -290,29 +289,32 @@ export default function Events() {
         )}
       </div>
 
-      {!picked && view === 'upcoming' && <div className="cal-bar desk-only">
-        <button className="icon" aria-label={t('events.prevWeek')} onClick={() => goWeek(weekShift - 1)}>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6" /></svg>
-        </button>
-        <span className="cal-range">{weekRange(week[0].date, week[6].date)}</span>
-        <button className="icon" aria-label={t('events.nextWeek')} onClick={() => goWeek(weekShift + 1)}>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6" /></svg>
-        </button>
-        {weekShift !== 0 && <button className="link" onClick={() => goWeek(0)}>{t('events.backToToday')}</button>}
-      </div>}
-
-      {view === 'upcoming' && <div className="cal-week desk-only" aria-label={t('events.week')}>
-        {week.map((d) => (
-          <section key={d.date} className={d.date === todayKey ? 'cal-day today' : d.date < todayKey ? 'cal-day past' : 'cal-day'} aria-label={formatDay(`${d.date}T12:00:00Z`)}>
-            <header aria-hidden="true">
-              <span className="dow">{d.dow}</span>
-              <span className="n">{d.num}</span>
-            </header>
-            {(weekEvents.get(d.date) ?? []).map(card)}
-          </section>
-        ))}
-        {loaded && weekEmpty && <p className="cal-none">{t('events.weekEmpty')}</p>}
-      </div>}
+      {!picked && view === 'upcoming' && (
+        <CalendarPanel
+          events={events}
+          answers={answers}
+          isStaff={isStaff}
+          clubName={club.name || t('app.name')}
+          groupName={groupsOf}
+          weekShift={weekShift}
+          weekLabel={weekRange(week[0].date, week[6].date)}
+          onWeekShift={goWeek}
+          renderWeek={(text, keep) => (
+            <div className="cal-week" aria-label={t('events.week')}>
+              {week.map((d) => (
+                <section key={d.date} className={d.date === todayKey ? 'cal-day today' : d.date < todayKey ? 'cal-day past' : 'cal-day'} aria-label={formatDay(`${d.date}T12:00:00Z`)}>
+                  <header aria-hidden="true">
+                    <span className="dow">{d.dow}</span>
+                    <span className="n">{d.num}</span>
+                  </header>
+                  {events.filter((e) => dayKey(e.starts_at) === d.date && keep(e)).map(card)}
+                </section>
+              ))}
+              {loaded && week.every((d) => !events.some((e) => dayKey(e.starts_at) === d.date && keep(e))) && <p className="cal-none">{text ? t('cal.none') : t('events.weekEmpty')}</p>}
+            </div>
+          )}
+        />
+      )}
 
       <div className="more">
         <button className="link" onClick={() => setView(view === 'upcoming' ? 'past' : 'upcoming')}>
