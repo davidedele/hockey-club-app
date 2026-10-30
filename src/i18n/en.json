@@ -698,5 +698,20 @@
   "event.countAbsent": "Absent",
   "event.countNotCalled": "Not called up",
   "event.notCalledList": "Not called up ({n})",
-  "event.manage": "Manage attendance"
+  "event.manage": "Manage attendance",
+  "event.tabDiscussion": "Discussion",
+  "event.move": "Move {name}",
+  "event.dragHint": "Drag a person to another column, or use the menu next to the name.",
+  "thread.empty": "No messages yet. Write the first one.",
+  "thread.label": "Your message",
+  "thread.send": "Send message",
+  "thread.delete": "Delete",
+  "thread.deleteConfirm": "Confirm delete",
+  "thread.readBy": "Read by {n}",
+  "thread.nobody": "Not read yet",
+  "thread.archived": "Archived discussion: no message for {days} days. A new message opens it again.",
+  "thread.you": "You",
+  "error.message_empty": "Write something before sending.",
+  "error.message_too_long": "The message is too long, 1000 characters at most.",
+  "error.not_in_event": "This person is not in the groups of the event."
 }
