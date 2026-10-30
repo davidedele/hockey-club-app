@@ -103,7 +103,7 @@ function PendingBanner() {
     return () => window.removeEventListener('attendance-changed', load)
   }, [load])
 
-  if (count === 0 || location.pathname === '/events' || location.pathname.startsWith('/settings') || location.pathname === '/profile') return null
+  if (count === 0 || location.pathname === '/events' || location.pathname.startsWith('/settings') || location.pathname.startsWith('/profile')) return null
   return (
     <div className="banner" role="status">
       <span>{count === 1 ? t('banner.one') : t('banner.many', { n: String(count) })}</span>
@@ -195,6 +195,7 @@ export default function App() {
         <Route path="/members/:id/documents" element={<Documents />} />
         <Route path="/documents" element={<Documents />} />
         <Route path="/profile" element={<ProfilePage />} />
+        <Route path="/profile/:section" element={<ProfilePage />} />
         <Route path="/settings" element={<Settings />} />
         <Route path="/settings/club" element={<ClubSettings />} />
         <Route path="/settings/groups" element={<GroupSettings />} />

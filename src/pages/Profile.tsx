@@ -13,9 +13,17 @@ import LanguageChoice from '../components/LanguageChoice'
 import { useClub } from '../lib/club'
 import { summary } from '../lib/documents'
 import type { MemberDocument, Position } from '../lib/types'
-import { Link } from 'react-router-dom'
+import { Link, NavLink, Navigate, useParams } from 'react-router-dom'
+
+const SECTIONS = ['info', 'absences', 'notifications', 'calendar', 'app'] as const
+type Section = (typeof SECTIONS)[number]
+
+const Chevron = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6" /></svg>
+)
 
 export default function ProfilePage() {
+  const { section } = useParams()
   const { profile, roles, reload } = useSession()
   const [firstName, setFirstName] = useState(profile?.first_name ?? '')
   const [lastName, setLastName] = useState(profile?.last_name ?? '')
@@ -117,57 +125,100 @@ export default function ProfilePage() {
     setMessage(t('common.saved'))
   }
 
+  if (section && !SECTIONS.includes(section as Section)) return <Navigate to="/profile" replace />
+
+  const titles: Record<Section, string> = {
+    info: t('profile.info'),
+    absences: t('absence.title'),
+    notifications: t('reminders.title'),
+    calendar: t('calendar.title'),
+    app: t('profile.app'),
+  }
+  const fullName = `${profile.first_name} ${profile.last_name}`
+
+  const active: Section = (section as Section | undefined) ?? 'info'
+  const itemClass = (key: Section) => ({ isActive }: { isActive: boolean }) => (isActive || (!section && key === 'info') ? 'active' : undefined)
+
   return (
-    <div className="page narrow">
-      <h1>{t('profile.title')}</h1>
-      <div className="logo-row">
-        <Avatar first={profile.first_name} last={profile.last_name} url={profile.avatar_path ? photos.get(profile.avatar_path) : null} size="large" />
-        <div>
-          <label className="button file">
-            {t(profile.avatar_path ? 'profile.photoChange' : 'profile.photoAdd')}
-            <input type="file" accept="image/*" disabled={photoBusy} onChange={(e) => void pickPhoto(e)} />
-          </label>
-          {profile.avatar_path && <button className="link" disabled={photoBusy} onClick={() => void removePhoto()}>{t('profile.photoRemove')}</button>}
-          <p className="hint">{t('profile.photoHint')}</p>
-          {photoError && <p className="error" role="alert">{photoError}</p>}
+    <div className={`page profile-shell${section ? ' has-section' : ''}`}>
+      <div className="menu-col">
+        <h1 className="sr-only phone-only">{t('profile.title')}</h1>
+        <div className="me-card">
+          <Avatar first={profile.first_name} last={profile.last_name} url={profile.avatar_path ? photos.get(profile.avatar_path) : null} size="large" />
+          <div>
+            <p className="me-name">{fullName}</p>
+            <p className="hint">{myGroups.length ? myGroups.join(', ') : t('profile.noGroups')}</p>
+            {roles.length > 0 && <p className="hint">{roles.map((r) => t(`role.${r}` as MessageKey)).join(', ')}</p>}
+          </div>
         </div>
+        <ul className="menu">
+          <li><NavLink to="/profile/info" className={itemClass('info')}><span className="ml">{titles.info}</span><Chevron /></NavLink></li>
+          <li>
+            <Link to="/documents">
+              <span className="ml">{t('docs.title')}</span>
+              {docState && <span className={`mv doc-status ${docState.level}`}><span className="dot" aria-hidden="true" />{docState.text}</span>}
+              <Chevron />
+            </Link>
+          </li>
+          <li><NavLink to="/profile/absences" className={itemClass('absences')}><span className="ml">{titles.absences}</span><Chevron /></NavLink></li>
+          <li><NavLink to="/profile/notifications" className={itemClass('notifications')}><span className="ml">{titles.notifications}</span><Chevron /></NavLink></li>
+          <li><NavLink to="/profile/calendar" className={itemClass('calendar')}><span className="ml">{titles.calendar}</span><Chevron /></NavLink></li>
+          <li><NavLink to="/profile/app" className={itemClass('app')}><span className="ml">{titles.app}</span><Chevron /></NavLink></li>
+        </ul>
+        <button className="link" onClick={() => void signOut()}>{t('common.signOut')}</button>
       </div>
-      <form onSubmit={save}>
-        <label>{t('common.firstName')}
-          <input required value={firstName} onChange={(e) => setFirstName(e.target.value)} />
-        </label>
-        <label>{t('common.lastName')}
-          <input required value={lastName} onChange={(e) => setLastName(e.target.value)} />
-        </label>
-        <label>{t('common.jersey')}
-          <input type="number" inputMode="numeric" min={0} max={99} value={jersey} onChange={(e) => setJersey(e.target.value)} />
-        </label>
-        <label htmlFor="position">{t('common.position')}</label>
-          <select id="position" value={position} onChange={(e) => setPosition(e.target.value as Position | '')}>
-            <option value="">{t('position.none')}</option>
-            <option value="goalie">{t('position.goalie')}</option>
-            <option value="defence">{t('position.defence')}</option>
-            <option value="forward">{t('position.forward')}</option>
-          </select>
-        
-        <label>{t('common.phone')}
-          <input type="tel" autoComplete="tel" maxLength={30} placeholder="333 123 4567" value={phone} onChange={(e) => setPhone(e.target.value)} onBlur={() => setPhone(formatPhone(phone))} />
-        </label>
-        <button type="submit">{t('common.save')}</button>
-        {message && <p className="hint">{message}</p>}
-      </form>
-      <h2>{t('docs.title')}</h2>
-      {docState && <p className={`doc-status ${docState.level}`}><span className="dot" aria-hidden="true" />{docState.text}</p>}
-      <p><Link className="button secondary small" to="/documents">{t('docs.open')}</Link></p>
-      <AbsencePeriods userId={profile.id} />
-      <InstallApp />
-      <LanguageChoice />
-      <ReminderSwitch />
-      <CalendarFeed />
-      <h2>{t('profile.groups')}</h2>
-      <p>{myGroups.length ? myGroups.join(', ') : t('profile.noGroups')}</p>
-      {roles.length > 0 && <p className="hint">{roles.map((r) => t(`role.${r}` as MessageKey)).join(', ')}</p>}
-      <button className="link" onClick={() => void signOut()}>{t('common.signOut')}</button>
+      <div className="content-col sub">
+        <Link className="back phone-only" to="/profile">{t('profile.back')}</Link>
+        <h1>{titles[active]}</h1>
+        {active === 'info' && (
+        <>
+          <div className="logo-row">
+            <Avatar first={profile.first_name} last={profile.last_name} url={profile.avatar_path ? photos.get(profile.avatar_path) : null} size="large" />
+            <div>
+              <label className="button file">
+                {t(profile.avatar_path ? 'profile.photoChange' : 'profile.photoAdd')}
+                <input type="file" accept="image/*" disabled={photoBusy} onChange={(e) => void pickPhoto(e)} />
+              </label>
+              {profile.avatar_path && <button className="link" disabled={photoBusy} onClick={() => void removePhoto()}>{t('profile.photoRemove')}</button>}
+              <p className="hint">{t('profile.photoHint')}</p>
+              {photoError && <p className="error" role="alert">{photoError}</p>}
+            </div>
+          </div>
+          <form onSubmit={save}>
+            <label>{t('common.firstName')}
+              <input required value={firstName} onChange={(e) => setFirstName(e.target.value)} />
+            </label>
+            <label>{t('common.lastName')}
+              <input required value={lastName} onChange={(e) => setLastName(e.target.value)} />
+            </label>
+            <label>{t('common.jersey')}
+              <input type="number" inputMode="numeric" min={0} max={99} value={jersey} onChange={(e) => setJersey(e.target.value)} />
+            </label>
+            <label htmlFor="position">{t('common.position')}</label>
+            <select id="position" value={position} onChange={(e) => setPosition(e.target.value as Position | '')}>
+              <option value="">{t('position.none')}</option>
+              <option value="goalie">{t('position.goalie')}</option>
+              <option value="defence">{t('position.defence')}</option>
+              <option value="forward">{t('position.forward')}</option>
+            </select>
+            <label>{t('common.phone')}
+              <input type="tel" autoComplete="tel" maxLength={30} placeholder="333 123 4567" value={phone} onChange={(e) => setPhone(e.target.value)} onBlur={() => setPhone(formatPhone(phone))} />
+            </label>
+            <button type="submit">{t('common.save')}</button>
+            {message && <p className="hint">{message}</p>}
+          </form>
+        </>
+        )}
+      {active === 'absences' && <AbsencePeriods userId={profile.id} />}
+      {active === 'notifications' && <ReminderSwitch />}
+      {active === 'calendar' && <CalendarFeed />}
+      {active === 'app' && (
+        <>
+          <InstallApp />
+          <LanguageChoice />
+        </>
+      )}
+      </div>
     </div>
   )
 }

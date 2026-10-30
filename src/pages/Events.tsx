@@ -28,6 +28,7 @@ export default function Events() {
   const [view, setView] = useState<'upcoming' | 'past'>('upcoming')
   const [weekShift, setWeekShift] = useState(0)
   const [picked, setPicked] = useState<string | null>(null)
+  const [extra, setExtra] = useState(0)
   const [loaded, setLoaded] = useState(false)
   const [records, setRecords] = useState<Map<string, string>>(new Map())
   const [memberCount, setMemberCount] = useState<number | null>(null)
@@ -114,9 +115,18 @@ export default function Events() {
   }
 
   const live = upcoming.filter((e) => !e.cancelled_at)
-  const next = view === 'upcoming' ? live[0] : undefined
+  // The phone home shows one week at a time: this week by default, other weeks with the arrows.
+  const inWeek = (e: EventRow) => { const k = dayKey(e.starts_at); return k >= week[0].date && k <= week[6].date }
+  const next = view === 'upcoming' && weekShift === 0 ? live[0] : undefined
   const todo = live.slice(1).filter((e) => e.event_groups.some((x) => myGroups.includes(x.group_id)) && !answers.has(e.id)).slice(0, 5)
-  const rest = view === 'upcoming' ? upcoming.filter((e) => e !== next) : past
+  const weekRest = upcoming.filter((e) => e !== next && inWeek(e))
+  // This week in full; when it has fewer than 5 events, the next ones fill it up to 5. "Show more" adds 5 at a time.
+  const PHONE_MIN = 5
+  const fill = weekShift === 0 ? Math.max(0, PHONE_MIN - (next ? 1 : 0) - weekRest.length) : 0
+  const later = upcoming.filter((e) => e !== next && !inWeek(e) && e.starts_at > (weekRest[weekRest.length - 1]?.starts_at ?? ''))
+  const phoneRest = [...weekRest, ...later.slice(0, fill + extra)]
+  const moreLeft = weekShift === 0 ? later.length - (fill + extra) : 0
+  const rest = view === 'upcoming' ? phoneRest : past
 
   function row(e: EventRow) {
     const mine = answers.get(e.id)
@@ -173,12 +183,13 @@ export default function Events() {
   const weekEvents = new Map(week.map((d) => [d.date, events.filter((e) => dayKey(e.starts_at) === d.date)]))
   const weekEmpty = week.every((d) => (weekEvents.get(d.date) ?? []).length === 0)
   const goWeek = (shift: number) => {
+    setExtra(0)
     setWeekShift(shift)
     setPicked(null)
   }
 
   return (
-    <div className="page wide">
+    <div className="page wide events-page">
       <div className="row phone-only">
         <h1>{formatMonth(`${week[3].date}T12:00:00Z`)}</h1>
         {isStaff && <Link className="button small" to="/events/new">{t('events.new')}</Link>}
@@ -259,11 +270,18 @@ export default function Events() {
             {todo.length === 0 ? <p className="hint">{t('dash.allDone')}</p> : <ul className="evrows">{todo.map(row)}</ul>}
           </section>
         )}
+        {loaded && view === 'upcoming' && upcoming.length > 0 && !next && rest.length === 0 && (
+          <div className="phone-only">
+            <p className="hint">{t('events.weekNone')}</p>
+            <button className="link" onClick={() => goWeek(weekShift + 1)}>{t('events.goNextWeek')}</button>
+          </div>
+        )}
         {rest.length > 0 && (
           <div className={view === 'upcoming' ? 'phone-only' : undefined}>
-            {view === 'upcoming' && <div className="nowline"><span>{t('events.then')}</span><i aria-hidden="true" /></div>}
+            {view === 'upcoming' && next && <div className="nowline"><span>{t('events.then')}</span><i aria-hidden="true" /></div>}
             {view === 'past' && <h2>{t('events.past')}</h2>}
             <ul className="evrows">{rest.map(row)}</ul>
+            {view === 'upcoming' && moreLeft > 0 && <button className="link" onClick={() => setExtra(extra + 5)}>{t('events.showMore')}</button>}
           </div>
         )}
       </div>

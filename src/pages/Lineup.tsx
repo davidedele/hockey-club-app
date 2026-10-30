@@ -41,7 +41,7 @@ function units(): { key: string; heading: MessageKey; units: Unit[] }[] {
   ]
 }
 
-export default function Lineup() {
+export default function Lineup({ embedded = false }: { embedded?: boolean }) {
   const { id = '' } = useParams()
   const { isStaff } = useSession()
   const [event, setEvent] = useState<EventRow | null>(null)
@@ -168,10 +168,10 @@ export default function Lineup() {
   }
 
   return (
-    <div className="page">
-      <p><Link to={`/events/${id}`}>{t('lineup.back')}</Link></p>
-      <h1>{t('lineup.title')}</h1>
-      <p className="hint">{event.title}, {formatDay(event.starts_at)} {formatTime(event.starts_at)}</p>
+    <div className={embedded ? undefined : 'page'}>
+      {!embedded && <p><Link to={`/events/${id}`}>{t('lineup.back')}</Link></p>}
+      {!embedded && <h1>{t('lineup.title')}</h1>}
+      {!embedded && <p className="hint">{event.title}, {formatDay(event.starts_at)} {formatTime(event.starts_at)}</p>}
       {error && <p className="error" role="alert">{error}</p>}
       {canEdit && <p className="hint">{t('lineup.help')}</p>}
       {isStaff && over && <p className="hint">{t('lineup.overHint')}</p>}
