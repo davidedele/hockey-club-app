@@ -17,7 +17,7 @@ Status words: Open, In progress, Done (PR number), Decided (waiting for Davide),
 9. N8 The label "Per lo staff" on the Home page. Status: Done (branch `claude/beautiful-johnson-vsdump`): "Da gestire".
 10. N9 The group selector looks different from the other controls in the phone top bar. Status: Done as Claude's choice (decision 110), waiting for Davide's look: pictures in `docs/ui-review/`.
 11. N10 The hockey style of the event page is missing on the Home page: Davide means the red line with the centre circle of the Eventi page. Status: Done as Claude's choice (decision 111), waiting for Davide's look: pictures in `docs/ui-review/`.
-12. N11 Club settings: the groups should be folded so that not everything is shown at once. Item 12 of the review of 31 October was marked done with headings only. Status: Open (reopened).
+12. N11 Club settings: the groups should be folded so that not everything is shown at once. Item 12 of the review of 31 October was marked done with headings only. Status: Done (branch `claude/beautiful-johnson-vsdump`): the three groups are folded rows with a one line summary, one open at a time, all closed on first load (decision 112); item 12 of 31 October is closed with it. The groups page was already a folded list; the ice, rink and invite pages have two groups of settings or fewer, so they stay as they are.
 13. N12 The Campionato shows a game "Sgularat against Vikings" that is not of group A. Status: Parked (decision 104): Davide does not want to send a screenshot.
 14. N13 "Tutte le partite" is not all the games (the lists show 10). Status: Open, proposed labels in the brief.
 15. N14 Championship statistics (top scorers, assists and so on), computed by the app from the game data. Status: Decided, a feature after a first check of what the game details contain.
@@ -35,7 +35,7 @@ Status words: Open, In progress, Done (PR number), Decided (waiting for Davide),
 9. Presenze: the search field is taller than the selects, the table is not clear, coloured cells reduce readability (keep colour, fix readability), the intro text is not professional. Status: Done (PR 37).
 10. Texts: "un mese prima" and "un mese dopo" should be more professional ("il mese precedente", "il mese successivo", or exact days). Status: Done (PR 37), but the attendance grid still said "Mese prima" and "Mese dopo"; finished in branch `claude/charming-ride-yo6gpc` (fix brief B1).
 11. Impostazioni: the cards are not how settings are usually shown; use the standard convention. Status: Done (PR 37).
-12. Impostazioni del club: empty space at the top, an underlined link to go back, content stuck to the left, no grouping (Nome e logo; Colori del club e delle maglie; Documenti), long scrolling. Status: Done (PR 37).
+12. Impostazioni del club: empty space at the top, an underlined link to go back, content stuck to the left, no grouping (Nome e logo; Colori del club e delle maglie; Documenti), long scrolling. Status: Done (PR 37). Reopened on 1 November and closed again with N11.
 13. Gruppi: same back link and alignment problems. Status: Done (PR 37).
 14. Inviti: past invites should be grouped. Status: Done (PR 37).
 15. Profilo: the photo appears twice; the content is centred while other pages are on the left; opening Documenti changes the layout and the section list disappears. Status: Done (PR 37).

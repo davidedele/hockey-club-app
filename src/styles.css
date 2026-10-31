@@ -1186,3 +1186,19 @@ input[type="color"] { padding: .25rem; }
   .when-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   .when-grid > label:first-child { grid-column: auto; }
 }
+
+/* Settings groups as folded rows (docs/UI_RULES.md 1.9): a button with a one line summary, one open at a time. */
+.fold { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); margin: 0 0 .75rem; overflow: hidden; }
+.fold h2 { margin: 0; font: inherit; }
+button.fold-head { display: flex; align-items: center; justify-content: space-between; gap: .75rem; width: 100%; min-height: 64px; padding: .75rem 1rem; color: var(--ink); background: none; border-radius: 0; text-align: left; font: inherit; }
+.fold-text { display: flex; flex-direction: column; gap: .125rem; min-width: 0; }
+.fold-title { font: 600 1.125rem/1.25 var(--font-display); }
+.fold-summary { color: var(--muted); font-size: .875rem; font-weight: 400; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fold-head .chev { width: 20px; height: 20px; flex: none; color: var(--muted); transition: transform 120ms ease-out; }
+.fold-head[aria-expanded="true"] .chev { transform: rotate(180deg); }
+.fold-head:focus-visible { outline-offset: -2px; }
+.fold-body { padding: 0 1rem 1.25rem; border-top: 1px solid var(--line); }
+.fold-body[hidden] { display: none; }
+.fold-body > .hint:first-child { margin: 1rem 0; }
+.fold-body .set-body { max-width: 34rem; }
+@media (prefers-reduced-motion: reduce) { .fold-head .chev { transition: none; } }

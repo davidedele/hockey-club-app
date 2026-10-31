@@ -15,6 +15,8 @@ Read this file, and the open items of `docs/UI_BACKLOG.md`, before touching a pa
 7. No row of loose links at the bottom of a page. An action belongs to the page or panel it concerns, or to the navigation.
 8. A wait longer than a second shows a skeleton of what is coming, not a line of text or a spinner; a loading number shows an en dash.
 
+9. A settings page with more than two groups of settings shows them as folded rows (`Fold` in `src/components/Fold.tsx`): a real button with `aria-expanded`, the title and a one line summary of what is set. All are closed on first load, only one is open at a time, and the open one stays open after a save because the page keeps its state and the closed bodies are only hidden.
+
 ## 2. Controls
 
 1. Text fields, selects, buttons and chips are 44 pixels tall. A select looks like a text field (same border, radius, padding and font), never like the small native control.

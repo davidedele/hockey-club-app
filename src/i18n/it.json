@@ -950,5 +950,10 @@
   "home.now": "Adesso",
   "home.laterOne": "1 evento senza risposta più avanti",
   "home.laterMany": "{n} eventi senza risposta più avanti",
-  "dash.laterTitle": "Più avanti"
+  "dash.laterTitle": "Più avanti",
+  "club.sumIdentityLogo": "{name}, logo caricato",
+  "club.sumIdentityNoLogo": "{name}, nessun logo",
+  "club.sumColours": "Colori del club, maglie {light} e {dark}",
+  "club.sumDocsYes": "Informativa privacy caricata",
+  "club.sumDocsNo": "Nessuna informativa caricata"
 }

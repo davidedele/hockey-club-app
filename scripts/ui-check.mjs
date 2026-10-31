@@ -349,6 +349,21 @@ for (const width of WIDTHS) {
   await page.keyboard.press('Escape')
   check(!(await page.isVisible('dialog[open]')), 'confirm: Escape does not close the delete window')
 
+  // Settings groups are folded rows: all closed on first load, one open at a time, a real button with aria-expanded.
+  await settle('/settings/club')
+  const heads = page.locator('main .fold-head')
+  check((await heads.count()) === 3, 'folds: the club settings do not show three folded groups')
+  check((await page.locator('main .fold-head[aria-expanded=true]').count()) === 0, 'folds: a group of the club settings is open on first load')
+  await heads.nth(0).click()
+  check((await page.locator('main .fold-head[aria-expanded=true]').count()) === 1 && (await page.locator('main .fold-body:visible').count()) === 1, 'folds: opening a group does not show exactly one body')
+  await heads.nth(1).click()
+  check((await page.locator('main .fold-head[aria-expanded=true]').count()) === 1 && (await heads.nth(0).getAttribute('aria-expanded')) === 'false', 'folds: opening a second group does not close the first')
+  await heads.nth(1).focus()
+  await page.keyboard.press('Enter')
+  check((await heads.nth(1).getAttribute('aria-expanded')) === 'false', 'folds: Enter on the open group does not close it')
+  await page.keyboard.press('Space')
+  check((await heads.nth(1).getAttribute('aria-expanded')) === 'true', 'folds: Space does not open the group')
+
   // The certificate: no date field without a file (decision 94); with a file the date field is there.
   await settle('/profile/documents')
   check((await page.locator('main input[type=date]').count()) === 0, 'certificate: a date field shows although no file was uploaded')
@@ -458,7 +473,7 @@ for (const width of WIDTHS) {
   await emptyForm(page, 'profile form', '/profile/info', async (pg) => { await pg.locator('form input[autocomplete="given-name"]').fill('') })
   await emptyForm(page, 'absence form', '/profile/absences', async (pg) => { await pg.locator('main input[type=date]').first().fill('') })
   await emptyForm(page, 'group settings', '/settings/groups', async (pg) => { const b = pg.locator('main button:has-text("Aggiungi gruppo")'); if (await b.count()) await b.first().click() })
-  await emptyForm(page, 'club settings', '/settings/club', async (pg) => { await pg.locator('form input[required]').first().fill('') })
+  await emptyForm(page, 'club settings', '/settings/club', async (pg) => { await pg.locator('main .fold-head').first().click(); await pg.locator('form input[required]:visible').first().fill('') })
   const anon = await browser.newContext({ viewport: { width: 375, height: 812 }, ...contextOptions })
   await anon.route(`${API}/**`, answer)
   const guest = await anon.newPage()

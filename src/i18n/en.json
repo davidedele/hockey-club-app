@@ -950,5 +950,10 @@
   "home.now": "Now",
   "home.laterOne": "1 event without an answer later on",
   "home.laterMany": "{n} events without an answer later on",
-  "dash.laterTitle": "Later"
+  "dash.laterTitle": "Later",
+  "club.sumIdentityLogo": "{name}, logo uploaded",
+  "club.sumIdentityNoLogo": "{name}, no logo",
+  "club.sumColours": "Club colours, jerseys {light} and {dark}",
+  "club.sumDocsYes": "Privacy notice uploaded",
+  "club.sumDocsNo": "No privacy notice uploaded"
 }
