@@ -649,11 +649,11 @@ a.back::before { content: ''; width: 8px; height: 8px; margin-right: .5rem; bord
 .ev-band { margin-bottom: 1rem; padding: 1rem 1.25rem 1.25rem; border-radius: var(--radius); background: var(--accent); color: var(--on-accent); }
 .ev-band.game { background: var(--team-dark); color: #fff; }
 .ev-band.cancelled { opacity: .7; }
-.ev-band-top { display: flex; align-items: center; gap: .75rem; flex-wrap: wrap; }
+.ev-band-top { display: flex; align-items: center; gap: .75rem; flex-wrap: nowrap; }
 .ev-band-top p { margin: 0; }
-.ev-day { font-weight: 500; }
-.ev-sub { flex: 1; font-size: .9375rem; opacity: .85; }
-.ev-menu { position: relative; margin-left: auto; }
+.ev-day { font-weight: 500; min-width: 0; }
+.ev-sub { flex: 1; min-width: 0; font-size: .9375rem; opacity: .85; }
+.ev-menu { position: relative; margin-left: auto; flex: none; }
 .ev-menu summary { list-style: none; display: grid; place-items: center; width: 44px; height: 44px; border-radius: var(--radius-control); background: rgba(255, 255, 255, .16); cursor: pointer; }
 .ev-menu summary::-webkit-details-marker { display: none; }
 .ev-menu svg { width: 22px; height: 22px; }
