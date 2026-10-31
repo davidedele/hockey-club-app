@@ -785,7 +785,7 @@ details > summary { display: flex; align-items: center; min-height: 44px; font-w
 .mday.out { background: var(--surface-2); color: var(--muted); }
 .mday-top { display: flex; justify-content: space-between; align-items: center; }
 .mday-n { display: grid; place-items: center; min-width: 28px; height: 28px; border-radius: 50%; font-size: .875rem; }
-.mday.today .mday-n { background: var(--now); color: #fff; }
+.mday.today .mday-n { background: var(--now); color: var(--on-signal); }
 .mday-add { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; color: var(--accent); text-decoration: none; font-size: 1.25rem; line-height: 1; }
 @media (hover: hover) { .mday-add { opacity: 0; } .mday:hover .mday-add, .mday:focus-within .mday-add { opacity: 1; } }
 .mev { display: block; padding: .125rem .375rem; border-radius: 6px; border-left: 3px solid var(--accent); background: var(--accent-soft); color: var(--ink); font-size: .8125rem; text-decoration: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -887,7 +887,7 @@ button.sort { display: inline-flex; align-items: center; min-height: 44px; paddi
 .diff .label, .avg .label { font-size: .8125rem; color: var(--muted); }
 .last-games { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 1rem; }
 .last-games li { display: grid; justify-items: center; gap: .125rem; }
-.last-games .badge { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; color: #fff; font: 600 1.25rem/1 var(--font-display); }
+.last-games .badge { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; color: var(--on-signal); font: 600 1.25rem/1 var(--font-display); }
 .last-games .ok .badge { background: var(--ok); }
 .last-games .bad .badge { background: var(--now); }
 .last-games .neutral .badge { background: var(--muted); }
