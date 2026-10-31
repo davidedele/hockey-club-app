@@ -1087,5 +1087,21 @@
   "predict.colPlayer": "Giocatore",
   "predict.colGuesses": "Pronostici",
   "predict.colExact": "Esatti",
-  "predict.colPoints": "Punti"
+  "predict.colPoints": "Punti",
+  "hall.tab": "Albo d'oro",
+  "hall.intro": "Chi ha guidato ogni stagione, dai numeri già nell'app. Con i pari merito compaiono tutti.",
+  "hall.empty": "L'albo si riempie con le prime partite e presenze registrate.",
+  "hall.season": "Stagione {season}",
+  "hall.goals": "Capocannoniere",
+  "hall.assists": "Più assist",
+  "hall.points": "Più punti",
+  "hall.mvp": "Più volte MVP",
+  "hall.present": "Più presente",
+  "shift.title": "Cronometro dei cambi",
+  "shift.hint": "Tocca la linea che entra in pista: il cronometro dell'altra si ferma. I tempi restano solo su questo telefono e non vengono salvati.",
+  "shift.limit": "Avvisa con una vibrazione dopo",
+  "shift.seconds": "{n} secondi",
+  "shift.total": "totale {time}",
+  "shift.stop": "Ferma il tempo",
+  "shift.reset": "Azzera i tempi"
 }

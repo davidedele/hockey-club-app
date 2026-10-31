@@ -8,6 +8,7 @@ import GroupBadge from '../components/GroupBadge'
 import SeasonTabs from '../components/SeasonTabs'
 import { useAvatarUrls } from '../lib/avatars'
 import TeamStats from '../components/TeamStats'
+import HallOfFame from '../components/HallOfFame'
 import PredictionTable from '../components/PredictionTable'
 import { useGroupFilter } from '../lib/groupfilter'
 import { useSession } from '../lib/session'
@@ -35,7 +36,7 @@ export default function Stats() {
   const [results, setResults] = useState<Result[]>([])
   const [params] = useSearchParams()
   const asked = params.get('tab')
-  const tab = asked === 'players' || asked === 'predictions' ? asked : 'team'
+  const tab = asked === 'players' || asked === 'predictions' || asked === 'hall' ? asked : 'team'
   const [avatars, setAvatars] = useState<Map<string, string | null>>(new Map())
   const [loaded, setLoaded] = useState(false)
   const [error, setError] = useState('')
@@ -94,7 +95,7 @@ export default function Stats() {
       <PageHeader title={t('stats.title')} />
       <SeasonTabs />
       <p className="hint">{t('stats.intro')}</p>
-      <div className="stats-filters">
+      {tab !== 'hall' && <div className="stats-filters">
         {seasons.length > 1 ? (
           <div>
             <label htmlFor="season">{t('stats.season')}</label>
@@ -113,7 +114,7 @@ export default function Stats() {
             </button>
           ))}
         </div>}
-      </div>
+      </div>}
 
       {error && <p className="error" role="alert">{error}</p>}
 
@@ -121,7 +122,10 @@ export default function Stats() {
         <Link to={{ search: '' }} replace aria-current={tab === 'team' ? 'page' : undefined}>{t('stats.tabTeam')}</Link>
         <Link to={{ search: '?tab=players' }} replace aria-current={tab === 'players' ? 'page' : undefined}>{t('stats.tabPlayers')}</Link>
         <Link to={{ search: '?tab=predictions' }} replace aria-current={tab === 'predictions' ? 'page' : undefined}>{t('predict.tab')}</Link>
+        <Link to={{ search: '?tab=hall' }} replace aria-current={tab === 'hall' ? 'page' : undefined}>{t('hall.tab')}</Link>
       </nav>
+
+      {tab === 'hall' && <HallOfFame seasons={seasons} />}
 
       {tab === 'predictions' && <PredictionTable season={season} />}
 

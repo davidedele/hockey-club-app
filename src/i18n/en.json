@@ -1087,5 +1087,21 @@
   "predict.colPlayer": "Player",
   "predict.colGuesses": "Predictions",
   "predict.colExact": "Exact",
-  "predict.colPoints": "Points"
+  "predict.colPoints": "Points",
+  "hall.tab": "Hall of fame",
+  "hall.intro": "Who led each season, from the numbers already in the app. Ties show everyone.",
+  "hall.empty": "The hall fills up with the first recorded games and attendance.",
+  "hall.season": "Season {season}",
+  "hall.goals": "Top scorer",
+  "hall.assists": "Most assists",
+  "hall.points": "Most points",
+  "hall.mvp": "Most MVP awards",
+  "hall.present": "Most present",
+  "shift.title": "Shift timer",
+  "shift.hint": "Tap the line that goes on: the other one stops. The times stay on this phone and are not saved.",
+  "shift.limit": "Vibrate after",
+  "shift.seconds": "{n} seconds",
+  "shift.total": "total {time}",
+  "shift.stop": "Stop the clock",
+  "shift.reset": "Reset the times"
 }

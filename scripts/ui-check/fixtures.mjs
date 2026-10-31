@@ -198,6 +198,12 @@ export const fixtures = {
     ],
     prediction_table: people.filter((p) => p.groups.includes(1)).slice(0, 5).map((p, i) => ({ user_id: p.id, first_name: p.first_name, last_name: p.last_name, predictions: 4 - (i % 2), exact: i === 0 ? 2 : 0, points: 40 - 6 * i })),
     game_prediction_list: people.filter((p) => p.groups.includes(1)).slice(0, 4).map((p, i) => ({ user_id: p.id, first_name: p.first_name, last_name: p.last_name, pred_for: 5 - i, pred_against: 2, points: i === 0 ? 13 : i === 1 ? 1 : 7 })),
+    season_leaders: [
+      { category: 'goals', user_id: uid(2), first_name: 'Marco', last_name: 'Bianchi', value: 12 },
+      { category: 'goals', user_id: uid(3), first_name: 'Luca', last_name: 'Rossi', value: 12 },
+      { category: 'assists', user_id: uid(3), first_name: 'Luca', last_name: 'Rossi', value: 9 },
+      { category: 'present', user_id: uid(2), first_name: 'Marco', last_name: 'Bianchi', value: 31 },
+    ],
     is_staff: true, is_board: true, is_member: true,
     attendance_summary: summary,
     attendance_grid: gridRows,
