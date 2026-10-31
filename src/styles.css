@@ -1158,3 +1158,4 @@ input[type="color"] { padding: .25rem; }
 .att-table { font-size: .8125rem; }
 .att-table thead th { white-space: normal; }
 .chip-skel { display: inline-block; width: 4.5rem; height: 44px; border-radius: 999px; }
+.crumbs a { display: inline-flex; align-items: center; min-height: 44px; }

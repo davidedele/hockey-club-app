@@ -177,10 +177,16 @@ function measure() {
     const h = el.getBoundingClientRect().height
     if (h < 43.5) problems.push(`control under 44px: ${el.tagName.toLowerCase()} "${name(el)}" is ${Math.round(h)}px`)
   }
-  for (const el of document.querySelectorAll('main a')) {
-    if (!visible(el) || el.closest('p, li > span, td, .hint, .crumbs')) continue
+  // A link inside a sentence is exempt; a link that is the whole paragraph or the whole cell is a control. The breadcrumb is measured too.
+  for (const el of document.querySelectorAll('main a, .crumbs a')) {
+    if (!visible(el)) continue
+    const host = el.closest('p, li > span, td, .hint')
+    if (host && host.textContent.trim() !== el.textContent.trim()) continue
+    // An inline link with text around it, in a heading or a card, is part of a sentence. A link that stands alone, and every breadcrumb step, is a control.
+    const alone = !el.parentElement || el.parentElement.textContent.trim() === el.textContent.trim()
+    if (getComputedStyle(el).display === 'inline' && !alone && !el.closest('.crumbs')) continue
     const h = el.getBoundingClientRect().height
-    if (h < 43.5 && getComputedStyle(el).display !== 'inline') problems.push(`link under 44px: "${name(el)}" is ${Math.round(h)}px`)
+    if (h < 43.5) problems.push(`link under 44px: "${name(el)}" is ${Math.round(h)}px`)
   }
   // A select must look like a text field, not the small native control of each system.
   for (const el of document.querySelectorAll('select')) {

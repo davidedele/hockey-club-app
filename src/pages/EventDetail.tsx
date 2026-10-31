@@ -426,7 +426,7 @@ export default function EventDetail() {
                 {isStaff && <li className="bad"><b>{loaded ? notCalled.length : '–'}</b><span>{t('event.countNotCalled')}</span></li>}
                 {isStaff && <li className="bad"><b>{loaded ? absent.length : '–'}</b><span>{t('event.countAbsent')}</span></li>}
               </ul>
-              {isStaff && <p><Link to={{ search: '?tab=presence' }} replace>{t('event.manage')}</Link></p>}
+              {isStaff && <p><Link className="inline-action" to={{ search: '?tab=presence' }} replace>{t('event.manage')}</Link></p>}
               {loaded && over && !cancelled && !recorded && <p className="hint">{t('event.presenceFromAnswers')}</p>}
               <details open>
                 <summary>{t('event.presentNames')}</summary>
