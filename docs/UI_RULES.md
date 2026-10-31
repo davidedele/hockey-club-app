@@ -19,7 +19,7 @@ Read this file, and the open items of `docs/UI_BACKLOG.md`, before touching a pa
 
 1. Text fields, selects, buttons and chips are 44 pixels tall. A select looks like a text field (same border, radius, padding and font), never like the small native control.
 2. Labels sit above the field, in sentence case, without a colon. A label inline with a toolbar field (for example "Cerca") also has no colon.
-3. A choice among more than four options, or among options that change over time (the groups), is a button that opens a list. Chips are for two to four fixed filters.
+3. A choice among more than four options is a button that opens a list. Chips are for two to four fixed filters. One exception, decided by Davide on 31 October 2026: the club's groups (A, B, C1, C2, Start) are shown as chips wherever a person chooses one or several of them (event form, announcement form, invites, group filters), because there are only about five and chips are quicker to tap. The group selector of the shell stays a menu (rule 5.1).
 4. A search field and the actions of the same list share one toolbar row: search on the left, actions on the right. They wrap only when the window is too narrow.
 5. Destructive actions ask for confirmation naming the thing. Print and export open a window first.
 6. A menu (for example the event actions) closes as soon as one of its actions is chosen.
