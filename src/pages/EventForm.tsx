@@ -188,7 +188,7 @@ export default function EventForm() {
         return
       }
     }
-    navigate(type === 'training' && repeat ? '/events' : `/events/${data as string}`, { replace: true })
+    navigate(`/events/${data as string}`, { replace: true })
   }
 
   return (
