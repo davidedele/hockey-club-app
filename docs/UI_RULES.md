@@ -38,7 +38,7 @@ Read this file, and the open items of `docs/UI_BACKLOG.md`, before touching a pa
 3. A heading with a number says exactly what is counted, and the same quantity shows the same number everywhere (banner, bell, panels). If a list shows only part of a set, the heading says so ("Prossimi 5 senza risposta") or shows the full count with a link to the rest.
 4. Singular and plural are both written out ("1 membro", "2 membri").
 5. People's names are shown with capital initials and never contain digits. The database tidies names on save and refuses digits; the forms say so before saving.
-6. Filter and toggle labels use standard words ("Tutte le partite", "Solo Sgularat"), not invented ones.
+6. Filter and toggle labels use standard words ("Tutte le squadre", "Solo Sgularat"); a list that shows part of a set says how many of how many ("10 di 24") and has a button for ten more, not invented ones.
 7. A person's name is written surname first, "Rossi Marco", in lists, headings, messages and the sidebar, through `personName` in `src/lib/names.ts`. A greeting uses the first name only. The same person never reads two ways on one screen.
 8. Scores: where both team names are shown, the home side comes first, in the names and in the score. Where only our result is shown, our score comes first and the text says so ("Noi 4, avversari 2", "In ogni partita il nostro punteggio è scritto per primo.").
 

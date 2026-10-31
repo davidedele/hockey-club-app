@@ -452,10 +452,10 @@
   "champ.colDiff": "Goal diff.",
   "champ.noStandings": "The table for this competition is not available yet.",
   "champ.next": "Next games",
-  "champ.results": "Results",
+  "champ.results": "Latest results",
   "champ.noNext": "No games coming up.",
   "champ.noResults": "No results yet.",
-  "champ.allGames": "All games",
+  "champ.allGames": "All teams",
   "champ.source": "Data from the Lega Hockey Libertas website, read {when}.",
   "champ.sourceNever": "The league data has not been read yet.",
   "champ.sourceFailed": "The last reading of the league website failed. The earlier data is still shown.",
@@ -955,5 +955,7 @@
   "club.sumIdentityNoLogo": "{name}, no logo",
   "club.sumColours": "Club colours, jerseys {light} and {dark}",
   "club.sumDocsYes": "Privacy notice uploaded",
-  "club.sumDocsNo": "No privacy notice uploaded"
+  "club.sumDocsNo": "No privacy notice uploaded",
+  "champ.count": "{shown} of {total}",
+  "champ.more": "Show {n} more"
 }

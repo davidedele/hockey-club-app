@@ -114,6 +114,13 @@ const leagueMatches = [
   { id: 503, championship_id: 3, championship: 'Campionato B', starts_at: at(-6, 21), home: 'HC Prova Uno', away: 'HC Sample', home_score: 4, away_score: 2, venue: 'Altra pista', seen_at: at(-1, 9) },
 ]
 
+// Older and later games of other teams, so the lists have more than ten rows and the "Mostra altre 10" button shows.
+const teams = ['HC Orsi', 'HC Esempio', 'HC Lupi', 'HC Falchi', 'HC Aquile']
+for (let i = 0; i < 14; i++) {
+  leagueMatches.push({ id: 600 + i, championship_id: 1, championship: 'Campionato A', starts_at: at(-120 + i * 3, 20), home: teams[i % 5], away: teams[(i + 2) % 5], home_score: 2 + (i % 4), away_score: i % 3, venue: 'Altra pista', seen_at: at(-1, 9) })
+  leagueMatches.push({ id: 700 + i, championship_id: 1, championship: 'Campionato A', starts_at: at(20 + i * 3, 20), home: teams[(i + 1) % 5], away: teams[(i + 3) % 5], home_score: null, away_score: null, venue: 'Altra pista', seen_at: at(-1, 9) })
+}
+
 const summary = people.filter((p) => p.groups.includes(1)).map((p, i) => ({
   user_id: p.id, first_name: p.first_name, last_name: p.last_name, position: p.position, events_total: 5, answered_present: 3 - (i % 3), answered_absent: i % 2, no_answer: 1 + (i % 2),
   on_time: 2, late: i % 2, excused: i % 3 === 0 ? 1 : 0, unexcused: 0, injured: 0, not_called_up: 0,
