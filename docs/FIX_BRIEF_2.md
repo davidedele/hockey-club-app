@@ -31,10 +31,10 @@ Davide: "when I'm in Membri I shouldn't see the 'Hai un evento senza risposta' .
 Found:
 1. `src/App.tsx` lines 84 to 93, `PendingBanner`, hides itself on Home, Eventi, settings and profile pages and shows on every other page, including Membri, Presenze, Esercizi and Campionato (a screenshot of Davide's shows it on a Campionato game page in the Direttivo view). It never looks at the chosen view (`view` in `src/lib/session.tsx`).
 2. `src/components/Bell.tsx` and `src/lib/notifications.ts` add the unanswered events to the bell count in every view.
-3. `src/components/DocumentsBanner.tsx` (the certificate and privacy line) shows in every view.
+3. `src/components/DocumentsBanner.tsx` (the certificate and privacy line) shows in every view. It must follow the same rule (decision 106).
 4. The Home page in the staff view keeps player elements (check `src/pages/Home.tsx`).
 
-Change: in the Direttivo and Allenatore views, everything about being present at an event is hidden: the unanswered events banner, the answer buttons and the "La tua risposta" box, and the pending count inside the bell. They appear in the Giocatore view. A person who is a player and a coach and wants the reminders switches to the Giocatore view. Davide named only this one group of things. Claude's default for the rest: the certificate and privacy line is about the person's own paperwork and stays visible in every view, and the bell keeps announcements and discussion messages. Ask Davide to confirm this default in one line when the item is shown. Add the rule to `docs/UI_RULES.md` and a check to `scripts/ui-check.mjs` (staff view: no banner; player view: banner).
+Change: in the Direttivo and Allenatore views, everything about being present at an event is hidden: the unanswered events banner, the answer buttons and the "La tua risposta" box, and the pending count inside the bell. They appear in the Giocatore view. A person who is a player and a coach and wants the reminders switches to the Giocatore view. Davide also decided (decision 106) that the person's own certificate and privacy line is hidden in the staff views too, and shown only in the Giocatore view. The bell keeps announcements and discussion messages in every view. Add the rule to `docs/UI_RULES.md` and a check to `scripts/ui-check.mjs` (staff view: no banner; player view: banner).
 
 Proof: switch between the three views with a test account that has all roles. The banner, the bell count and the answer buttons follow the view, on every page.
 
