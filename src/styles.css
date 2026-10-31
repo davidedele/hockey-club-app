@@ -1164,4 +1164,7 @@ input[type="color"] { padding: .25rem; }
 :root { --on-signal: #ffffff; }
 @media (prefers-color-scheme: dark) {
   :root { --on-signal: #0b131c; }
+  /* A training band in a deep blue with white text, instead of the light blue accent. */
+  .ev-band { background: #1c4f8f; color: #ffffff; }
+  .ev-band.game { background: var(--team-dark); }
 }
