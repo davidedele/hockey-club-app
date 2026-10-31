@@ -4,6 +4,24 @@ Every point Davide raised about the interface, with its status. Newest review fi
 
 Status words: Open, In progress, Done (PR number), Decided (waiting for Davide), Won't do (with the reason).
 
+## Phone test of 1 November 2026 (Davide, iPhone with Safari). Details and proposed fixes in `docs/FIX_BRIEF_2.md`
+
+1. B13 No message appears in forms with a required field left empty, including sign up and login (iPhone Safari does not show the browser's own message). Status: Open, first in the order of work (`docs/FIX_BRIEF.md`).
+2. N1 Player things (the unanswered events banner, the count in the bell, answer buttons, the person's own certificate banner) must not appear in the staff views. The banner showed on Membri only because it is hidden on a few pages. Status: Decided (waiting for Davide to confirm the list).
+3. N2 The unanswered window should be this week, not 14 days; the same number everywhere. Status: Decided (waiting for Davide: calendar week or next 7 days).
+4. N3 The notification panel runs off the left side of the screen on phones and must close when tapping outside it. Status: Open.
+5. N4 In Documenti the date box is wider than the page on iPhone. Status: Open.
+6. N5 In Profilo, Assenze, the start and end dates are too close together; check every form for the same problem. Status: Open.
+7. N6 A certificate date can be saved without a certificate file. Status: Decided (waiting for Davide: file and date both needed, and what staff may do).
+8. N7 Use standard wording ("Notifiche") instead of "Email dal club", and check every text for the same kind of inconsistency. Status: Decided (waiting for Davide to confirm the glossary).
+9. N8 The label "Per lo staff" on the Home page. Status: Decided (waiting for Davide: a better name).
+10. N9 The group selector looks different from the other controls in the phone top bar. Status: Open, design first.
+11. N10 The hockey style of the event page is missing on the Home page. Status: Open, design first.
+12. N11 Club settings: the groups should be folded so that not everything is shown at once. Item 12 of the review of 31 October was marked done with headings only. Status: Open (reopened).
+13. N12 The Campionato shows a game "Sgularat against Vikings" that is not of group A. Status: Open, needs a screenshot and a data check first.
+14. N13 "Tutte le partite" is not all the games (the lists show 10). Status: Open, proposed labels in the brief.
+15. N14 Championship statistics (top scorers, assists and so on), computed by the app from the game data. Status: Decided, a feature after a first check of what the game details contain.
+
 ## Review of 31 October 2026 (screenshots of events, members, attendance, settings, club, groups, profile, documents)
 
 1. Home page. There is none; one would be useful and good looking. Status: Done (PR 37), built as proposed to Davide (next event with answers, pending answers, announcements, league position and last result, staff figures); waiting for his changes.
