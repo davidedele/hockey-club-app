@@ -362,20 +362,17 @@ export default function EventDetail() {
         busy={busy}
         onClose={() => setCancelling(false)}
       />
-      {confirming && (
-        <div className="box" role="alertdialog" aria-label={t('event.delete')}>
-          <p>{t('event.deleteConfirm', { title: event.title, date: dayLabel })}</p>
-          <div className="actions">
-            <button className="danger" disabled={busy} onClick={() => void remove(false)}>
-              {event.series_id ? t('event.deleteOne') : t('event.deleteThis')}
-            </button>
-            {event.series_id && (
-              <button className="danger" disabled={busy} onClick={() => void remove(true)}>{t('event.deleteFollowing')}</button>
-            )}
-            <button className="link" disabled={busy} onClick={() => setConfirming(false)}>{t('common.cancel')}</button>
-          </div>
-        </div>
-      )}
+      <ConfirmDialog
+        open={confirming}
+        title={t('event.deleteTitle')}
+        body={t('event.deleteConfirm', { title: event.title, date: dayLabel })}
+        choices={[
+          { label: event.series_id ? t('event.deleteOne') : t('event.deleteThis'), onChoose: () => void remove(false) },
+          ...(event.series_id ? [{ label: t('event.deleteFollowing'), onChoose: () => void remove(true) }] : []),
+        ]}
+        busy={busy}
+        onClose={() => setConfirming(false)}
+      />
 
       <nav className="ev-tabs" aria-label={t('event.tabs')}>
         {tabs.map((x) => (

@@ -492,6 +492,7 @@
   "event.cancelTitle": "Annullare l'evento?",
   "event.cancelBody": "Stai per annullare \"{title}\" del {date}. I giocatori vengono avvisati. Puoi riattivare l'evento dal menu.",
   "event.cancelGo": "Annulla l'evento",
+  "event.deleteTitle": "Eliminare l'evento?",
   "event.restoreHint": "Se lo riattivi, i giocatori ne vengono avvisati di nuovo.",
   "events.cancelled": "Annullato",
   "error.event_cancelled": "L'evento è stato annullato, non si può rispondere.",

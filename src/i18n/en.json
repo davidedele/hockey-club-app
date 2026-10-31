@@ -492,6 +492,7 @@
   "event.cancelTitle": "Call the event off?",
   "event.cancelBody": "You are about to call off \"{title}\" of {date}. The players are told. You can put the event back on from the menu.",
   "event.cancelGo": "Call the event off",
+  "event.deleteTitle": "Delete the event?",
   "event.restoreHint": "If you put it back on, the players are told again.",
   "events.cancelled": "Called off",
   "error.event_cancelled": "The event has been called off, you cannot answer.",
