@@ -45,7 +45,7 @@ await new Promise((ok) => server.listen(0, '127.0.0.1', ok))
 const origin = `http://127.0.0.1:${server.address().port}`
 
 // 3. The fake backend: tables with simple filters, functions, sign in, storage.
-function filterRows(rows, params) {
+function filterRows(rows, params, table) {
   let list = rows.slice()
   for (const [key, raw] of params) {
     if (['select', 'order', 'limit', 'offset', 'columns', 'on_conflict'].includes(key) || key.includes('.')) continue
@@ -75,7 +75,43 @@ function filterRows(rows, params) {
   }
   const limit = Number(params.get('limit'))
   if (limit) list = list.slice(0, limit)
-  return list
+  return embed(list, table, params.get('select') ?? '')
+}
+
+// Embedded rows of a select such as "*, event_groups(group_id)" or "profiles:author_id(first_name)":
+// a child table is found by its "<table>_id" column, a parent table by the named column or "<name>_id".
+const one = (name) => name.replace(/s$/, '')
+function splitTop(text) {
+  const parts = []
+  let depth = 0
+  let current = ''
+  for (const ch of text) {
+    if (ch === '(') depth++
+    if (ch === ')') depth--
+    if (ch === ',' && depth === 0) { parts.push(current.trim()); current = '' } else current += ch
+  }
+  if (current.trim()) parts.push(current.trim())
+  return parts
+}
+function embed(rows, table, select) {
+  const wanted = splitTop(select).map((part) => part.match(/^(?:(\w+):)?(\w+)(?:!\w+)?\((.*)\)$/)).filter(Boolean)
+  if (!wanted.length) return rows
+  const pick = (row, inner) => (row ? Object.fromEntries(inner === '*' ? Object.entries(row) : inner.split(',').map((c) => [c.trim(), row[c.trim()]])) : null)
+  return rows.map((row) => {
+    const copy = { ...row }
+    for (const [, alias, name, inner] of wanted) {
+      if (alias) {
+        // "profiles:author_id(...)": the output name is the table, the part before "(" is the column that points at it.
+        copy[alias] = pick((fixtures.tables[alias] ?? []).find((t) => t.id === row[name]), inner)
+        continue
+      }
+      const target = fixtures.tables[name] ?? []
+      const childColumn = `${one(table)}_id`
+      if (target[0] && childColumn in target[0]) copy[name] = target.filter((t) => t[childColumn] === row.id).map((t) => pick(t, inner))
+      else copy[name] = pick(target.find((t) => t.id === row[name === 'profiles' ? 'user_id' : `${one(name)}_id`]), inner)
+    }
+    return copy
+  })
 }
 
 async function answer(route) {
@@ -100,7 +136,7 @@ async function answer(route) {
   if (p.startsWith('/rest/v1/')) {
     const table = p.split('/').pop()
     if (req.method() !== 'GET' && req.method() !== 'HEAD') return json([], req.method() === 'POST' ? 201 : 200)
-    const rows = filterRows(fixtures.tables[table] ?? [], url.searchParams)
+    const rows = filterRows(fixtures.tables[table] ?? [], url.searchParams, table)
     const headers = { 'content-range': `0-${Math.max(rows.length - 1, 0)}/${rows.length}` }
     if (req.method() === 'HEAD') return route.fulfill({ status: 200, headers: { ...headers, 'access-control-allow-origin': '*', 'access-control-expose-headers': 'content-range' }, body: '' })
     if ((req.headers()['accept'] ?? '').includes('vnd.pgrst.object')) {
@@ -188,19 +224,32 @@ for (const width of [375, 1280]) {
     const session = { access_token: 'sample', refresh_token: 'sample', token_type: 'bearer', expires_in: 3600, expires_at: Math.floor(Date.now() / 1000) + 36000, user: { id: me, email, aud: 'authenticated', role: 'authenticated', app_metadata: {}, user_metadata: {} } }
     localStorage.setItem('sb-mock-auth-token', JSON.stringify(session))
   }, [ME, fixtures.me.email])
+  // The login page is opened in a fresh context with no saved session. In the shared one the sign in
+  // stored by the other pages would send it straight to the home page.
+  const fresh = await browser.newContext({ viewport: { width, height: width === 375 ? 812 : 800 }, serviceWorkers: 'block', locale: 'it-IT', timezoneId: 'Europe/Rome' })
+  await fresh.route(`${API}/**`, answer)
   for (const [name, path, kind] of ROUTES) {
-    const page = await context.newPage()
+    const page = await (kind === 'auth' ? fresh : context).newPage()
     const errors = []
-    page.on('pageerror', (e) => errors.push(String(e.message)))
+    page.on('pageerror', (e) => errors.push(String(e.stack || e.message).split('\n').slice(0, 3).join(' | ')))
     page.on('console', (m) => { if (m.type() === 'error' && !/Failed to load resource|status of 40[46]/.test(m.text())) errors.push(m.text()) })
     await page.goto(origin + path)
     await page.waitForLoadState('networkidle').catch(() => {})
     await page.waitForTimeout(400)
     const m = await page.evaluate(measure)
-    await page.screenshot({ path: join(out, String(width), `${name}.png`), fullPage: true })
+    if (kind === 'auth') {
+      const shown = await page.evaluate(() => ({ path: location.pathname, password: Boolean(document.querySelector('input[type=password]')), email: Boolean(document.querySelector('input[type=email]')) }))
+      if (shown.path !== path || !shown.password || !shown.email) m.problems.push(`the page does not show the sign in form: opened ${path}, ended on ${shown.path}, email field ${shown.email}, password field ${shown.password}`)
+    }
+    // The whole page in one picture. The window is made as tall as the page, so a bar fixed to the
+    // bottom of the window (the phone tab bar) stays at the bottom instead of cutting across the middle.
+    const height = await page.evaluate(() => document.documentElement.scrollHeight)
+    await page.setViewportSize({ width, height: Math.min(Math.max(height, 800), 6000) })
+    await page.screenshot({ path: join(out, String(width), `${name}.png`) })
     report.push({ width, name, path, kind: kind ?? 'page', ...m, errors })
     await page.close()
   }
+  await fresh.close()
   await context.close()
 }
 // 6b. Interactions that a screenshot cannot prove, at computer width.
