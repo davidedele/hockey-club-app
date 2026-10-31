@@ -109,9 +109,11 @@ const SECTION: Record<string, MessageKey> = {
 function Crumbs() {
   const { pathname } = useLocation()
   const club = useClub()
-  const leaf = useCrumbLeaf()
+  const rawLeaf = useCrumbLeaf()
   const first = pathname.split('/')[1] ?? ''
   const key = SECTION[first]
+  // A page that has the same name as its section is not named twice.
+  const leaf = key && rawLeaf === t(key) ? '' : rawLeaf
   return (
     <nav className="crumbs" aria-label={t('crumb.label')}>
       <ol>
