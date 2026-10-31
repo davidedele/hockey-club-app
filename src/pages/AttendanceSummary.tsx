@@ -167,7 +167,7 @@ export default function AttendanceSummary() {
                       const v = c.get(r)
                       return <td key={c.key + c.group} className={`${cellClass(c, i)}${v === 0 ? ' zero' : ''}`}>{v === 0 ? '\u2013' : v}</td>
                     })}
-                    <td className="g-percent g-start">{percent(r) === null ? '\u2013' : `${percent(r)}%`}</td>
+                    <td className="g-percent g-start">{percent(r) ? `${percent(r)}%` : '\u2013'}</td>
                   </tr>
                 ))}
                 {shown.length === 0 && <tr><td colSpan={COLUMNS.length + 1} className="hint">{t('cal.none')}</td></tr>}

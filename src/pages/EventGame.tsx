@@ -13,6 +13,7 @@ const FIELDS: { key: keyof Draft; label: 'stats.colGoals' | 'stats.colAssists' |
   { key: 'saves', label: 'stats.colSaves', goalie: true },
 ]
 const RATINGS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+const DASH = '\u2013'
 const decimal = new Intl.NumberFormat(locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 })
 const name = (r: GameResultRow) => `${r.last_name} ${r.first_name}`
 const isGoalie = (r: GameResultRow) => r.position === 'goalie' || r.shots_against !== null
@@ -63,7 +64,8 @@ export default function EventGame({ eventId, myId, isStaff, started, over, reloa
   const hasNumbers = played.some((r) => r.goals !== null || r.shots_against !== null)
   const hasGoalieNumbers = played.some((r) => r.shots_against !== null)
   // Staff store only the players with something to record; once numbers exist, the others played with zero.
-  const shown = (v: number | null) => v ?? (hasNumbers ? 0 : '')
+  // An empty or zero value is an en dash in a table (docs/UI_RULES.md, rule 4.3).
+  const shown = (v: number | null) => (v ? v : DASH)
   const votes = results.reduce((n, r) => n + (r.mvp_votes ?? 0), 0)
   const podium = results.filter((r) => (r.mvp_votes ?? 0) > 0).sort((a, b) => (b.mvp_votes ?? 0) - (a.mvp_votes ?? 0)).slice(0, 3)
   const top = podium[0]?.mvp_votes ?? 0
@@ -206,10 +208,10 @@ export default function EventGame({ eventId, myId, isStaff, started, over, reloa
                     <td>{shown(r.goals)}</td>
                     <td>{shown(r.assists)}</td>
                     <td>{shown(r.penalty_minutes)}</td>
-                    {hasGoalieNumbers && <td>{r.shots_against !== null ? t('game.savesValue', { saves: String(r.saves), shots: String(r.shots_against) }) : ''}</td>}
-                    {visible && <td>{r.rating_avg === null ? '' : decimal.format(r.rating_avg)}</td>}
-                    {visible && <td>{r.mvp_votes || ''}</td>}
-                    {myVote !== null && <td>{r.my_rating ?? ''}</td>}
+                    {hasGoalieNumbers && <td>{r.shots_against !== null ? t('game.savesValue', { saves: String(r.saves), shots: String(r.shots_against) }) : DASH}</td>}
+                    {visible && <td>{r.rating_avg === null ? DASH : decimal.format(r.rating_avg)}</td>}
+                    {visible && <td>{r.mvp_votes || DASH}</td>}
+                    {myVote !== null && <td>{r.my_rating ?? DASH}</td>}
                   </tr>
                 ))}
               </tbody>
