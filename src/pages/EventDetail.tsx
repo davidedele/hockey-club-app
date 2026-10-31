@@ -5,6 +5,7 @@ import EventGame from './EventGame'
 import EventThread from '../components/EventThread'
 import Lineup from './Lineup'
 import Plan from './Plan'
+import { ConfirmDialog } from '../components/ConfirmAction'
 import { jerseyName, useClub } from '../lib/club'
 import { useCrumb } from '../lib/crumb'
 import { useSession } from '../lib/session'
@@ -36,6 +37,7 @@ export default function EventDetail() {
   const [scoreUs, setScoreUs] = useState('')
   const [scoreThem, setScoreThem] = useState('')
   const [confirming, setConfirming] = useState(false)
+  const [cancelling, setCancelling] = useState(false)
   // The actions menu closes when one of its actions is chosen.
   const menu = useRef<HTMLDetailsElement>(null)
   const closeMenu = () => menu.current?.removeAttribute('open')
@@ -318,7 +320,7 @@ export default function EventDetail() {
               </summary>
               <div className="ev-menu-list">
                 <Link to={`/events/${id}/edit`}>{t('event.edit')}</Link>
-                <button disabled={busy} onClick={() => { closeMenu(); void setCancelled(!cancelled) }}>{cancelled ? t('event.restore') : t('event.cancel')}</button>
+                <button disabled={busy} onClick={() => { closeMenu(); if (cancelled) void setCancelled(false); else setCancelling(true) }}>{cancelled ? t('event.restore') : t('event.cancel')}</button>
                 <button className="danger-text" disabled={busy} onClick={() => { closeMenu(); setConfirming(true) }}>{t('event.deleteStart')}</button>
               </div>
             </details>
@@ -351,7 +353,15 @@ export default function EventDetail() {
       </header>
 
       {error && <p className="error" role="alert">{error}</p>}
-      {cancelled && <p className="box cancelled-note" role="status">{t('event.cancelledBanner')}</p>}
+      {cancelled && <p className="box cancelled-note" role="status">{t('event.cancelledBanner')}{isStaff && ` ${t('event.restoreHint')}`}</p>}
+      <ConfirmDialog
+        open={cancelling}
+        title={t('event.cancelTitle')}
+        body={t('event.cancelBody', { title: event.title, date: dayLabel })}
+        choices={[{ label: t('event.cancelGo'), onChoose: () => void setCancelled(true) }]}
+        busy={busy}
+        onClose={() => setCancelling(false)}
+      />
       {confirming && (
         <div className="box" role="alertdialog" aria-label={t('event.delete')}>
           <p>{t('event.deleteConfirm', { title: event.title, date: dayLabel })}</p>
