@@ -1,3 +1,4 @@
+import { readableInk } from '../lib/colour'
 import { useEffect, useMemo, useState, type CSSProperties } from 'react'
 import PageHeader from '../components/PageHeader'
 import { Link, useSearchParams } from 'react-router-dom'
@@ -71,7 +72,7 @@ export default function Stats() {
   const goalies = rows.filter((r) => r.position === 'goalie')
   const picked = groups.find((g) => g.id === group)
   const colours = picked?.game_dark && picked.game_light
-    ? ({ '--team-dark': picked.game_dark, '--team-light': picked.game_light } as CSSProperties)
+    ? ({ '--team-dark': picked.game_dark, '--team-light': picked.game_light, '--band-ink': readableInk(picked.game_dark) } as CSSProperties)
     : undefined
 
   function who(r: SeasonStatRow) {

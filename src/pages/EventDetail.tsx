@@ -1,3 +1,4 @@
+import { readableInk } from '../lib/colour'
 import { useGroupFilter } from '../lib/groupfilter'
 import { personName } from '../lib/names'
 import { PageSkeleton } from '../components/Skeleton'
@@ -270,7 +271,7 @@ export default function EventDetail() {
 
   // A game uses the colours of its first group that has its own; otherwise the club colours.
   const teamGroup = event.event_groups.map((x) => groups.find((y) => y.id === x.group_id)).find((y) => y?.game_dark && y?.game_light)
-  const bandStyle = game && teamGroup ? ({ '--team-dark': teamGroup.game_dark, '--team-light': teamGroup.game_light } as CSSProperties) : undefined
+  const bandStyle = game && teamGroup ? ({ '--team-dark': teamGroup.game_dark, '--team-light': teamGroup.game_light, '--band-ink': readableInk(teamGroup.game_dark) } as CSSProperties) : undefined
   const clubName = club.name || t('app.name')
   const away = event.home_away === 'away'
   const sides = game && event.opponent ? (away ? [event.opponent, clubName] : [clubName, event.opponent]) : null
@@ -457,7 +458,7 @@ export default function EventDetail() {
               {!over && !cancelled && <a className="button secondary small" href={whatsappLink(shareText)} target="_blank" rel="noopener noreferrer">{t('share.whatsapp')}</a>}
               {hasScore && <a className="button secondary small" href={whatsappLink(resultText)} target="_blank" rel="noopener noreferrer">{t('share.result')}</a>}
             </div>
-            {!cancelled && isStaff && <p className="hint">{t('event.cancelHint')}</p>}
+            {!cancelled && !over && isStaff && <p className="hint">{t('event.cancelHint')}</p>}
           </div>
         </div>
       )}

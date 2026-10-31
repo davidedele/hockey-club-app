@@ -1,3 +1,4 @@
+import { readableInk } from '../lib/colour'
 import { useCallback, useEffect, useMemo, useState, type CSSProperties } from 'react'
 import { Link } from 'react-router-dom'
 import NextPanel from '../components/NextPanel'
@@ -116,7 +117,7 @@ export default function Home() {
   const groupName = (e: EventRow) => e.event_groups.map((x) => groups.find((g) => g.id === x.group_id)?.name).filter(Boolean).join(', ')
   const colours = (e: EventRow): CSSProperties | undefined => {
     const g = e.event_groups.map((x) => groups.find((y) => y.id === x.group_id)).find((y) => y?.game_dark && y?.game_light)
-    return g ? ({ '--team-dark': g.game_dark, '--team-light': g.game_light } as CSSProperties) : undefined
+    return g ? ({ '--team-dark': g.game_dark, '--team-light': g.game_light, '--band-ink': readableInk(g.game_dark) } as CSSProperties) : undefined
   }
   const certs = isStaff ? [...new Set(docs.map((d) => d.user_id))].map((id) => certificateState(docs.find((d) => d.user_id === id)).level) : []
   const certSoon = certs.filter((l) => l === 'soon').length

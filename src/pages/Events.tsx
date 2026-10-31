@@ -1,3 +1,4 @@
+import { readableInk } from '../lib/colour'
 import { useCallback, useEffect, useMemo, useState, type CSSProperties } from 'react'
 import { Link } from 'react-router-dom'
 import { errorText, t } from '../i18n'
@@ -106,7 +107,7 @@ export default function Events() {
   // A game uses the colours of its first group that has its own; otherwise the club colours.
   const teamColours = (e: EventRow): CSSProperties | undefined => {
     const g = e.event_groups.map((x) => groups.find((y) => y.id === x.group_id)).find((y) => y?.game_dark && y?.game_light)
-    return g ? ({ '--team-dark': g.game_dark, '--team-light': g.game_light } as CSSProperties) : undefined
+    return g ? ({ '--team-dark': g.game_dark, '--team-light': g.game_light, '--band-ink': readableInk(g.game_dark) } as CSSProperties) : undefined
   }
   const groupsOf = (e: EventRow) => e.event_groups.map((x) => groupName.get(x.group_id)).filter(Boolean).join(', ')
 

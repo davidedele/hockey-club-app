@@ -234,7 +234,7 @@ button.icon svg { width: 22px; height: 22px; }
 .stripes { display: grid; grid-template-columns: repeat(6, 1fr); height: 10px; }
 .stripes span:nth-child(odd) { background: var(--team-light); }
 
-.next.game { background: var(--team-dark); border-color: var(--team-dark); color: #fff; }
+.next.game { background: var(--team-dark); border-color: var(--team-dark); color: var(--band-ink, #fff); }
 .next.game .label, .next.game .until, .next.game .pair dt, .next.game .foot { color: rgba(255, 255, 255, .75); }
 .next.game .label strong, .next.game .big, .next.game .foot .count, .next.game a.open { color: var(--team-light); }
 .next.game .pair { border-top-color: rgba(255, 255, 255, .16); }
@@ -390,7 +390,7 @@ label[for] + select { margin-bottom: 1rem; }
   .page.wide { max-width: 76rem; }
   h1 { font-size: 1.75rem; }
 
-  .club-banner { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem; padding: 1rem 1.25rem; border-radius: var(--radius); background: var(--team-dark); color: #fff; }
+  .club-banner { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem; padding: 1rem 1.25rem; border-radius: var(--radius); background: var(--team-dark); color: var(--band-ink, #fff); }
   .club-banner .crest { width: 56px; height: 52px; }
   .cb-title { flex: 1 1 12rem; min-width: 0; }
   .cb-title h1 { margin: 0; color: #fff; font-size: 1.75rem; }
@@ -444,7 +444,7 @@ button.secondary { background: var(--surface); color: var(--accent); border: 1px
 .stats-filters .chips { margin-bottom: 0; }
 .stats-filters label[for] + select { margin-bottom: .5rem; }
 .season-name { align-self: center; margin: 0 0 .5rem; font-weight: 500; }
-.record { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: .75rem 1rem; margin: .5rem 0 0; padding: 1rem 1.25rem; background: var(--team-dark); color: #fff; border-radius: var(--radius); }
+.record { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: .75rem 1rem; margin: .5rem 0 0; padding: 1rem 1.25rem; background: var(--team-dark); color: var(--band-ink, #fff); border-radius: var(--radius); }
 .record dt { font-size: .875rem; color: rgba(255, 255, 255, .72); }
 .record dd { margin: 0; font: 600 2rem/1.1 var(--font-display); color: var(--team-light); font-variant-numeric: tabular-nums; }
 @media (max-width: 767.98px) {
@@ -647,7 +647,7 @@ a.back::before { content: ''; width: 8px; height: 8px; margin-right: .5rem; bord
 .ev-step.off { opacity: .4; }
 
 .ev-band { margin-bottom: 1rem; padding: 1rem 1.25rem 1.25rem; border-radius: var(--radius); background: var(--accent); color: var(--on-accent); }
-.ev-band.game { background: var(--team-dark); color: #fff; }
+.ev-band.game { background: var(--team-dark); color: var(--band-ink, #fff); }
 .ev-band.cancelled { opacity: .7; }
 .ev-band-top { display: flex; align-items: center; gap: .75rem; flex-wrap: nowrap; }
 .ev-band-top p { margin: 0; }
@@ -1084,7 +1084,7 @@ a.inline-action { display: inline-flex; align-items: center; min-height: 44px; }
 label.button.secondary, a.button.secondary { background: var(--surface); color: var(--accent); border: 1px solid var(--line-strong); }
 
 /* League game details */
-.scoreboard { margin: 0 0 1.5rem; padding: 1.25rem 1.5rem; text-align: center; color: #fff; background: var(--team-dark); border-radius: var(--radius); }
+.scoreboard { margin: 0 0 1.5rem; padding: 1.25rem 1.5rem; text-align: center; color: var(--band-ink, #fff); background: var(--team-dark); border-radius: var(--radius); }
 .scoreboard .sb-meta { margin: 0; color: rgba(255, 255, 255, .78); font-size: .875rem; }
 .sb-row { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 1rem; margin: .75rem 0; }
 .sb-team { font: 600 1.25rem/1.2 var(--font-display); overflow-wrap: anywhere; }
