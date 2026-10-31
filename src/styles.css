@@ -747,7 +747,7 @@ details > summary { display: flex; align-items: center; min-height: 44px; font-w
 .bell > summary { list-style: none; position: relative; display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; color: var(--ink); cursor: pointer; }
 .bell > summary::-webkit-details-marker { display: none; }
 .bell svg { width: 22px; height: 22px; }
-.bell-count { position: absolute; top: 2px; right: 2px; min-width: 18px; height: 18px; padding: 0 4px; border-radius: 9px; background: var(--now); color: #fff; font: 600 .6875rem/18px var(--font-body); text-align: center; }
+.bell-count { position: absolute; top: 2px; right: 2px; min-width: 18px; height: 18px; padding: 0 4px; border-radius: 9px; background: var(--now); color: var(--on-signal); font: 600 .6875rem/18px var(--font-body); text-align: center; }
 .bell-list { position: absolute; right: 0; top: calc(100% + .25rem); z-index: 6; width: min(20rem, calc(100vw - 2rem)); padding: .5rem; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: 0 6px 24px rgba(14, 34, 54, .12); }
 .bell-list h2 { margin: 0; padding: .25rem .5rem; font-size: 1rem; }
 .bell-list a { display: flex; align-items: center; min-height: 44px; padding: 0 .5rem; border-radius: 8px; color: var(--ink); text-decoration: none; }
@@ -1159,3 +1159,9 @@ input[type="color"] { padding: .25rem; }
 .att-table thead th { white-space: normal; }
 .chip-skel { display: inline-block; width: 4.5rem; height: 44px; border-radius: 999px; }
 .crumbs a { display: inline-flex; align-items: center; min-height: 44px; }
+
+/* Text on the red, green and grey signal colours: white on the dark theme's light tones fails contrast, so the dark theme uses dark text. */
+:root { --on-signal: #ffffff; }
+@media (prefers-color-scheme: dark) {
+  :root { --on-signal: #0b131c; }
+}
