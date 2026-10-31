@@ -68,6 +68,11 @@ label + .field-error { margin-top: -.625rem; }
 .brand svg { color: var(--accent); }
 
 /* Forms */
+/* Date and time fields: iPhone Safari gives them a width of their own that ignores width: 100%, so they must be allowed to shrink. */
+input[type="date"], input[type="time"], input[type="datetime-local"] { min-width: 0; max-width: 100%; -webkit-appearance: none; appearance: none; }
+input[type="date"]::-webkit-date-and-time-value, input[type="time"]::-webkit-date-and-time-value { text-align: left; min-width: 0; }
+input[type="date"]::-webkit-datetime-edit, input[type="time"]::-webkit-datetime-edit { padding: 0; }
+form label, .when-grid > *, .absence-dates > * { min-width: 0; }
 label { display: block; margin-bottom: 1rem; font-weight: 500; }
 .field { margin-bottom: 1rem; }
 .field .label { display: block; font-weight: 500; margin-bottom: .375rem; }
@@ -477,10 +482,10 @@ button.secondary { background: var(--surface); color: var(--accent); border: 1px
 .statgrid label { margin: 0; font-size: .875rem; color: var(--muted); }
 .statgrid input { color: var(--ink); font-variant-numeric: tabular-nums; }
 
-/* Absences: the two dates side by side */
+/* Absences: the two dates one under the other on phones (never two date fields on one row there), side by side from 600px */
 .absence-form { margin-top: 1rem; }
-.absence-dates { display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; }
-.absence-dates label { margin-bottom: .75rem; }
+.absence-dates { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0 1rem; }
+@media (min-width: 600px) { .absence-dates { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .list li.row > span { min-width: 0; }
 .absence-reason { display: block; }
 

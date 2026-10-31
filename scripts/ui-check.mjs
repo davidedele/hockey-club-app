@@ -184,6 +184,12 @@ function measure() {
   const doc = document.documentElement
   const problems = []
   if (doc.scrollWidth > doc.clientWidth + 1) problems.push(`sideways scroll: page is ${doc.scrollWidth}px wide in a ${doc.clientWidth}px window`)
+  // No field or control reaches past the window edge, even when an ancestor hides the overflow (iPhone date fields).
+  for (const el of document.querySelectorAll('main input, main select, main textarea, main button, main label')) {
+    if (!visible(el) || el.closest('.scroll, .table-wrap, .chips, .days')) continue
+    const r = el.getBoundingClientRect()
+    if (r.right > doc.clientWidth + 1 || r.left < -1) problems.push(`box outside the window: ${el.tagName.toLowerCase()} "${name(el)}" spans ${Math.round(r.left)} to ${Math.round(r.right)} in a ${doc.clientWidth}px window`)
+  }
   // Controls: 44 pixels tall. Links inside running text are exempt.
   for (const el of document.querySelectorAll('main button, main input:not([type=checkbox]):not([type=radio]):not([type=file]):not([type=color]), main select, main summary, main [role=button], .side button, .top button, .top a, .side select')) {
     if (!visible(el) || el.closest('.sr-only')) continue
