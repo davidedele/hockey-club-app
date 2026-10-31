@@ -1,3 +1,4 @@
+import { personName } from '../lib/names'
 import { useCallback, useEffect, useRef, useState, type ChangeEvent, type FormEvent } from 'react'
 import ConfirmAction from '../components/ConfirmAction'
 import { Navigate, useParams } from 'react-router-dom'
@@ -69,7 +70,7 @@ export default function Documents() {
   const consent = docs.find((x) => x.kind === 'privacy_consent')
   const certNow = certificateState(cert)
   const consentNow = consentState(consent, club.privacyNoticePath)
-  const name = person ? `${person.first_name} ${person.last_name}` : ''
+  const name = person ? personName(person) : ''
 
   // Every change reports its real outcome, then the page and the banner reload.
   async function finish(problem: string, done = '') {

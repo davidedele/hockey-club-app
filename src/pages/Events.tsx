@@ -1,3 +1,4 @@
+import { readableInk } from '../lib/colour'
 import { useCallback, useEffect, useMemo, useState, type CSSProperties } from 'react'
 import { Link } from 'react-router-dom'
 import { errorText, t } from '../i18n'
@@ -40,6 +41,7 @@ export default function Events() {
   const [records, setRecords] = useState<Map<string, string>>(new Map())
   const [memberCount, setMemberCount] = useState<number | null>(null)
   const [busy, setBusy] = useState('')
+  const [savedFor, setSavedFor] = useState('')
   const [error, setError] = useState('')
 
   const load = useCallback(async () => {
@@ -105,7 +107,7 @@ export default function Events() {
   // A game uses the colours of its first group that has its own; otherwise the club colours.
   const teamColours = (e: EventRow): CSSProperties | undefined => {
     const g = e.event_groups.map((x) => groups.find((y) => y.id === x.group_id)).find((y) => y?.game_dark && y?.game_light)
-    return g ? ({ '--team-dark': g.game_dark, '--team-light': g.game_light } as CSSProperties) : undefined
+    return g ? ({ '--team-dark': g.game_dark, '--team-light': g.game_light, '--band-ink': readableInk(g.game_dark) } as CSSProperties) : undefined
   }
   const groupsOf = (e: EventRow) => e.event_groups.map((x) => groupName.get(x.group_id)).filter(Boolean).join(', ')
 
@@ -117,6 +119,9 @@ export default function Events() {
     else {
       setAnswers(new Map(answers).set(e.id, value))
       window.dispatchEvent(new Event('attendance-changed'))
+      // A short confirmation next to the event that was answered.
+      setSavedFor(e.id)
+      window.setTimeout(() => setSavedFor((current) => (current === e.id ? '' : current)), 4000)
     }
     await load()
     setBusy('')
@@ -153,7 +158,7 @@ export default function Events() {
           </div>
           <div>
             <div className="ti">{title}</div>
-            <div className="m">{e.cancelled_at && <span className="tag">{t('events.cancelled')} </span>}{meta || groupsOf(e)}</div>
+            <div className="m">{e.cancelled_at && <span className="tag">{t('events.cancelled')} </span>}{meta || groupsOf(e)}{savedFor === e.id && <span className="tag todo" role="status"> · {t('events.savedShort')}</span>}</div>
           </div>
         </Link>
         {!over && canAnswer(e) ? (
@@ -187,6 +192,7 @@ export default function Events() {
         ) : mine ? (
           <span className="state">{t(mine === 'present' ? 'answer.present' : 'answer.absent')}</span>
         ) : null}
+        {savedFor === e.id && <span className="m" role="status">{t('events.savedShort')}</span>}
       </article>
     )
   }

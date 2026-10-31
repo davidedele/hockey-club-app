@@ -5,7 +5,7 @@ set -euo pipefail
 
 root="$(cd "$(dirname "$0")/.." && pwd)"
 # PG_BIN can point at any Postgres bin folder. Otherwise look in the usual Linux and Homebrew places.
-bin="${PG_BIN:-$(ls -d /usr/lib/postgresql/*/bin /opt/homebrew/opt/postgresql@*/bin /usr/local/opt/postgresql@*/bin 2>/dev/null | sort -V | tail -1)}"
+bin="${PG_BIN:-$(ls -d /usr/lib/postgresql/*/bin /opt/homebrew/opt/postgresql@*/bin /usr/local/opt/postgresql@*/bin 2>/dev/null | sort -V | tail -1 || true)}"
 [ -x "$bin/initdb" ] || { echo "Postgres server binaries not found" >&2; exit 1; }
 
 work="$(mktemp -d)"

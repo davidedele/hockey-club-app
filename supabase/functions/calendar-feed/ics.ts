@@ -25,7 +25,7 @@ export const words = {
 
 // Backslash, semicolon, comma and line breaks must be escaped inside a text value.
 export function escapeText(s: string): string {
-  return s.replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\r?\n/g, '\\n')
+  return s.replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\r\n|\r|\n/g, '\\n')
 }
 
 // Lines longer than 75 bytes are folded: a line break and one space. Never cut inside a character.

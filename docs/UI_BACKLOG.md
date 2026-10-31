@@ -15,7 +15,7 @@ Status words: Open, In progress, Done (PR number), Decided (waiting for Davide),
 7. Campionato: open a past game to see its details (scorers, penalties) from the league website. Status: Done (PR 37).
 8. Campionato: "Solo le nostre" is not a standard label. Status: Done (PR 37).
 9. Presenze: the search field is taller than the selects, the table is not clear, coloured cells reduce readability (keep colour, fix readability), the intro text is not professional. Status: Done (PR 37).
-10. Texts: "un mese prima" and "un mese dopo" should be more professional ("il mese precedente", "il mese successivo", or exact days). Status: Done (PR 37).
+10. Texts: "un mese prima" and "un mese dopo" should be more professional ("il mese precedente", "il mese successivo", or exact days). Status: Done (PR 37), but the attendance grid still said "Mese prima" and "Mese dopo"; finished in branch `claude/charming-ride-yo6gpc` (fix brief B1).
 11. Impostazioni: the cards are not how settings are usually shown; use the standard convention. Status: Done (PR 37).
 12. Impostazioni del club: empty space at the top, an underlined link to go back, content stuck to the left, no grouping (Nome e logo; Colori del club e delle maglie; Documenti), long scrolling. Status: Done (PR 37).
 13. Gruppi: same back link and alignment problems. Status: Done (PR 37).
@@ -25,12 +25,26 @@ Status words: Open, In progress, Done (PR number), Decided (waiting for Davide),
 17. Events: "Da rispondere (5)" stays 5 after answering because it shows the next five; the label is wrong. Status: Done (PR 37).
 18. Keep track of everything and add a check that runs on every change. Status: Done in this branch (`docs/UI_RULES.md`, this file, `scripts/ui-check.mjs`).
 
+## Test of 31 October 2026 (interface test in a browser, fix brief), all in branch `claude/charming-ride-yo6gpc`
+
+1. A1 Cancelling an event asks first, in the confirmation window. Status: Done.
+2. A2 Deleting an event uses the same window, with the choice for a series inside it. Status: Done.
+3. A3 Deleting an announcement or a drill names it in the window. Status: Done.
+4. A4 Tables wider than their card show a shadow and a hint (`TableScroll`); the attendance and members tables fit at 1280 pixels. Status: Done.
+5. A5 After the event, Presenti means the people recorded as on time or late; the number appears once. Status: Done (needs migration 0035 for players).
+6. A6 Scores in one order on every screen. Status: Done (decision 82).
+7. B1 grid month buttons, B2 en dash for zero and empty values, B3 breadcrumb without the repeated name, B5 grey placeholders while loading, B6 44 pixel links, B7 the Da rispondere heading says what it counts, B8 surname first everywhere, B9 saved note and vote hint, B10 the day in the bell, B11 menu button on the first row, B12 the new event opens. Status: Done.
+8. B4 Groups stay chips; rule 2.3 changed. Status: Decided (decision 83).
+9. B13 The browser's own validation message for a missing date or time may be English on a phone. Status: Open, to be looked at on a real Italian phone before anything is replaced.
+10. B14 The old test members with digits in their names. Status: Open, a data fix on the test project, not code.
+11. C1 to C3 Dark mode: bell badge, result circles and today mark use dark text on the light signal colours; the training band is a deep blue with white text. Status: Done.
+
 ## Earlier reviews
 
 1. The banner says "Hai 1 evento senza risposta" while the events panel lists five: different time spans. Status: Done (PR 37).
 2. The Campionato page has its own group chips without Tutti, separate from the global selector. Status: Done (PR 37).
-3. New event form: date, times and meetup stacked in one narrow column; the global group is not preselected everywhere. Status: Open.
-4. Event page: the event strip does not follow the chosen group. Status: Open.
+3. New event form: date, times and meetup stacked in one narrow column; the global group is not preselected everywhere. Status: Done (branch `claude/charming-ride-yo6gpc`): day and times side by side, and the chosen group is preselected in the event, announcement and invite forms.
+4. Event page: the event strip does not follow the chosen group. Status: Done (branch `claude/charming-ride-yo6gpc`).
 5. League names are stored with a simpler capitalisation than the app shows. Status: Open.
 6. A real PDF certificate upload has not been confirmed. Status: Open (Davide to try).
 7. Destructive actions without confirmation (revoke invite, remove logo, remove certificate file, withdraw consent, remove photo), found by the UX audit of 31 October. Status: Done (PR 37).

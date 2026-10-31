@@ -1,3 +1,4 @@
+import TableScroll from './TableScroll'
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { useGroupFilter } from '../lib/groupfilter'
@@ -245,7 +246,7 @@ export default function CalendarPanel(props: {
               {scopeButton('past', t('cal.scopePast'))}
               {scopeButton('all', t('cal.scopeAll'))}
             </div>
-            <div className="table-wrap">
+            <TableScroll variant="table-wrap">
               <table className="list-table">
                 <thead>
                   <tr>
@@ -271,7 +272,7 @@ export default function CalendarPanel(props: {
                   {pages.length === 0 && <tr><td colSpan={6} className="hint">{t('cal.none')}</td></tr>}
                 </tbody>
               </table>
-            </div>
+            </TableScroll>
             <TablePager total={listRows.length} page={page} size={size} onPage={setPage} onSize={(n) => { setSize(n); setPage(1) }} />
           </>
         )}

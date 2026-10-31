@@ -1,3 +1,5 @@
+import { useGroupFilter } from '../lib/groupfilter'
+import { personName } from '../lib/names'
 import { useCallback, useEffect, useState } from 'react'
 import ConfirmAction from '../components/ConfirmAction'
 import PageHeader from '../components/PageHeader'
@@ -22,6 +24,7 @@ export default function Invites() {
   const { isStaff, isBoard } = useSession()
   const [groups, setGroups] = useState<Group[]>([])
   const [invites, setInvites] = useState<Invite[]>([])
+  const { groupId: chosenGroup } = useGroupFilter()
   const [groupId, setGroupId] = useState<number | ''>('')
   const [link, setLink] = useState('')
   const [linkIsTeam, setLinkIsTeam] = useState(false)
@@ -43,9 +46,9 @@ export default function Invites() {
     const ids = [...new Set(list2.map((x) => x.used_by).filter((x): x is string => Boolean(x)))]
     if (ids.length) {
       const p = await supabase.from('profiles').select('id, first_name, last_name').in('id', ids)
-      setNames(new Map(((p.data ?? []) as { id: string; first_name: string; last_name: string }[]).map((x) => [x.id, `${x.first_name} ${x.last_name}`])))
+      setNames(new Map(((p.data ?? []) as { id: string; first_name: string; last_name: string }[]).map((x) => [x.id, personName(x)])))
     }
-    setGroupId((current) => (current === '' && list[0] ? list[0].id : current))
+    setGroupId((current) => (current === '' ? (chosenGroup !== null && list.some((g) => g.id === chosenGroup) ? chosenGroup : list[0]?.id ?? '') : current))
   }, [])
 
   useEffect(() => {

@@ -1,3 +1,4 @@
+import TableScroll from '../components/TableScroll'
 import { useEffect, useMemo, useState } from 'react'
 import PageHeader from '../components/PageHeader'
 import { Link, Navigate } from 'react-router-dom'
@@ -79,7 +80,7 @@ export default function IceHours() {
   function table(which: 'used' | 'cancelled') {
     const sums = which === 'used' ? used : cancelled
     return (
-      <div className="scroll">
+      <TableScroll>
         <table className="stats-table">
           <thead>
             <tr>
@@ -115,7 +116,7 @@ export default function IceHours() {
             )}
           </tfoot>
         </table>
-      </div>
+      </TableScroll>
     )
   }
 

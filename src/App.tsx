@@ -1,3 +1,5 @@
+import { personName } from './lib/names'
+import { PageSkeleton } from './components/Skeleton'
 import { Link, NavLink, Navigate, Outlet, Route, Routes, useLocation } from 'react-router-dom'
 import { t, type MessageKey } from './i18n'
 import { isConfigured } from './lib/supabase'
@@ -109,9 +111,11 @@ const SECTION: Record<string, MessageKey> = {
 function Crumbs() {
   const { pathname } = useLocation()
   const club = useClub()
-  const leaf = useCrumbLeaf()
+  const rawLeaf = useCrumbLeaf()
   const first = pathname.split('/')[1] ?? ''
   const key = SECTION[first]
+  // A page that has the same name as its section is not named twice.
+  const leaf = key && rawLeaf === t(key) ? '' : rawLeaf
   return (
     <nav className="crumbs" aria-label={t('crumb.label')}>
       <ol>
@@ -131,14 +135,14 @@ function Protected() {
   const { pathname } = useLocation()
   const note = useNotifications()
   const { groups } = useGroupFilter()
-  if (loading) return <p className="center">{t('common.loading')}</p>
+  if (loading) return <PageSkeleton />
   if (!session) return <Navigate to="/login" replace />
   if (!profile) {
     const pending = getPendingInvite()
     return <Navigate to={pending ? `/join/${pending}` : '/login'} replace />
   }
   const photo = profile.avatar_path ? mine.get(profile.avatar_path) : null
-  const fullName = `${profile.first_name} ${profile.last_name}`
+  const fullName = personName(profile)
   const main = (
     <>
       <NavLink to="/" end><TabIcon name="home" />{t('nav.home')}</NavLink>

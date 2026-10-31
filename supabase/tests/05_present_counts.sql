@@ -16,7 +16,7 @@ insert into public.profiles (id, first_name, last_name) values
   ('00000000-0000-0000-0000-000000000002', 'Pio', 'Two'),
   ('00000000-0000-0000-0000-000000000003', 'Pip', 'Three');
 insert into public.profile_contacts (user_id, email, phone)
-  select p.id, u.email, '333' from public.profiles p join auth.users u using (id);
+  select p.id, u.email, '3331112222' from public.profiles p join auth.users u using (id);
 insert into public.user_roles values
   ('00000000-0000-0000-0000-0000000000b1', 'board'),
   ('00000000-0000-0000-0000-0000000000c1', 'coach');

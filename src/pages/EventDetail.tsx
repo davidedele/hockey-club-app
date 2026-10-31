@@ -1,3 +1,7 @@
+import { readableInk } from '../lib/colour'
+import { useGroupFilter } from '../lib/groupfilter'
+import { personName } from '../lib/names'
+import { PageSkeleton } from '../components/Skeleton'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { errorText, t, type MessageKey } from '../i18n'
@@ -5,6 +9,7 @@ import EventGame from './EventGame'
 import EventThread from '../components/EventThread'
 import Lineup from './Lineup'
 import Plan from './Plan'
+import { ConfirmDialog } from '../components/ConfirmAction'
 import { jerseyName, useClub } from '../lib/club'
 import { useCrumb } from '../lib/crumb'
 import { useSession } from '../lib/session'
@@ -16,7 +21,7 @@ import type { Answer, AttendanceRow, EventRow, Group, Rink, Status } from '../li
 
 const STATUSES: Status[] = ['on_time', 'late', 'excused', 'unexcused', 'injured', 'not_called_up']
 
-type NearEvent = Pick<EventRow, 'id' | 'type' | 'title' | 'starts_at' | 'opponent' | 'score_for' | 'score_against' | 'cancelled_at'>
+type NearEvent = Pick<EventRow, 'id' | 'type' | 'title' | 'starts_at' | 'opponent' | 'home_away' | 'score_for' | 'score_against' | 'cancelled_at' | 'event_groups'>
 type Tab = 'info' | 'presence' | 'game' | 'discussion' | 'lineup' | 'plan'
 type State = 'present' | 'absent' | 'waiting' | 'not_called_up'
 
@@ -33,9 +38,12 @@ export default function EventDetail() {
   const [mine, setMine] = useState<Answer | null>(null)
   const [rows, setRows] = useState<AttendanceRow[]>([])
   const [going, setGoing] = useState<{ user_id: string; first_name: string; last_name: string }[]>([])
+  // Whether the staff recorded who came, as the database sees it (a person only learns this for an event of their own).
+  const [recordedByDb, setRecordedByDb] = useState(false)
   const [scoreUs, setScoreUs] = useState('')
   const [scoreThem, setScoreThem] = useState('')
   const [confirming, setConfirming] = useState(false)
+  const [cancelling, setCancelling] = useState(false)
   // The actions menu closes when one of its actions is chosen.
   const menu = useRef<HTMLDetailsElement>(null)
   const closeMenu = () => menu.current?.removeAttribute('open')
@@ -45,6 +53,7 @@ export default function EventDetail() {
   const [dragging, setDragging] = useState<string | null>(null)
   const [hoverState, setHoverState] = useState<State | null>(null)
   const [params] = useSearchParams()
+  const { groupId: chosenGroup } = useGroupFilter()
 
   const refresh = useCallback(async () => {
     if (!profile) return
@@ -54,9 +63,10 @@ export default function EventDetail() {
       supabase.from('group_members').select('group_id').eq('user_id', profile.id),
       supabase.from('attendance_answers').select('answer').eq('event_id', id).eq('user_id', profile.id).maybeSingle(),
       supabase.from('rinks').select('id, name'),
-      supabase.from('events').select('id, type, title, starts_at, opponent, score_for, score_against, cancelled_at').order('starts_at', { ascending: false }).limit(1000),
+      supabase.from('events').select('id, type, title, starts_at, opponent, home_away, score_for, score_against, cancelled_at, event_groups(group_id)').order('starts_at', { ascending: false }).limit(1000),
     ])
-    setNear(((nb.data ?? []) as NearEvent[]).slice().reverse())
+    // The strip follows the group chosen in the selector; the event being looked at is always in it.
+    setNear(((nb.data ?? []) as NearEvent[]).filter((x) => x.id === id || chosenGroup === null || x.event_groups.some((g) => g.group_id === chosenGroup)).reverse())
     const row = (e.data as EventRow | null) ?? null
     setEvent(row)
     setGroups((g.data ?? []) as Group[])
@@ -71,11 +81,15 @@ export default function EventDetail() {
       const r = await supabase.rpc('event_attendance', { p_event_id: id })
       setRows((r.data ?? []) as AttendanceRow[])
     } else if (row) {
-      const r = await supabase.rpc('event_present_people', { p_event_id: id })
+      const [r, rec] = await Promise.all([
+        supabase.rpc('event_present_people', { p_event_id: id }),
+        supabase.rpc('event_presence_recorded', { p_event_id: id }),
+      ])
       setGoing((r.data ?? []) as { user_id: string; first_name: string; last_name: string }[])
+      setRecordedByDb(rec.data === true)
     }
     setLoaded(true)
-  }, [id, profile, isStaff])
+  }, [id, profile, isStaff, chosenGroup])
 
   useEffect(() => {
     void refresh()
@@ -84,7 +98,7 @@ export default function EventDetail() {
   useCrumb(event?.title ?? '')
 
   if (loaded && !event) return <Navigate to="/events" replace />
-  if (!event) return <p className="center">{t('common.loading')}</p>
+  if (!event) return <PageSkeleton />
 
   const now = Date.now()
   const over = new Date(event.ends_at).getTime() < now
@@ -108,9 +122,6 @@ export default function EventDetail() {
     jerseyLabel ? t('share.jerseyText', { jersey: jerseyLabel.toLowerCase() }) : '',
     t('share.answerText', { url: link }),
   ].filter(Boolean).join(' ')
-  const resultText = hasScore
-    ? t('share.resultText', { match: matchName, us: String(event.score_for), them: String(event.score_against), url: link })
-    : ''
 
   // A change that a rule silently refuses must not look like it worked.
   async function guarded(change: () => PromiseLike<{ error: { message?: string; code?: string } | null; data?: unknown[] | null }>) {
@@ -187,7 +198,7 @@ export default function EventDetail() {
   const stateOf = (r: AttendanceRow): State => (!called(r) ? 'not_called_up' : r.answer === 'present' ? 'present' : r.answer === 'absent' ? 'absent' : 'waiting')
 
   function person(r: AttendanceRow) {
-    const full = `${r.first_name} ${r.last_name}`
+    const full = personName(r)
     return (
       <li
         key={r.user_id}
@@ -197,7 +208,7 @@ export default function EventDetail() {
         onDragEnd={() => { setDragging(null); setHoverState(null) }}
       >
         <div className="row">
-          <span>{r.last_name} {r.first_name}</span>
+          <span data-person-name>{r.last_name} {r.first_name}</span>
           <span className="person-actions">
             <select aria-label={t('event.move', { name: full })} value={stateOf(r)} disabled={busy} onChange={(e) => void moveTo(r.user_id, e.target.value as State)}>
               <option value="present">{t('answer.present')}</option>
@@ -252,15 +263,22 @@ export default function EventDetail() {
   // The neighbouring events, to move between them without going back to the list.
   const at = near.findIndex((x) => x.id === id)
   const strip = at < 0 ? [] : near.slice(Math.max(0, at - 2), at + 3)
-  const nearTitle = (x: NearEvent) => (x.type === 'game' && x.opponent ? t('events.vs', { club: club.name || t('app.name'), opponent: x.opponent }) : x.title)
+  // Where both team names are shown, the home side comes first, in the names and in the score.
+  const nearTitle = (x: NearEvent) => (x.type === 'game' && x.opponent
+    ? t('events.vs', x.home_away === 'away' ? { club: x.opponent, opponent: club.name || t('app.name') } : { club: club.name || t('app.name'), opponent: x.opponent })
+    : x.title)
+  const nearScore = (x: NearEvent) => (x.home_away === 'away' ? `${x.score_against} : ${x.score_for}` : `${x.score_for} : ${x.score_against}`)
 
   // A game uses the colours of its first group that has its own; otherwise the club colours.
   const teamGroup = event.event_groups.map((x) => groups.find((y) => y.id === x.group_id)).find((y) => y?.game_dark && y?.game_light)
-  const bandStyle = game && teamGroup ? ({ '--team-dark': teamGroup.game_dark, '--team-light': teamGroup.game_light } as CSSProperties) : undefined
+  const bandStyle = game && teamGroup ? ({ '--team-dark': teamGroup.game_dark, '--team-light': teamGroup.game_light, '--band-ink': readableInk(teamGroup.game_dark) } as CSSProperties) : undefined
   const clubName = club.name || t('app.name')
   const away = event.home_away === 'away'
   const sides = game && event.opponent ? (away ? [event.opponent, clubName] : [clubName, event.opponent]) : null
   const scores = hasScore ? (away ? [event.score_against, event.score_for] : [event.score_for, event.score_against]) : null
+  const resultText = scores && hasScore
+    ? t('share.resultText', { home: (sides ?? [clubName, t('event.scoreThem')])[0], homeScore: String(scores[0]), away: (sides ?? [clubName, t('event.scoreThem')])[1], awayScore: String(scores[1]), url: link })
+    : ''
   const typeLabel = event.title === t(`eventType.${event.type}` as MessageKey) ? '' : t(`eventType.${event.type}` as MessageKey)
 
   const scoreForm = isStaff && game && (
@@ -280,7 +298,11 @@ export default function EventDetail() {
     </section>
   )
 
-  const presentNames = isStaff ? present.map((r) => ({ user_id: r.user_id, first_name: r.first_name, last_name: r.last_name })) : going
+  // After the event has ended "present" means the people the staff recorded as on time or late. Before
+  // that, or when nothing was recorded, it means the people who answered present. Not called up is never present.
+  const recorded = isStaff ? over && rows.some((r) => r.status !== null && r.status !== 'not_called_up') : recordedByDb
+  const recordedPresent = rows.filter((r) => called(r) && (r.status === 'on_time' || r.status === 'late'))
+  const presentNames = isStaff ? (recorded ? recordedPresent : present).map((r) => ({ user_id: r.user_id, first_name: r.first_name, last_name: r.last_name })) : going
 
   return (
     <div className="page wide event-page">
@@ -298,7 +320,7 @@ export default function EventDetail() {
                 <Link className={x.id === id ? 'on' : undefined} aria-current={x.id === id ? 'page' : undefined} to={`/events/${x.id}`}>
                   <span className="when">{formatShortDay(x.starts_at)}</span>
                   <span className="what">{nearTitle(x)}</span>
-                  {x.score_for !== null && x.score_against !== null && <span className="res">{x.score_for} : {x.score_against}</span>}
+                  {x.score_for !== null && x.score_against !== null && <span className="res">{nearScore(x)}</span>}
                 </Link>
               </li>
             ))}
@@ -318,7 +340,7 @@ export default function EventDetail() {
               </summary>
               <div className="ev-menu-list">
                 <Link to={`/events/${id}/edit`}>{t('event.edit')}</Link>
-                <button disabled={busy} onClick={() => { closeMenu(); void setCancelled(!cancelled) }}>{cancelled ? t('event.restore') : t('event.cancel')}</button>
+                <button disabled={busy} onClick={() => { closeMenu(); if (cancelled) void setCancelled(false); else setCancelling(true) }}>{cancelled ? t('event.restore') : t('event.cancel')}</button>
                 <button className="danger-text" disabled={busy} onClick={() => { closeMenu(); setConfirming(true) }}>{t('event.deleteStart')}</button>
               </div>
             </details>
@@ -351,21 +373,26 @@ export default function EventDetail() {
       </header>
 
       {error && <p className="error" role="alert">{error}</p>}
-      {cancelled && <p className="box cancelled-note" role="status">{t('event.cancelledBanner')}</p>}
-      {confirming && (
-        <div className="box" role="alertdialog" aria-label={t('event.delete')}>
-          <p>{t('event.deleteConfirm', { title: event.title, date: dayLabel })}</p>
-          <div className="actions">
-            <button className="danger" disabled={busy} onClick={() => void remove(false)}>
-              {event.series_id ? t('event.deleteOne') : t('event.deleteThis')}
-            </button>
-            {event.series_id && (
-              <button className="danger" disabled={busy} onClick={() => void remove(true)}>{t('event.deleteFollowing')}</button>
-            )}
-            <button className="link" disabled={busy} onClick={() => setConfirming(false)}>{t('common.cancel')}</button>
-          </div>
-        </div>
-      )}
+      {cancelled && <p className="box cancelled-note" role="status">{t('event.cancelledBanner')}{isStaff && ` ${t('event.restoreHint')}`}</p>}
+      <ConfirmDialog
+        open={cancelling}
+        title={t('event.cancelTitle')}
+        body={t('event.cancelBody', { title: event.title, date: dayLabel })}
+        choices={[{ label: t('event.cancelGo'), onChoose: () => void setCancelled(true) }]}
+        busy={busy}
+        onClose={() => setCancelling(false)}
+      />
+      <ConfirmDialog
+        open={confirming}
+        title={t('event.deleteTitle')}
+        body={t('event.deleteConfirm', { title: event.title, date: dayLabel })}
+        choices={[
+          { label: event.series_id ? t('event.deleteOne') : t('event.deleteThis'), onChoose: () => void remove(false) },
+          ...(event.series_id ? [{ label: t('event.deleteFollowing'), onChoose: () => void remove(true) }] : []),
+        ]}
+        busy={busy}
+        onClose={() => setConfirming(false)}
+      />
 
       <nav className="ev-tabs" aria-label={t('event.tabs')}>
         {tabs.map((x) => (
@@ -399,14 +426,15 @@ export default function EventDetail() {
             <section className="card">
               <h2>{t('event.attendance')}</h2>
               <ul className="counters">
-                <li className="ok"><b>{presentNames.length}</b><span>{t('event.countPresent')}</span></li>
-                {isStaff && <li><b>{pending.length}</b><span>{t('event.countWaiting')}</span></li>}
-                {isStaff && <li className="bad"><b>{notCalled.length}</b><span>{t('event.countNotCalled')}</span></li>}
-                {isStaff && <li className="bad"><b>{absent.length}</b><span>{t('event.countAbsent')}</span></li>}
+                <li className="ok"><b>{loaded ? presentNames.length : '–'}</b><span>{t('event.countPresent')}</span></li>
+                {isStaff && <li><b>{loaded ? pending.length : '–'}</b><span>{t('event.countWaiting')}</span></li>}
+                {isStaff && <li className="bad"><b>{loaded ? notCalled.length : '–'}</b><span>{t('event.countNotCalled')}</span></li>}
+                {isStaff && <li className="bad"><b>{loaded ? absent.length : '–'}</b><span>{t('event.countAbsent')}</span></li>}
               </ul>
-              {isStaff && <p><Link to={{ search: '?tab=presence' }} replace>{t('event.manage')}</Link></p>}
+              {isStaff && <p><Link className="inline-action" to={{ search: '?tab=presence' }} replace>{t('event.manage')}</Link></p>}
+              {loaded && over && !cancelled && !recorded && <p className="hint">{t('event.presenceFromAnswers')}</p>}
               <details open>
-                <summary>{t('event.presentList', { n: String(presentNames.length) })}</summary>
+                <summary>{t('event.presentNames')}</summary>
                 {presentNames.length === 0 ? (
                   <p className="hint">{t('event.nobodyYet')}</p>
                 ) : (
@@ -430,7 +458,7 @@ export default function EventDetail() {
               {!over && !cancelled && <a className="button secondary small" href={whatsappLink(shareText)} target="_blank" rel="noopener noreferrer">{t('share.whatsapp')}</a>}
               {hasScore && <a className="button secondary small" href={whatsappLink(resultText)} target="_blank" rel="noopener noreferrer">{t('share.result')}</a>}
             </div>
-            {!cancelled && isStaff && <p className="hint">{t('event.cancelHint')}</p>}
+            {!cancelled && !over && isStaff && <p className="hint">{t('event.cancelHint')}</p>}
           </div>
         </div>
       )}
@@ -442,7 +470,7 @@ export default function EventDetail() {
             {!started && <p className="hint">{t('event.recordHint')}</p>}
             <div className="board">
               <section {...dropProps('present')}>
-                <h2>{t('event.presentList', { n: String(present.length) })}</h2>
+                <h2>{t(recorded ? 'event.answeredPresentList' : 'event.presentList', { n: String(present.length) })}</h2>
                 <ul className="list">{present.map(person)}</ul>
               </section>
               <section {...dropProps('waiting')}>
@@ -452,7 +480,7 @@ export default function EventDetail() {
                   <div className="actions share-row">
                     <a
                       className="button secondary small"
-                      href={whatsappLink(t('share.missingText', { title: matchName, day: dayLabel, names: pending.map((r) => `${r.first_name} ${r.last_name}`).join(', '), url: link }))}
+                      href={whatsappLink(t('share.missingText', { title: matchName, day: dayLabel, names: pending.map((r) => personName(r)).join(', '), url: link }))}
                       target="_blank"
                       rel="noopener noreferrer"
                     >

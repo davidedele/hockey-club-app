@@ -1,3 +1,6 @@
+import { useGroupFilter } from '../lib/groupfilter'
+import { personName } from '../lib/names'
+import ConfirmAction from '../components/ConfirmAction'
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import PageHeader from '../components/PageHeader'
 import { errorText, t } from '../i18n'
@@ -16,10 +19,11 @@ export default function Announcements() {
   const [loaded, setLoaded] = useState(false)
   const [title, setTitle] = useState('')
   const [body, setBody] = useState('')
-  const [groupIds, setGroupIds] = useState<number[]>([])
+  const { groupId: chosenGroup } = useGroupFilter()
+  // A new announcement starts on the group chosen in the selector.
+  const [groupIds, setGroupIds] = useState<number[]>(() => (chosenGroup !== null ? [chosenGroup] : []))
   const [email, setEmail] = useState(false)
   const [busy, setBusy] = useState(false)
-  const [confirming, setConfirming] = useState('')
   const [error, setError] = useState('')
 
   const load = useCallback(async () => {
@@ -61,7 +65,7 @@ export default function Announcements() {
     }
     setTitle('')
     setBody('')
-    setGroupIds([])
+    setGroupIds(chosenGroup !== null ? [chosenGroup] : [])
     setEmail(false)
     await load()
   }
@@ -69,7 +73,6 @@ export default function Announcements() {
   async function remove(id: string) {
     setError('')
     const { data, error } = await supabase.from('announcements').delete().eq('id', id).select()
-    setConfirming('')
     if (error || !data || data.length === 0) {
       setError(errorText(error ?? { message: 'forbidden' }))
       return
@@ -119,7 +122,7 @@ export default function Announcements() {
         {items.map((a) => {
           const isNew = !seenAt || new Date(a.created_at) > new Date(seenAt)
           const canDelete = isBoard || a.author_id === profile?.id
-          const who = a.profiles ? `${a.profiles.first_name} ${a.profiles.last_name}` : ''
+          const who = a.profiles ? personName(a.profiles) : ''
           return (
             <li key={a.id} className="ann">
               <div className="row">
@@ -131,14 +134,7 @@ export default function Announcements() {
                 {who ? t('ann.by', { name: who, groups: names(a) }) : names(a)}, {formatDay(a.created_at)} {formatTime(a.created_at)}
               </p>
               {canDelete && (
-                confirming === a.id ? (
-                  <div className="row">
-                    <button type="button" className="danger" onClick={() => void remove(a.id)}>{t('ann.confirmDelete')}</button>
-                    <button type="button" className="link" onClick={() => setConfirming('')}>{t('ann.cancel')}</button>
-                  </div>
-                ) : (
-                  <button type="button" className="link" onClick={() => setConfirming(a.id)}>{t('ann.delete')}</button>
-                )
+                <ConfirmAction label={t('ann.delete')} title={t('ann.deleteTitle')} body={t('ann.deleteBody', { title: a.title })} confirm={t('ann.delete')} onConfirm={() => void remove(a.id)} />
               )}
             </li>
           )

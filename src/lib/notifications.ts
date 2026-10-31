@@ -1,3 +1,4 @@
+import { formatShortDay } from './time'
 import { useCallback, useEffect, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import { useSession } from './session'
@@ -10,6 +11,8 @@ export interface ThreadNote {
   event_id: string
   unread: number
   title: string
+  // The day of the event, so two trainings with the same name can be told apart.
+  day: string
 }
 
 export interface Notifications {
@@ -52,9 +55,9 @@ export function useNotifications(): Notifications {
     const unread = ((th.data ?? []) as { event_id: string; unread: number }[]).filter((x) => Number(x.unread) > 0)
     let threads: ThreadNote[] = []
     if (unread.length > 0) {
-      const titles = await supabase.from('events').select('id, title').in('id', unread.map((x) => x.event_id))
-      const byId = new Map(((titles.data ?? []) as { id: string; title: string }[]).map((x) => [x.id, x.title]))
-      threads = unread.map((x) => ({ event_id: x.event_id, unread: Number(x.unread), title: byId.get(x.event_id) ?? '' }))
+      const titles = await supabase.from('events').select('id, title, starts_at').in('id', unread.map((x) => x.event_id))
+      const byId = new Map(((titles.data ?? []) as { id: string; title: string; starts_at: string }[]).map((x) => [x.id, x]))
+      threads = unread.map((x) => ({ event_id: x.event_id, unread: Number(x.unread), title: byId.get(x.event_id)?.title ?? '', day: byId.get(x.event_id) ? formatShortDay(byId.get(x.event_id)!.starts_at) : '' }))
     }
     setState({ pending, announcements, threads })
   }, [profile])

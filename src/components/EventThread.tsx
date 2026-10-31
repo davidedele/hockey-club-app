@@ -1,3 +1,4 @@
+import { personName } from '../lib/names'
 import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
 import { errorText, t } from '../i18n'
 import { useSession } from '../lib/session'
@@ -88,7 +89,7 @@ export default function EventThread({ eventId }: { eventId: string }) {
 
   const last = messages[messages.length - 1]
   const archived = last ? Date.now() - new Date(last.created_at).getTime() > ARCHIVE_DAYS * 86400000 : false
-  const name = (p: { first_name: string; last_name: string } | null) => (p ? `${p.first_name} ${p.last_name}` : '')
+  const name = (p: { first_name: string; last_name: string } | null) => (p ? personName(p) : '')
 
   return (
     <section className="card thread" aria-label={t('event.tabDiscussion')}>

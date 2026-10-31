@@ -7,8 +7,8 @@ import SectionShell from '../components/SectionShell'
 import { shrinkPhoto, useAvatarUrls } from '../lib/avatars'
 import { signOut, useSession } from '../lib/session'
 import { supabase } from '../lib/supabase'
-import { formatPhone } from '../lib/phone'
-import { nameHasDigits, tidyName } from '../lib/names'
+import { formatPhone, isPhoneValid } from '../lib/phone'
+import { nameHasDigits, personName, tidyName } from '../lib/names'
 import AbsencePeriods from '../components/AbsencePeriods'
 import CalendarFeed from '../components/CalendarFeed'
 import ReminderSwitch from '../components/ReminderSwitch'
@@ -62,7 +62,7 @@ export default function ProfileLayout() {
         <div className="shell-card">
           <Avatar first={profile.first_name} last={profile.last_name} url={profile.avatar_path ? photos.get(profile.avatar_path) : null} size="large" />
           <div>
-            <p className="shell-title">{profile.first_name} {profile.last_name}</p>
+            <p className="shell-title">{personName(profile)}</p>
             <p className="hint">{myGroups.length ? myGroups.join(', ') : t('profile.noGroups')}</p>
             {realRoles.length > 0 && <p className="hint">{realRoles.map((r) => t(`role.${r}` as MessageKey)).join(', ')}</p>}
           </div>
@@ -86,6 +86,7 @@ export function ProfileInfo() {
   const [phone, setPhone] = useState('')
   const [message, setMessage] = useState('')
   const [nameError, setNameError] = useState('')
+  const [phoneError, setPhoneError] = useState('')
   const [photoBusy, setPhotoBusy] = useState(false)
   const [photoError, setPhotoError] = useState('')
   const photos = useAvatarUrls([profile?.avatar_path])
@@ -156,6 +157,7 @@ export function ProfileInfo() {
     e.preventDefault()
     setMessage('')
     if (nameHasDigits(firstName) || nameHasDigits(lastName)) return setNameError(t('error.name_digits'))
+    if (!isPhoneValid(phone)) return setPhoneError(t('error.phone_invalid'))
     const a = await supabase
       .from('profiles')
       .update({
@@ -217,8 +219,9 @@ export function ProfileInfo() {
           </div>
         </div>
         <label>{t('common.phone')}
-          <input type="tel" autoComplete="tel" maxLength={30} placeholder="333 123 4567" value={phone} onChange={(e) => setPhone(e.target.value)} onBlur={() => setPhone(formatPhone(phone))} />
+          <input type="tel" autoComplete="tel" maxLength={30} placeholder="333 123 4567" value={phone} aria-invalid={Boolean(phoneError)} onChange={(e) => { setPhone(e.target.value); setPhoneError('') }} onBlur={() => { setPhone(formatPhone(phone)); setPhoneError(isPhoneValid(phone) ? '' : t('error.phone_invalid')) }} />
         </label>
+        {phoneError && <p className="error" role="alert">{phoneError}</p>}
         <button type="submit">{t('common.save')}</button>
         {message && <p className={message === t('common.saved') ? 'hint' : 'error'} role={message === t('common.saved') ? 'status' : 'alert'}>{message}</p>}
       </form>

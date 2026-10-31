@@ -1,3 +1,4 @@
+import { readableInk } from './colour'
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react'
 import { supabase } from './supabase'
 
@@ -51,6 +52,7 @@ export function ClubProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const root = document.documentElement.style
     root.setProperty('--team-dark', club.gameDark)
+    root.setProperty('--band-ink', readableInk(club.gameDark))
     root.setProperty('--team-light', club.gameLight)
     if (club.name) document.title = club.name
   }, [club])

@@ -1,3 +1,4 @@
+import { PageSkeleton } from '../components/Skeleton'
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import { Link, Navigate, useParams } from 'react-router-dom'
 import { errorText, t } from '../i18n'
@@ -56,7 +57,7 @@ export default function Plan({ embedded = false }: { embedded?: boolean }) {
   }, [load])
 
   if (loaded && !event) return <Navigate to="/events" replace />
-  if (!event) return <p className="center">{t('common.loading')}</p>
+  if (!event) return <PageSkeleton />
 
   async function write(values: { notes?: string | null; visible_after?: boolean }) {
     setBusy(true)

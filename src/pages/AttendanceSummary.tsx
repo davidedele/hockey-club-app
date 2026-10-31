@@ -1,3 +1,4 @@
+import TableScroll from '../components/TableScroll'
 import { useEffect, useMemo, useState } from 'react'
 import SortHeader from '../components/SortHeader'
 import TablePager from '../components/TablePager'
@@ -140,7 +141,7 @@ export default function AttendanceSummary() {
       {rows.length > 0 && <p className="hint" role="status">{t('att.players', { n: String(shown.length) })}</p>}
       {rows.length > 0 && (
         <>
-          <div className="table-wrap">
+          <TableScroll variant="table-wrap">
             <table className="att-table">
               <thead>
                 <tr>
@@ -160,19 +161,19 @@ export default function AttendanceSummary() {
               <tbody>
                 {visible.map((r) => (
                   <tr key={r.user_id}>
-                    <th scope="row" className="att-name">{r.last_name} {r.first_name}</th>
+                    <th scope="row" className="att-name" data-person-name>{r.last_name} {r.first_name}</th>
                     <td className="g-calls">{Number(r.events_total) - Number(r.not_called_up)}</td>
                     {middle.map((c, i) => {
                       const v = c.get(r)
                       return <td key={c.key + c.group} className={`${cellClass(c, i)}${v === 0 ? ' zero' : ''}`}>{v === 0 ? '\u2013' : v}</td>
                     })}
-                    <td className="g-percent g-start">{percent(r) === null ? '\u2013' : `${percent(r)}%`}</td>
+                    <td className="g-percent g-start">{percent(r) ? `${percent(r)}%` : '\u2013'}</td>
                   </tr>
                 ))}
                 {shown.length === 0 && <tr><td colSpan={COLUMNS.length + 1} className="hint">{t('cal.none')}</td></tr>}
               </tbody>
             </table>
-          </div>
+          </TableScroll>
           <TablePager total={shown.length} page={page} size={size} onPage={setPage} onSize={(n) => { setSize(n); setPage(1) }} />
         </>
       )}
