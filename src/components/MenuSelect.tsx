@@ -62,6 +62,7 @@ export default function MenuSelect<T extends string | number | null>(props: {
         aria-expanded={open}
         aria-controls={id}
         aria-label={icon ? `${label}: ${current?.label ?? ''}` : undefined}
+        title={icon ? `${label}: ${current?.label ?? ''}` : undefined}
         onClick={() => setOpen(!open)}
         onKeyDown={(e) => { if (e.key === 'ArrowDown' && !open) { e.preventDefault(); setOpen(true) } }}
       >

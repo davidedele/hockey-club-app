@@ -114,7 +114,7 @@ async function answer(route) {
 // 4. The pages. "sub" pages must offer a way back; "auth" pages are outside the app frame.
 const { training, game, member } = fixtures.ids
 const ROUTES = [
-  ['events', '/events'], ['members', '/'], ['championship', '/campionato'], ['league-match', '/campionato/partita/501', 'sub'], ['stats', '/stats'],
+  ['home', '/'], ['events', '/events'], ['members', '/members'], ['championship', '/campionato'], ['league-match', '/campionato/partita/501', 'sub'], ['stats', '/stats'],
   ['attendance', '/attendance'], ['attendance-events', '/attendance?tab=events'],
   ['event-training', `/events/${training}`, 'sub'], ['event-game', `/events/${game}`, 'sub'],
   ['event-new', '/events/new', 'sub'], ['attendance-missing', '/attendance?tab=missing'],
@@ -203,6 +203,64 @@ for (const width of [375, 1280]) {
   }
   await context.close()
 }
+// 6b. Interactions that a screenshot cannot prove, at computer width.
+{
+  const context = await browser.newContext({ viewport: { width: 1280, height: 800 }, serviceWorkers: 'block', locale: 'it-IT', timezoneId: 'Europe/Rome' })
+  await context.route(`${API}/**`, answer)
+  await context.addInitScript(([me, email]) => {
+    const session = { access_token: 'sample', refresh_token: 'sample', token_type: 'bearer', expires_in: 3600, expires_at: Math.floor(Date.now() / 1000) + 36000, user: { id: me, email, aud: 'authenticated', role: 'authenticated', app_metadata: {}, user_metadata: {} } }
+    localStorage.setItem('sb-mock-auth-token', JSON.stringify(session))
+  }, [ME, fixtures.me.email])
+  const page = await context.newPage()
+  const problems = []
+  const check = (ok, text) => { if (!ok) problems.push(text) }
+  const settle = async (path) => { await page.goto(origin + path); await page.waitForLoadState('networkidle').catch(() => {}); await page.waitForTimeout(300) }
+  const active = () => page.evaluate(() => ({ role: document.activeElement?.getAttribute('role'), checked: document.activeElement?.getAttribute('aria-checked'), text: document.activeElement?.textContent?.trim(), cls: document.activeElement?.className }))
+
+  // The group menu opens on the chosen item, moves with the arrows and gives the focus back on Escape.
+  await settle('/members')
+  await page.click('.side-switch .ms-button')
+  check(await page.isVisible('.side-switch [role=menu]'), 'group menu: the list does not open')
+  let a = await active()
+  check(a.role === 'menuitemradio' && a.checked === 'true', 'group menu: the focus is not on the chosen group')
+  await page.keyboard.press('ArrowDown')
+  check((await active()).checked === 'false', 'group menu: ArrowDown does not move to the next group')
+  await page.keyboard.press('Escape')
+  a = await active()
+  check(!(await page.isVisible('.side-switch [role=menu]')) && String(a.cls).includes('ms-button'), 'group menu: Escape does not close it and return to the button')
+
+  // The player view hides the staff pages and the settings; the board view brings them back.
+  await page.click('.crumb-actions .ms-button')
+  await page.click('.crumb-actions [role=menuitemradio]:has-text("Giocatore")')
+  await page.waitForTimeout(200)
+  check(!(await page.isVisible('.side a[href="/attendance"]')) && !(await page.isVisible('.side a[href="/settings"]')), 'view menu: the player view still shows Presenze or Impostazioni')
+  await page.click('.crumb-actions .ms-button')
+  await page.click('.crumb-actions [role=menuitemradio]:has-text("Direttivo")')
+  await page.waitForTimeout(200)
+  check(await page.isVisible('.side a[href="/attendance"]'), 'view menu: the board view does not bring Presenze back')
+
+  // A name with a digit is refused when the field is left, and the message goes when it is fixed.
+  await settle('/profile/info')
+  const first = page.locator('form input[autocomplete="given-name"]')
+  await first.fill('Mario3')
+  await first.blur()
+  check(await page.isVisible('form .error[role=alert]'), 'names: no message for a digit after leaving the field')
+  await first.fill('Mario')
+  check(!(await page.isVisible('form .error[role=alert]')), 'names: the message stays after the name is fixed')
+
+  // Removing asks first: the window names the thing, Annulla has the focus, Escape removes nothing.
+  await settle('/settings/invites')
+  await page.click('button.link:has-text("Revoca")')
+  check(await page.isVisible('dialog[open]'), 'confirm: revoking an invite does not ask first')
+  check((await active()).text === 'Annulla', 'confirm: Annulla does not have the focus')
+  await page.keyboard.press('Escape')
+  a = await active()
+  check(!(await page.isVisible('dialog[open]')) && a.text === 'Revoca', 'confirm: Escape does not close the window and return to the button')
+
+  report.push({ width: 1280, name: 'interactions', path: '-', kind: 'auth', problems, errors: [] })
+  await context.close()
+}
+
 await browser.close()
 server.close()
 

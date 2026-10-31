@@ -1,4 +1,5 @@
 import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react'
+import ConfirmAction from '../components/ConfirmAction'
 import { errorText, t, type MessageKey } from '../i18n'
 import Avatar from '../components/Avatar'
 import PageHeader from '../components/PageHeader'
@@ -185,7 +186,7 @@ export function ProfileInfo() {
               {t(profile.avatar_path ? 'profile.photoChange' : 'profile.photoAdd')}
               <input type="file" accept="image/*" disabled={photoBusy} onChange={(e) => void pickPhoto(e)} />
             </label>
-            {profile.avatar_path && <button className="link" disabled={photoBusy} onClick={() => void removePhoto()}>{t('profile.photoRemove')}</button>}
+            {profile.avatar_path && <ConfirmAction label={t('profile.photoRemove')} title={t('profile.photoRemoveTitle')} body={t('profile.photoRemoveBody')} confirm={t('profile.photoRemove')} disabled={photoBusy} onConfirm={() => void removePhoto()} />}
           </div>
           <p className="hint">{t('profile.photoHint')}</p>
           {photoError && <p className="error" role="alert">{photoError}</p>}

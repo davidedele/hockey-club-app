@@ -65,7 +65,16 @@ export default function LeagueMatch() {
         actions={eventId ? <Link className="button secondary" to={`/events/${eventId}`}>{t('match.openEvent')}</Link> : undefined}
       />
       {error && <p className="error" role="alert">{error}</p>}
-      {!detail && !error && <p className="hint" role="status">{t('match.loading')}</p>}
+      {!detail && !error && (
+        <div aria-busy="true">
+          <p className="sr-only" role="status">{t('match.loading')}</p>
+          <div className="skeleton sb-skel" />
+          <div className="match-grid">
+            <div className="skeleton list-skel" />
+            <div className="skeleton list-skel" />
+          </div>
+        </div>
+      )}
       {detail && (
         <>
           <section className="scoreboard" aria-label={t('match.result')}>

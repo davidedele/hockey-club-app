@@ -1,4 +1,5 @@
 import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react'
+import ConfirmAction from '../components/ConfirmAction'
 import { Navigate } from 'react-router-dom'
 import PageHeader from '../components/PageHeader'
 import Crest from '../components/Crest'
@@ -157,7 +158,7 @@ export default function ClubSettings() {
                   {t('club.logoChoose')}
                   <input type="file" accept="image/png,image/jpeg,image/webp" disabled={busy} onChange={(e) => { setSavedGroup('identity'); void upload(e) }} />
                 </label>
-                {club.logoPath && <button className="link" disabled={busy} onClick={() => { setSavedGroup('identity'); void removeLogo() }}>{t('club.logoRemove')}</button>}
+                {club.logoPath && <ConfirmAction label={t('club.logoRemove')} title={t('club.logoRemoveTitle')} body={t('club.logoRemoveBody')} confirm={t('club.logoRemove')} disabled={busy} onConfirm={() => { setSavedGroup('identity'); void removeLogo() }} />}
               </div>
               <p className="hint">{t('club.logoHint')}</p>
             </div>
@@ -167,7 +168,7 @@ export default function ClubSettings() {
               <input required maxLength={60} value={name} onChange={(e) => setName(e.target.value)} />
             </label>
             {status('identity')}
-            <button type="submit" disabled={busy || name.trim() === club.name}>{t('common.save')}</button>
+            <button type="submit" disabled={busy}>{t('common.save')}</button>
           </form>
         </div>
       </section>

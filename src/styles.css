@@ -1118,3 +1118,34 @@ input[type="color"] { padding: .25rem; }
 }
 .colours { align-items: end; }
 .members-table td.email-cell { max-width: 16rem; overflow: hidden; text-overflow: ellipsis; }
+
+/* Home (page pattern 4, dashboard): the next event and the answers on the left, news, league and
+   staff figures on the right. Every card opens the page where the thing is handled. */
+.home-grid { display: grid; gap: 1rem; align-items: start; }
+.home-main, .home-side { display: grid; gap: 1rem; min-width: 0; }
+@media (min-width: 1100px) { .home-grid { grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 1.5rem; } }
+.home-page .card { padding: 1rem 1.25rem; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); }
+.home-page .card h2 { display: flex; align-items: center; gap: .5rem; margin: 0; font-size: 1.25rem; }
+.home-page .card h2 .count { display: inline-grid; place-items: center; min-width: 1.75rem; height: 1.75rem; padding: 0 .5rem; border-radius: 999px; background: var(--accent); color: var(--on-accent); font: 600 .9375rem/1 var(--font-body); }
+.card-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .5rem 1rem; margin-bottom: .5rem; }
+.card-head > a { display: inline-flex; align-items: center; min-height: 44px; font-weight: 500; text-decoration: none; }
+.card-head > a:hover { text-decoration: underline; }
+.home-list { list-style: none; margin: 0; padding: 0; }
+.home-list li + li { border-top: 1px solid var(--line); }
+.home-list a { display: grid; grid-template-columns: 7.5rem minmax(0, 1fr); align-items: center; gap: .75rem; min-height: 52px; padding: .375rem 0; color: var(--ink); text-decoration: none; }
+.home-list a:hover .hl-what { color: var(--accent); text-decoration: underline; }
+.hl-when { color: var(--muted); font-size: .875rem; }
+.hl-when strong { color: var(--ink); font-weight: 500; }
+.hl-what { font-weight: 500; overflow-wrap: anywhere; }
+.home-facts { display: grid; gap: 0; margin: 0; }
+.home-facts > div { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .25rem 1rem; min-height: 52px; padding: .375rem 0; border-top: 1px solid var(--line); }
+.home-facts > div:first-child { border-top: 0; }
+.home-facts dt { color: var(--muted); font-size: .9375rem; }
+.home-facts dd { margin: 0; font-weight: 500; text-align: right; }
+.home-facts dd a { display: inline-flex; align-items: center; min-height: 44px; }
+.home-page .next { margin: 0; }
+.skeleton { background: var(--surface-2); border-radius: var(--radius); }
+.sb-skel { height: 9.5rem; margin-bottom: 1.5rem; }
+.list-skel { height: 16rem; }
+@media (prefers-reduced-motion: no-preference) { .skeleton { animation: skel 1.6s ease-in-out infinite; } }
+@keyframes skel { 50% { opacity: .55; } }

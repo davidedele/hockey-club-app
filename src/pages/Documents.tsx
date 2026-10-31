@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type ChangeEvent, type FormEvent } from 'react'
+import ConfirmAction from '../components/ConfirmAction'
 import { Navigate, useParams } from 'react-router-dom'
 import PageHeader from '../components/PageHeader'
 import { errorText, t } from '../i18n'
@@ -62,7 +63,7 @@ export default function Documents() {
 
   if (!profile) return null
   if (!own && !isStaff) return <Navigate to="/profile/documents" replace />
-  if (loaded && !person) return <Navigate to="/" replace />
+  if (loaded && !person) return <Navigate to="/members" replace />
 
   const cert = docs.find((x) => x.kind === 'medical_certificate')
   const consent = docs.find((x) => x.kind === 'privacy_consent')
@@ -216,7 +217,7 @@ export default function Documents() {
               {t(cert?.file_path ? 'docs.certReplace' : 'docs.certUpload')}
               <input type="file" accept="image/*,application/pdf" disabled={busy} onChange={(e) => void upload(e)} />
             </label>
-            {cert?.file_path && <button className="link" disabled={busy} onClick={() => void removeFile()}>{t('docs.certRemoveFile')}</button>}
+            {cert?.file_path && <ConfirmAction label={t('docs.certRemoveFile')} title={t('docs.certRemoveTitle')} body={t('docs.certRemoveBody')} confirm={t('docs.certRemoveFile')} disabled={busy} onConfirm={() => void removeFile()} />}
           </div>
         </div>
       </section>
@@ -228,7 +229,7 @@ export default function Documents() {
         {own && club.privacyNoticePath && (
           <div className="actions">
             {consentNow.level !== 'ok' && <button disabled={busy} onClick={() => void accept()}>{t('docs.consentAccept')}</button>}
-            {consent && <button className="link" disabled={busy} onClick={() => void withdraw()}>{t('docs.consentWithdraw')}</button>}
+            {consent && <ConfirmAction label={t('docs.consentWithdraw')} title={t('docs.consentWithdrawTitle')} body={t('docs.consentWithdrawBody')} confirm={t('docs.consentWithdraw')} disabled={busy} onConfirm={() => void withdraw()} />}
           </div>
         )}
         {!own && <p className="hint">{t('docs.consentOnlyMember')}</p>}

@@ -13,6 +13,7 @@ Read this file, and the open items of `docs/UI_BACKLOG.md`, before touching a pa
 5. A section with sub pages is a shell: a card with the section list on the left and the content on the right, as in SportEasy's team settings. Settings and the profile both use it. The list stays on screen on every sub page of the section, including Documenti in the profile. On phones the list is the section's first page and every sub page has the back button of rule 4.
 6. A picture or a piece of information appears once per screen. For example the profile photo is in the shell card, not repeated in the content.
 7. No row of loose links at the bottom of a page. An action belongs to the page or panel it concerns, or to the navigation.
+8. A wait longer than a second shows a skeleton of what is coming, not a line of text or a spinner; a loading number shows an en dash.
 
 ## 2. Controls
 
@@ -22,6 +23,8 @@ Read this file, and the open items of `docs/UI_BACKLOG.md`, before touching a pa
 4. A search field and the actions of the same list share one toolbar row: search on the left, actions on the right. They wrap only when the window is too narrow.
 5. Destructive actions ask for confirmation naming the thing. Print and export open a window first.
 6. A menu (for example the event actions) closes as soon as one of its actions is chosen.
+7. Removing something (an invite, a logo, a file, a photo, a consent) goes through `ConfirmAction`: the window names the thing, the action is red and Annulla has the focus.
+8. On phones the tab bar has at most five places. Pages that do not fit (the drill library) are in the computer sidebar and reachable from where they are used.
 
 ## 3. Text
 
@@ -46,7 +49,7 @@ Read this file, and the open items of `docs/UI_BACKLOG.md`, before touching a pa
 
 ## 6. How to check
 
-1. Run `node scripts/ui-check.mjs` after `npm run build`. It serves the built app with sample data and no real account, opens every page at 375 and 1280 pixels, saves screenshots to `ui-check/`, and fails on: sideways scrolling, controls under 44 pixels, a page frame whose left edge differs from the others, a sub page without a way back, a translation key shown as text, a label ending with a colon, a name with digits.
+1. Run `node scripts/ui-check.mjs`. It builds its own copy of the app against a fake backend with invented sample data (no account, no network), opens every page at 375 and 1280 pixels, saves screenshots to `ui-check/`, and fails on: sideways scrolling, controls under 44 pixels, a select with the native look, a page frame whose left edge differs from the others, a sub page without a way back, a translation key shown as text, a label ending with a colon, a script error. It also tries the group menu and the view menu by keyboard, the name rule on leaving the field, and a confirmation window (Annulla focused, Escape removes nothing). A new page goes into its route list; a new kind of data goes into `scripts/ui-check/fixtures.mjs`.
 2. Look at every screenshot of a page you changed, top to bottom, at both widths. A passing script is not a passing page.
 3. Run the UX skills that apply (`vectorlab-ux-skills:ux-audit`, `ui-consistency:verifying`, `ux-ui-audit:ux-ui-audit` on the live site when it is published) and write what could not be proven.
 

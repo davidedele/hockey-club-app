@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import ConfirmAction from '../components/ConfirmAction'
 import PageHeader from '../components/PageHeader'
 import { Navigate } from 'react-router-dom'
 import { errorText, locale, t } from '../i18n'
@@ -102,7 +103,7 @@ export default function Invites() {
         <strong>{groupName(i.group_id)}</strong>
         <span className="hint">{i.used_by && names.get(i.used_by) ? t('invites.usedBy', { name: names.get(i.used_by)! }) : status(i)}</span>
       </div>
-      {usable(i) && <button className="link" onClick={() => revoke(i.id)}>{t('invites.revoke')}</button>}
+      {usable(i) && <ConfirmAction label={t('invites.revoke')} title={t('invites.revokeTitle', { group: groupName(i.group_id) })} body={t('invites.revokeBody')} confirm={t('invites.revokeGo')} onConfirm={() => revoke(i.id)} />}
     </li>
   )
 

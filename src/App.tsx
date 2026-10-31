@@ -38,10 +38,12 @@ import Plan from './pages/Plan'
 import Login from './pages/Login'
 import MemberEdit from './pages/MemberEdit'
 import Members from './pages/Members'
+import Home from './pages/Home'
 import ProfileLayout, { ProfileAbsences, ProfileApp, ProfileCalendar, ProfileInfo, ProfileNotifications } from './pages/Profile'
 import ResetPassword from './pages/ResetPassword'
 
 const ICONS = {
+  home: <path d="M4 11l8-7 8 7v8a1 1 0 0 1-1 1h-4v-6h-6v6H5a1 1 0 0 1-1-1z" />,
   events: <path d="M7 3v3M17 3v3M5 5h14a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1zM4 10h16" />,
   members: (
     <>
@@ -79,7 +81,7 @@ function TabIcon({ name }: { name: keyof typeof ICONS }) {
 // two weeks, so its number never contradicts the longer list on the events page.
 function PendingBanner({ count }: { count: number }) {
   const location = useLocation()
-  if (count === 0 || location.pathname === '/events' || location.pathname.startsWith('/settings') || location.pathname.startsWith('/profile')) return null
+  if (count === 0 || location.pathname === '/' || location.pathname === '/events' || location.pathname.startsWith('/settings') || location.pathname.startsWith('/profile')) return null
   return (
     <div className="banner" role="status">
       <span>{count === 1 ? t('banner.one') : t('banner.many', { n: String(count) })}</span>
@@ -89,7 +91,7 @@ function PendingBanner({ count }: { count: number }) {
 }
 
 const SECTION: Record<string, MessageKey> = {
-  '': 'nav.members',
+  '': 'nav.home',
   members: 'nav.members',
   events: 'nav.events',
   campionato: 'nav.championship',
@@ -113,7 +115,7 @@ function Crumbs() {
   return (
     <nav className="crumbs" aria-label={t('crumb.label')}>
       <ol>
-        <li><Link to="/events">{club.name || t('app.name')}</Link></li>
+        <li><Link to="/">{club.name || t('app.name')}</Link></li>
         {key && <li>{leaf ? <Link to={first ? `/${first}` : '/'}>{t(key)}</Link> : <span aria-current="page">{t(key)}</span>}</li>}
         {key && leaf && <li><span aria-current="page">{leaf}</span></li>}
       </ol>
@@ -139,20 +141,23 @@ function Protected() {
   const fullName = `${profile.first_name} ${profile.last_name}`
   const main = (
     <>
+      <NavLink to="/" end><TabIcon name="home" />{t('nav.home')}</NavLink>
       <NavLink to="/events"><TabIcon name="events" />{t('nav.events')}</NavLink>
-      <NavLink to="/" end><TabIcon name="members" />{t('nav.members')}</NavLink>
+      <NavLink to="/members"><TabIcon name="members" />{t('nav.members')}</NavLink>
       <NavLink to="/campionato" className={({ isActive }) => (isActive || pathname === '/stats' ? 'active' : undefined)}><TabIcon name="stats" />{t('nav.championship')}</NavLink>
       {isStaff && <NavLink to="/attendance"><TabIcon name="attendance" />{t('nav.attendance')}</NavLink>}
-      {isStaff && <NavLink to="/drills"><TabIcon name="drills" />{t('nav.drills')}</NavLink>}
     </>
   )
+  // The drill library is in the sidebar on computers; on phones the tab bar keeps five places at most,
+  // and the library opens from the plan of a training.
+  const drills = isStaff && <NavLink to="/drills"><TabIcon name="drills" />{t('nav.drills')}</NavLink>
   return (
     <div className="shell">
       <a className="skip" href="#main">{t('nav.skip')}</a>
       <aside className="side">
-        <Link className="club" to="/events"><Crest /><span className="club-name">{club.name || t('app.name')}</span></Link>
+        <Link className="club" to="/"><Crest /><span className="club-name">{club.name || t('app.name')}</span></Link>
         <GroupSwitch className="side-switch" />
-        <nav aria-label={t('nav.main')}>{main}</nav>
+        <nav aria-label={t('nav.main')}>{main}{drills}</nav>
         <nav className="side-foot" aria-label={t('nav.account')}>
           {isBoard && <NavLink to="/settings"><TabIcon name="settings" />{t('settings.title')}</NavLink>}
           {isStaff && !isBoard && <NavLink to="/settings/invites"><TabIcon name="invites" />{t('nav.invites')}</NavLink>}
@@ -168,7 +173,7 @@ function Protected() {
           </span>
         </div>
         <header className="top">
-          <Link className="club" to="/events" aria-label={club.name || t('app.name')}><Crest />{groups.length < 2 && <span className="club-name">{club.name || t('app.name')}</span>}</Link>
+          <Link className="club" to="/" aria-label={club.name || t('app.name')}><Crest />{groups.length < 2 && <span className="club-name">{club.name || t('app.name')}</span>}</Link>
           <GroupSwitch className="top-switch" short />
           <span className="top-actions">
           <ViewSwitch compact />
@@ -202,7 +207,8 @@ export default function App() {
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/join/:token" element={<Join />} />
       <Route element={<Protected />}>
-        <Route path="/" element={<Members />} />
+        <Route path="/" element={<Home />} />
+        <Route path="/members" element={<Members />} />
         <Route path="/events" element={<Events />} />
         <Route path="/events/new" element={<EventForm />} />
         <Route path="/events/unanswered" element={<Navigate to="/attendance?tab=missing" replace />} />

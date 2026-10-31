@@ -106,7 +106,7 @@ export default function Join() {
         {!loading && profile && !busy && !error && <button onClick={redeem}>{t('join.useInvite')}</button>}
         {!loading && error && <p className="error">{error}</p>}
         {!loading && !error && (!profile || busy) && <p>{t('join.working')}</p>}
-        {error && <p><Link to="/">{t('nav.members')}</Link></p>}
+        {error && <p><Link to="/">{t('nav.home')}</Link></p>}
       </div>
     )
   }

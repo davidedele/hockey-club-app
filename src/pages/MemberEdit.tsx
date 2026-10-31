@@ -40,8 +40,8 @@ export default function MemberEdit() {
     void refresh()
   }, [refresh])
 
-  if (!isStaff) return <Navigate to="/" replace />
-  if (loaded && !person) return <Navigate to="/" replace />
+  if (!isStaff) return <Navigate to="/members" replace />
+  if (loaded && !person) return <Navigate to="/members" replace />
   if (!person) return <p className="center">{t('common.loading')}</p>
 
   const isMe = me?.id === person.id
@@ -94,7 +94,7 @@ export default function MemberEdit() {
 
   return (
     <div className="page">
-      <PageHeader title={name} back={{ to: '/', label: t('nav.members') }} />
+      <PageHeader title={name} back={{ to: '/members', label: t('nav.members') }} />
       {error && <p className="error" role="alert">{error}</p>}
 
       <h2>{t('member.groups')}</h2>
