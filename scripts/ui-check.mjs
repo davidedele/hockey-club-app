@@ -343,6 +343,36 @@ for (const width of WIDTHS) {
   await page.keyboard.press('Escape')
   check(!(await page.isVisible('dialog[open]')), 'confirm: Escape does not close the delete window')
 
+  // The notification panel: fully inside the window, closes on a tap outside, on Escape and after a link, and gives the focus back.
+  const bell = async (width, height, label) => {
+    const target = await context.newPage()
+    await target.setViewportSize({ width, height })
+    await target.goto(origin + '/members')
+    await target.waitForLoadState('networkidle').catch(() => {})
+    await target.waitForTimeout(300)
+    const summary = width < 768 ? '.top .bell summary' : '.crumb-actions .bell summary'
+    await target.click(summary)
+    await target.screenshot({ path: join(out, `bell-${label}.png`) })
+    const box = await target.locator(width < 768 ? '.top .bell-list' : '.crumb-actions .bell-list').boundingBox()
+    check(box && box.x >= 0 && box.y >= 0 && box.x + box.width <= width && box.y + box.height <= height, `bell at ${label}: the panel is not fully inside the window (${JSON.stringify(box)})`)
+    if (width < 768 && box) check(Math.abs((box.x + box.width / 2) - width / 2) <= 1, `bell at ${label}: the panel is not centred on the phone`)
+    await target.mouse.click(5, height - 5)
+    check(!(await target.locator('.bell[open]').count()), `bell at ${label}: a tap outside does not close the panel`)
+    await target.click(summary)
+    await target.keyboard.press('Escape')
+    check(!(await target.locator('.bell[open]').count()), `bell at ${label}: Escape does not close the panel`)
+    check(await target.evaluate(() => document.activeElement?.tagName === 'SUMMARY'), `bell at ${label}: the focus does not return to the bell after Escape`)
+    await target.click(summary)
+    await target.waitForTimeout(100)
+    check(await target.locator('.bell[open]').count(), `bell at ${label}: the panel does not open again after Escape`)
+    if (!(await target.locator('.bell[open]').count())) { await target.close(); return }
+    await target.locator(width < 768 ? '.top .bell-list a' : '.crumb-actions .bell-list a').first().click()
+    await target.waitForTimeout(200)
+    check(!(await target.locator('.bell[open]').count()), `bell at ${label}: the panel stays open after a link is followed`)
+    await target.close()
+  }
+  for (const [w, h] of [[320, 640], [375, 812], [430, 932], [1280, 800]]) await bell(w, h, `${w}px`)
+
   // Player things stay out of the staff views (decision 93, 106): no unanswered events banner, no certificate line
   // and no pending count in the bell. In the Giocatore view they show, and the same number is everywhere (decision 92).
   const asView = async (view, path) => { await page.goto(origin + '/'); await page.evaluate((v) => localStorage.setItem('view-as', v), view); await settle(path) }
