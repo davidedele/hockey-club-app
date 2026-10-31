@@ -276,11 +276,11 @@ export default function EventForm() {
             </div>
             {editing && (
               <>
-              <label>
-                {t('form.video')}
-                <input type="url" inputMode="url" autoCapitalize="none" maxLength={300} placeholder="https://" value={video} onChange={(e) => setVideo(e.target.value)} />
-              </label>
-              <p className="hint">{t('form.videoHint')}</p>
+                <label>
+                  {t('form.video')}
+                  <input type="url" inputMode="url" autoCapitalize="none" maxLength={300} placeholder="https://" value={video} onChange={(e) => setVideo(e.target.value)} />
+                </label>
+                <p className="hint">{t('form.videoHint')}</p>
               </>
             )}
             <div className="field">

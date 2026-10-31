@@ -1237,3 +1237,4 @@ button.fold-head { display: flex; align-items: center; justify-content: space-be
 .shift-times { display: grid; justify-items: end; font-variant-numeric: tabular-nums; }
 .shift-times b { font-size: 1.25rem; }
 .shift-times b.over { text-decoration: underline; }
+.milestones .row { flex-wrap: wrap; gap: .25rem 1rem; }

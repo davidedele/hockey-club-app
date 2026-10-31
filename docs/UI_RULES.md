@@ -62,6 +62,9 @@ Read this file, and the open items of `docs/UI_BACKLOG.md`, before touching a pa
 4. The controls of the phone top bar (group, view, bell, gear, picture) are one family: round, 44 pixels, flat, the same focus ring. The group selector shows the code of the chosen group (A, B, C1, C2, S) in a 36 pixel circle like the profile picture, or an icon for all groups; the list that opens shows the full names.
 5. The red "now" line with the small circle in the middle, like the centre line and circle of a rink (`.nowline`), is the club's hockey mark. It is used at most twice on a screen: above the next event ("Adesso") and as the divider before what comes later ("Più avanti"). Red stays otherwise for danger and errors.
 
+6. Match predictions and other club fun (decision 119): the form to guess is part of the Giocatore view only; the list of guesses after the start and the tables are club information and show in every view. A person's guess is never shown to others before the game starts. Where a score has our side first, the text says so.
+7. A row with a long name and an action (club documents) lets the action drop under the name instead of leaving the window.
+
 ## 6. How to check
 
 1. Run `node scripts/ui-check.mjs`. It builds its own copy of the app against a fake backend with invented sample data (no account, no network), opens every page at 375 and 1280 pixels, saves screenshots to `ui-check/`, and fails on: sideways scrolling, controls under 44 pixels, a select with the native look, a page frame whose left edge differs from the others, a sub page without a way back, a translation key shown as text, a label ending with a colon, a script error. It also tries the group menu and the view menu by keyboard, the name rule on leaving the field, and a confirmation window (Annulla focused, Escape removes nothing). A new page goes into its route list; a new kind of data goes into `scripts/ui-check/fixtures.mjs`.

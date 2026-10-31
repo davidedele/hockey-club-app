@@ -9,7 +9,7 @@ begin
   if not (exists (select 1 from information_schema.columns where table_schema = 'public' and table_name = 'club_settings' and column_name = 'mfa_required_from')) then
     raise exception 'Wrong project, or an earlier migration is missing: migration 0042 was not applied.';
   end if;
-  if exists (select 1 from pg_constraint where conname = 'profiles_id_fkey' and conrelid = 'public.profiles'::regclass and confdeltype = 'r') then
+  if exists (select 1 from pg_constraint where conname = 'profiles_id_fkey' and conrelid = to_regclass('public.profiles') and confdeltype = 'r') then
     raise exception 'Migration 0042 is already applied: nothing was changed.';
   end if;
 end

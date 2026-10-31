@@ -23,9 +23,9 @@ Email setup (custom sender and email confirmation) is in `docs/SETUP_EMAIL.md`.
 2. `UI_CHECK_DARK=1` runs the dark colour scheme, `UI_CHECK_LARGE=1` a larger text size. They can be combined with the first one. Screenshots go to `ui-check/<width>-dark`, `-large` and so on.
 3. `UI_CHECK_WIDTHS=375,1280` limits the widths for a quick run.
 
-## Applying the new migrations to the test project (0036 to 0042)
+## Applying the new migrations to the test project (0036 to 0049)
 
-1. Apply the files of `supabase/apply` in number order in the SQL Editor of the TEST project: `apply_0036_certificate_issue_date.sql`, `apply_0037_rink_address.sql`, `apply_0038_my_season.sql`, `apply_0039_push_notifications.sql`, `apply_0040_delete_member_data.sql`, `apply_0041_board_two_step.sql`, `apply_0042_keep_history_on_account_delete.sql`. Each stops by itself on the wrong project or on a second run. `bash scripts/test-apply.sh` checks the files on a local Postgres. Regenerate them with `node scripts/make-apply.mjs` after any change to a migration.
+1. Apply the files of `supabase/apply` in number order in the SQL Editor of the TEST project: `apply_0036_certificate_issue_date.sql`, `apply_0037_rink_address.sql`, `apply_0038_my_season.sql`, `apply_0039_push_notifications.sql`, `apply_0040_delete_member_data.sql`, `apply_0041_board_two_step.sql`, `apply_0042_keep_history_on_account_delete.sql`, `apply_0043_opponent_history.sql`, `apply_0044_club_documents.sql`, `apply_0045_match_video.sql`, `apply_0046_pinned_announcements.sql`, `apply_0047_my_milestones.sql`, `apply_0048_game_predictions.sql`, `apply_0049_season_leaders.sql`. Each stops by itself on the wrong project or on a second run. `bash scripts/test-apply.sh` checks the files on a local Postgres. Regenerate them with `node scripts/make-apply.mjs` after any change to a migration.
 2. Deploy the new server function `delete-member` (Verify JWT on; deploy it again if you deployed the first version, because it now disables the sign in account instead of deleting it) and deploy `send-reminders` again (it now sends push). See `docs/SETUP_PUSH.md`.
 3. `QA_WRITE=1 node scripts/qa-real.mjs` reads the test project as the test player and the test board account, and compares the numbers on screen with the database. Without QA_WRITE it writes nothing.
 

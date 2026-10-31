@@ -72,7 +72,7 @@ export default function MySeason() {
           {milestones.length === 0 ? (
             <p className="hint">{t('milestone.none')}</p>
           ) : (
-            <section className="card">
+            <>
               <ul className="list milestones">
                 {milestones.flatMap((m) => {
                   const k = milestoneKey(m)
@@ -80,7 +80,7 @@ export default function MySeason() {
                 })}
               </ul>
               <p className="hint">{t('milestone.intro')}</p>
-            </section>
+            </>
           )}
         </>
       )}

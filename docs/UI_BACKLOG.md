@@ -65,6 +65,14 @@ Status words: Open, In progress, Done (PR number), Decided (waiting for Davide),
 4. A bell line read "1 nuovi". Status: Done ("1 nuovo avviso").
 5. Not done on purpose: the list rows and week cards have no "Apri in Mappe" button (decision 116); the unused texts of `it.json` (about 20 outside the error codes) are not removed.
 
+## Follow up run, voted ideas (V1 to V10)
+
+1. New screens: "Ultimi scontri con ..." on a game page, the number hint on Dati personali, "Documenti del club" in the profile list, the video button on a game, "In evidenza" announcements, "Traguardi" in La mia stagione, "Il tuo pronostico" and the list of guesses on a game, the Statistiche tabs "Pronostici" and "Albo d'oro", the shift timer on the line-up tab. Status: Done, checked by the interface checker (except the shift timer, see item 3).
+2. The checker found a club document row whose button left the window at 320 to 390 pixels, and a video link under 44 pixels. Status: Done.
+3. The shift timer only shows for staff during a live game; the checker's sample data has none, so it was looked at by hand only in a scratch run. Status: Open (add a live game to the sample data).
+4. At 375 pixels the Statistiche tab "Albo d'oro" is cut at the edge and scrolls, like the Eventi tabs. Status: Open, Davide to say if a shorter name is wanted.
+5. In the profile list the dot of the "Documenti" status touches the last letter of the word in the checker's screenshot at 1280 pixels. Status: Open, check on a real screen.
+
 ## Earlier reviews
 
 1. The banner says "Hai 1 evento senza risposta" while the events panel lists five: different time spans. Status: Done (PR 37).

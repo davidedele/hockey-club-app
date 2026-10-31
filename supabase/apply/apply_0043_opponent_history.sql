@@ -6,7 +6,7 @@
 
 do $guard$
 begin
-  if not (exists (select 1 from pg_constraint where conname = 'profiles_id_fkey' and conrelid = 'public.profiles'::regclass and confdeltype = 'r')) then
+  if not (exists (select 1 from pg_constraint where conname = 'profiles_id_fkey' and conrelid = to_regclass('public.profiles') and confdeltype = 'r')) then
     raise exception 'Wrong project, or an earlier migration is missing: migration 0043 was not applied.';
   end if;
   if to_regprocedure('public.opponent_history(uuid)') is not null then
