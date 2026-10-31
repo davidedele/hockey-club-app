@@ -1,3 +1,4 @@
+import { useGroupFilter } from '../lib/groupfilter'
 import { personName } from '../lib/names'
 import { PageSkeleton } from '../components/Skeleton'
 import { useCallback, useEffect, useRef, useState } from 'react'
@@ -19,7 +20,7 @@ import type { Answer, AttendanceRow, EventRow, Group, Rink, Status } from '../li
 
 const STATUSES: Status[] = ['on_time', 'late', 'excused', 'unexcused', 'injured', 'not_called_up']
 
-type NearEvent = Pick<EventRow, 'id' | 'type' | 'title' | 'starts_at' | 'opponent' | 'home_away' | 'score_for' | 'score_against' | 'cancelled_at'>
+type NearEvent = Pick<EventRow, 'id' | 'type' | 'title' | 'starts_at' | 'opponent' | 'home_away' | 'score_for' | 'score_against' | 'cancelled_at' | 'event_groups'>
 type Tab = 'info' | 'presence' | 'game' | 'discussion' | 'lineup' | 'plan'
 type State = 'present' | 'absent' | 'waiting' | 'not_called_up'
 
@@ -51,6 +52,7 @@ export default function EventDetail() {
   const [dragging, setDragging] = useState<string | null>(null)
   const [hoverState, setHoverState] = useState<State | null>(null)
   const [params] = useSearchParams()
+  const { groupId: chosenGroup } = useGroupFilter()
 
   const refresh = useCallback(async () => {
     if (!profile) return
@@ -60,9 +62,10 @@ export default function EventDetail() {
       supabase.from('group_members').select('group_id').eq('user_id', profile.id),
       supabase.from('attendance_answers').select('answer').eq('event_id', id).eq('user_id', profile.id).maybeSingle(),
       supabase.from('rinks').select('id, name'),
-      supabase.from('events').select('id, type, title, starts_at, opponent, home_away, score_for, score_against, cancelled_at').order('starts_at', { ascending: false }).limit(1000),
+      supabase.from('events').select('id, type, title, starts_at, opponent, home_away, score_for, score_against, cancelled_at, event_groups(group_id)').order('starts_at', { ascending: false }).limit(1000),
     ])
-    setNear(((nb.data ?? []) as NearEvent[]).slice().reverse())
+    // The strip follows the group chosen in the selector; the event being looked at is always in it.
+    setNear(((nb.data ?? []) as NearEvent[]).filter((x) => x.id === id || chosenGroup === null || x.event_groups.some((g) => g.group_id === chosenGroup)).reverse())
     const row = (e.data as EventRow | null) ?? null
     setEvent(row)
     setGroups((g.data ?? []) as Group[])
@@ -85,7 +88,7 @@ export default function EventDetail() {
       setRecordedByDb(rec.data === true)
     }
     setLoaded(true)
-  }, [id, profile, isStaff])
+  }, [id, profile, isStaff, chosenGroup])
 
   useEffect(() => {
     void refresh()
