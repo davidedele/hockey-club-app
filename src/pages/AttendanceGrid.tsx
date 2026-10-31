@@ -1,3 +1,4 @@
+import TableScroll from '../components/TableScroll'
 import { useEffect, useMemo, useState } from 'react'
 import { Navigate } from 'react-router-dom'
 import { errorText, t, type MessageKey } from '../i18n'
@@ -116,8 +117,7 @@ export default function AttendanceGrid({ embedded = false }: { embedded?: boolea
       {loaded && !error && events.length > 0 && people.length === 0 && <p className="hint">{t('grid.noMembers')}</p>}
       {events.length > 0 && people.length > 0 && (
         <>
-          <p className="hint">{t('summary.scrollHint')}</p>
-          <div className="scroll">
+          <TableScroll>
             <table className="grid">
               <thead>
                 <tr>
@@ -149,7 +149,7 @@ export default function AttendanceGrid({ embedded = false }: { embedded?: boolea
                 ))}
               </tbody>
             </table>
-          </div>
+          </TableScroll>
           <h2>{t('grid.legend')}</h2>
           <p className="hint">{t('grid.legendIntro')}</p>
           <ul className="legend">

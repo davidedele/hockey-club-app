@@ -1,3 +1,4 @@
+import TableScroll from '../components/TableScroll'
 import { useEffect, useMemo, useState } from 'react'
 import SortHeader from '../components/SortHeader'
 import TablePager from '../components/TablePager'
@@ -140,7 +141,7 @@ export default function AttendanceSummary() {
       {rows.length > 0 && <p className="hint" role="status">{t('att.players', { n: String(shown.length) })}</p>}
       {rows.length > 0 && (
         <>
-          <div className="table-wrap">
+          <TableScroll variant="table-wrap">
             <table className="att-table">
               <thead>
                 <tr>
@@ -172,7 +173,7 @@ export default function AttendanceSummary() {
                 {shown.length === 0 && <tr><td colSpan={COLUMNS.length + 1} className="hint">{t('cal.none')}</td></tr>}
               </tbody>
             </table>
-          </div>
+          </TableScroll>
           <TablePager total={shown.length} page={page} size={size} onPage={setPage} onSize={(n) => { setSize(n); setPage(1) }} />
         </>
       )}

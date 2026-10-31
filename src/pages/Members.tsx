@@ -1,3 +1,4 @@
+import TableScroll from '../components/TableScroll'
 import { useEffect, useMemo, useState } from 'react'
 import PageHeader from '../components/PageHeader'
 import { Link } from 'react-router-dom'
@@ -107,7 +108,7 @@ export default function Members() {
           {isStaff && <OutputAction kind="csv" label={t('table.export')} rows={sorted.length} personal disabled={sorted.length === 0} onRun={exportCsv} />}
         </div>
       </div>
-      <div className="scroll desk-only">
+      <TableScroll className="desk-only">
         <table className="members-table">
           <thead>
             <tr>
@@ -134,7 +135,7 @@ export default function Members() {
                   <td>{p.jersey_number ?? ''}</td>
                   <td>{p.position ? t(`position.${p.position}` as MessageKey) : ''}</td>
                   <td>{groupsOf(p.id)}</td>
-                  {isStaff && <td className="email-cell">{contact?.email ? <a href={`mailto:${contact.email}`} title={contact.email}>{contact.email}</a> : ''}</td>}
+                  {isStaff && <td className="email-cell">{contact?.email ? <a href={`mailto:${contact.email}`} title={contact.email}>{`${contact.email.split('@')[0]}@`}<wbr />{contact.email.split('@').slice(1).join('@')}</a> : ''}</td>}
                   {isStaff && <td>{contact?.phone ? <a href={phoneLink(contact.phone)}>{formatPhone(contact.phone)}</a> : ''}</td>}
                   {isStaff && <td>{docCell(p.id)}</td>}
                 </tr>
@@ -145,7 +146,7 @@ export default function Members() {
             )}
           </tbody>
         </table>
-      </div>
+      </TableScroll>
       <div className="desk-only">
         <TablePager total={sorted.length} page={page} size={size} onPage={setPage} onSize={(n) => { setSize(n); setPage(1) }} />
       </div>

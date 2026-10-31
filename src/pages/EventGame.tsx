@@ -1,3 +1,4 @@
+import TableScroll from '../components/TableScroll'
 import { useCallback, useEffect, useState } from 'react'
 import { errorText, locale, t } from '../i18n'
 import { supabase } from '../lib/supabase'
@@ -184,7 +185,7 @@ export default function EventGame({ eventId, myId, isStaff, started, over, reloa
       {played.length > 0 && !editing && (
         <>
           {!hasNumbers && <p className="hint">{t('game.noStats')}</p>}
-          <div className="scroll">
+          <TableScroll>
             <table className="stats-table">
               <thead>
                 <tr>
@@ -213,7 +214,7 @@ export default function EventGame({ eventId, myId, isStaff, started, over, reloa
                 ))}
               </tbody>
             </table>
-          </div>
+          </TableScroll>
           {isStaff && (
             <div className="actions spaced">
               <button className="secondary" onClick={startEditing}>{t('game.edit')}</button>

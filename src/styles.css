@@ -1149,3 +1149,11 @@ input[type="color"] { padding: .25rem; }
 .list-skel { height: 16rem; }
 @media (prefers-reduced-motion: no-preference) { .skeleton { animation: skel 1.6s ease-in-out infinite; } }
 @keyframes skel { 50% { opacity: .55; } }
+
+/* A table wider than its card: a shadow on the edge and a hint under it (TableScroll). */
+.scroll.over, .table-wrap.over { box-shadow: inset -14px 0 12px -12px rgba(14, 34, 54, .3); }
+.scroll-hint { margin: .5rem 0 0; }
+.members-table .email-cell { white-space: normal; overflow-wrap: anywhere; min-width: 11rem; max-width: 15rem; }
+.att-table th, .att-table td { padding-left: .375rem; padding-right: .375rem; }
+.att-table { font-size: .8125rem; }
+.att-table thead th { white-space: normal; }
