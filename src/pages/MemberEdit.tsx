@@ -1,3 +1,4 @@
+import { PageSkeleton } from '../components/Skeleton'
 import { useCallback, useEffect, useState } from 'react'
 import PageHeader from '../components/PageHeader'
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom'
@@ -42,7 +43,7 @@ export default function MemberEdit() {
 
   if (!isStaff) return <Navigate to="/members" replace />
   if (loaded && !person) return <Navigate to="/members" replace />
-  if (!person) return <p className="center">{t('common.loading')}</p>
+  if (!person) return <PageSkeleton />
 
   const isMe = me?.id === person.id
 

@@ -1,3 +1,4 @@
+import { PageSkeleton } from '../components/Skeleton'
 import { useCallback, useEffect, useState } from 'react'
 import { Link, Navigate, useParams } from 'react-router-dom'
 import { errorText, t, type MessageKey } from '../i18n'
@@ -73,7 +74,7 @@ export default function Lineup({ embedded = false }: { embedded?: boolean }) {
   }, [load])
 
   if (loaded && !event) return <Navigate to="/events" replace />
-  if (!event) return <p className="center">{t('common.loading')}</p>
+  if (!event) return <PageSkeleton />
 
   const over = new Date(event.ends_at).getTime() < Date.now()
   const cancelled = event.cancelled_at !== null

@@ -1,3 +1,4 @@
+import { PageSkeleton } from '../components/Skeleton'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { errorText, t, type MessageKey } from '../i18n'
@@ -92,7 +93,7 @@ export default function EventDetail() {
   useCrumb(event?.title ?? '')
 
   if (loaded && !event) return <Navigate to="/events" replace />
-  if (!event) return <p className="center">{t('common.loading')}</p>
+  if (!event) return <PageSkeleton />
 
   const now = Date.now()
   const over = new Date(event.ends_at).getTime() < now

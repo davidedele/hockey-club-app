@@ -1,3 +1,4 @@
+import { PageSkeleton } from './components/Skeleton'
 import { Link, NavLink, Navigate, Outlet, Route, Routes, useLocation } from 'react-router-dom'
 import { t, type MessageKey } from './i18n'
 import { isConfigured } from './lib/supabase'
@@ -133,7 +134,7 @@ function Protected() {
   const { pathname } = useLocation()
   const note = useNotifications()
   const { groups } = useGroupFilter()
-  if (loading) return <p className="center">{t('common.loading')}</p>
+  if (loading) return <PageSkeleton />
   if (!session) return <Navigate to="/login" replace />
   if (!profile) {
     const pending = getPendingInvite()

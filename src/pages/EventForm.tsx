@@ -1,3 +1,4 @@
+import { ChipsSkeleton } from '../components/Skeleton'
 import { useEffect, useState, type FormEvent } from 'react'
 import PageHeader from '../components/PageHeader'
 import { Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom'
@@ -21,6 +22,8 @@ export default function EventForm() {
   const { groupId: chosenGroup } = useGroupFilter()
   const [groups, setGroups] = useState<Group[]>([])
   const [rinks, setRinks] = useState<Rink[]>([])
+  // The groups and rinks come from the database; until they are here the chips are grey placeholders.
+  const [listsReady, setListsReady] = useState(false)
   const [rinkId, setRinkId] = useState<number | null>(null)
   const [loaded, setLoaded] = useState(!editing)
 
@@ -53,6 +56,7 @@ export default function EventForm() {
       const [g, r] = await Promise.all([supabase.from('groups').select('*').order('id'), supabase.from('rinks').select('id, name').order('name')])
       setGroups((g.data ?? []) as Group[])
       setRinks((r.data ?? []) as Rink[])
+      setListsReady(true)
       if (!id) {
         // A new event starts on the group chosen in the switcher.
         if (chosenGroup !== null) setGroupIds((current) => (current.length === 0 ? [chosenGroup] : current))
@@ -228,6 +232,12 @@ export default function EventForm() {
           {t('form.venue')}
           <input maxLength={120} value={venue} onChange={(e) => setVenue(e.target.value)} />
         </label>
+        {!listsReady && (
+          <div className="field">
+            <span className="label">{t('form.rink')}</span>
+            <ChipsSkeleton count={3} />
+          </div>
+        )}
         {rinks.length > 0 && (
           <div className="field">
             <span className="label">{t('form.rink')}</span>
@@ -301,13 +311,15 @@ export default function EventForm() {
           <>
             <div className="field">
               <span className="label">{t('form.groups')}</span>
-              <div className="chips wrap">
-                {groups.map((g) => (
-                  <button type="button" key={g.id} className={groupIds.includes(g.id) ? 'chip on' : 'chip'} aria-pressed={groupIds.includes(g.id)} onClick={() => toggleGroup(g.id)}>
-                    {g.name}
-                  </button>
-                ))}
-              </div>
+              {listsReady ? (
+                <div className="chips wrap">
+                  {groups.map((g) => (
+                    <button type="button" key={g.id} className={groupIds.includes(g.id) ? 'chip on' : 'chip'} aria-pressed={groupIds.includes(g.id)} onClick={() => toggleGroup(g.id)}>
+                      {g.name}
+                    </button>
+                  ))}
+                </div>
+              ) : <ChipsSkeleton />}
               <span className="hint">{t('form.groupsHint')}</span>
             </div>
             {type === 'training' && (
