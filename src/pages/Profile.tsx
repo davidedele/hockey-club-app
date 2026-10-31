@@ -12,6 +12,7 @@ import { formatPhone, isPhoneValid } from '../lib/phone'
 import { nameHasDigits, personName, tidyName } from '../lib/names'
 import AbsencePeriods from '../components/AbsencePeriods'
 import CalendarFeed from '../components/CalendarFeed'
+import NotificationSettings from '../components/NotificationSettings'
 import ReminderSwitch from '../components/ReminderSwitch'
 import InstallApp from '../components/InstallApp'
 import LanguageChoice from '../components/LanguageChoice'
@@ -246,6 +247,8 @@ export function ProfileNotifications() {
   return (
     <div className="section">
       <PageHeader title={t('reminders.title')} back={back()} />
+      <NotificationSettings />
+      <h2>{t('push.emailTitle')}</h2>
       <ReminderSwitch heading={false} />
     </div>
   )
