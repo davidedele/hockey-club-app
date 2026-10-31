@@ -4,7 +4,7 @@ Update this file at the end of every session, so the next session starts exactly
 Keep entries short and put the newest first.
 
 ## Current state
-Migration 0032 is written and waits to be applied to the test project (apply_0032.sql). Older note: migrations up to 0015 are applied to the Supabase test project (0012 to 0015 on 22 October, by Davide in the SQL Editor, from one file with a check that stops on the wrong project or a second run). Security advisors after that: row level security on every table; `league_ignored` has no policies on purpose, since only the league function and triggers use it. The league-sync server function is not deployed yet, so the Campionato page stays empty until it is. The weekly limit was dropped on 28 October.
+Migrations up to 0035 are applied to the Supabase test project (apply files of 0036 to 0041 are written in `supabase/apply` and wait for Davide). The newest work is on branch `claude/beautiful-johnson-vsdump`; read the "What is done and what is not" section below and `docs/VERIFY_ROUND.md` first.
 
 ## Session log
 00. Long autonomous run on branch `claude/beautiful-johnson-vsdump` (fix brief 2, the approved features and the voted ideas), 31 October 2026. Author of every commit: davidedele. Newest step first.
