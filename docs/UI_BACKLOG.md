@@ -57,6 +57,14 @@ Status words: Open, In progress, Done (PR number), Decided (waiting for Davide),
 10. B14 The old test members with digits in their names. Status: Open, a data fix on the test project, not code.
 11. C1 to C3 Dark mode: bell badge, result circles and today mark use dark text on the light signal colours; the training band is a deep blue with white text. Status: Done.
 
+## Found during the long run (31 October 2026, Claude)
+
+1. At 320 pixels the member page and the absence form were wider than the window. Status: Done (UI rule 2.10).
+2. The yellow club banner on Eventi had pale text on yellow. Status: Done: the text follows the colour's brightness.
+3. With the largest text size, the page size buttons of the attendance table and the facts of an event pushed the page sideways. Status: Done.
+4. A bell line read "1 nuovi". Status: Done ("1 nuovo avviso").
+5. Not done on purpose: the list rows and week cards have no "Apri in Mappe" button (decision 116); the unused texts of `it.json` (about 20 outside the error codes) are not removed.
+
 ## Earlier reviews
 
 1. The banner says "Hai 1 evento senza risposta" while the events panel lists five: different time spans. Status: Done (PR 37).

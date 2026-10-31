@@ -22,3 +22,9 @@ Email setup (custom sender and email confirmation) is in `docs/SETUP_EMAIL.md`.
 1. `UI_CHECK_WEBKIT=1 node scripts/ui-check.mjs` runs it on WebKit, the engine of iPhone Safari. WebKit could not run in the cloud container used for the build, so run it once on the Mac: `npx playwright install webkit`, then the command above. Screenshots go to `ui-check/<width>-webkit`.
 2. `UI_CHECK_DARK=1` runs the dark colour scheme, `UI_CHECK_LARGE=1` a larger text size. They can be combined with the first one. Screenshots go to `ui-check/<width>-dark`, `-large` and so on.
 3. `UI_CHECK_WIDTHS=375,1280` limits the widths for a quick run.
+
+## Applying the new migrations to the test project (0036 to 0041)
+
+1. Apply the files of `supabase/apply` in number order in the SQL Editor of the TEST project: `apply_0036_certificate_issue_date.sql`, `apply_0037_rink_address.sql`, `apply_0038_my_season.sql`, `apply_0039_push_notifications.sql`, `apply_0040_delete_member_data.sql`, `apply_0041_board_two_step.sql`. Each stops by itself on the wrong project or on a second run. `bash scripts/test-apply.sh` checks the files on a local Postgres. Regenerate them with `node scripts/make-apply.mjs` after any change to a migration.
+2. Deploy the new server function `delete-member` (Verify JWT on) and deploy `send-reminders` again (it now sends push). See `docs/SETUP_PUSH.md`.
+3. `QA_WRITE=1 node scripts/qa-real.mjs` reads the test project as the test player and the test board account, and compares the numbers on screen with the database. Without QA_WRITE it writes nothing.
