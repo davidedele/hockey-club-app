@@ -185,6 +185,7 @@ export const fixtures = {
     reminder_prefs: [], calendar_tokens: [{ user_id: ME, token: 'sampletoken0123456789sampletoken0123456789', created_at: at(-30, 9) }],
   },
   rpc: {
+    my_season: [{ events_total: '12', answered_present: '9', answered_absent: '2', no_answer: '1', on_time: '8', late: '1', excused: '2', unexcused: '0', injured: '0', not_called_up: '1', games: 5, goals: 3, assists: 4, penalty_minutes: 6, mvp: 1, rating_avg: '7.5', rated_games: 3 }],
     is_staff: true, is_board: true, is_member: true,
     attendance_summary: summary,
     attendance_grid: gridRows,

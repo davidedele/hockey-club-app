@@ -170,7 +170,7 @@ const ROUTES = [
   ['announcements', '/announcements', 'sub'], ['drills', '/drills'],
   ['member-edit', `/members/${member}`, 'sub'], ['member-documents', `/members/${member}/documents`, 'sub'],
   ['profile', '/profile'], ['profile-info', '/profile/info', 'sub'], ['profile-documents', '/documents', 'sub'],
-  ['profile-absences', '/profile/absences', 'sub'], ['profile-notifications', '/profile/notifications', 'sub'],
+  ['profile-absences', '/profile/absences', 'sub'], ['profile-season', '/profile/season', 'sub'], ['profile-notifications', '/profile/notifications', 'sub'],
   ['profile-calendar', '/profile/calendar', 'sub'], ['profile-app', '/profile/app', 'sub'],
   ['settings', '/settings'], ['settings-club', '/settings/club', 'sub'], ['settings-groups', '/settings/groups', 'sub'],
   ['settings-rinks', '/settings/rinks', 'sub'], ['settings-ice', '/settings/ice', 'sub'], ['settings-invites', '/settings/invites', 'sub'],
@@ -422,6 +422,7 @@ for (const width of WIDTHS) {
     await settle('/events')
     check(!(await page.locator('main .answers button, main .quick button').count()), `views: the ${view} view shows answer buttons on the events page`)
     await settle('/')
+    check(!(await page.locator('#home-season').count()), `views: the ${view} view shows the season tile of the player`)
     check(!(await page.locator('#home-pending').count()), `views: the ${view} view shows the list of events to answer on the home page`)
   }
   await asView('player', '/members')
@@ -434,6 +435,7 @@ for (const width of WIDTHS) {
   check(bellText.includes(bannerText), `views: the bell and the banner do not say the same: "${bellText.replace(/\s+/g, ' ')}" against "${bannerText}"`)
   await settle('/')
   await page.screenshot({ path: join(out, 'home-player-1280.png'), fullPage: true })
+  check(await page.locator('#home-season').count() === 1, 'season: the player view of Home has no "La mia stagione" tile')
   const homeN = Number(await page.locator('#home-pending .count').innerText().catch(() => 'x'))
   check(homeN === bannerN, `views: the Home tile counts ${homeN}, the banner ${bannerN}`)
   await settle('/events')

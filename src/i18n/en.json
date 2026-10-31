@@ -963,5 +963,15 @@
   "event.rinkNote": "Note on the rink",
   "rinks.address": "Address (optional)",
   "rinks.note": "Note (optional)",
-  "rinks.noteHint": "For example where to park or which entrance to use."
+  "rinks.noteHint": "For example where to park or which entrance to use.",
+  "season.title": "My season",
+  "season.intro": "Your numbers for the season: attendance and games. Only you can see them.",
+  "season.attendance": "Attendance",
+  "season.games": "Games",
+  "season.mvp": "MVP votes",
+  "season.rating": "Average rating received",
+  "season.ratingNote": "The average counts only the games you voted on too. Nobody sees who gave which rating.",
+  "season.empty": "There are no events for you in this season yet. Once there are, you will see them here.",
+  "season.emptyShort": "No data for this season yet.",
+  "season.open": "Open"
 }

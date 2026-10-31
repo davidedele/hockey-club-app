@@ -963,5 +963,15 @@
   "event.rinkNote": "Nota sulla pista",
   "rinks.address": "Indirizzo (facoltativo)",
   "rinks.note": "Nota (facoltativa)",
-  "rinks.noteHint": "Per esempio dove parcheggiare o da quale ingresso entrare."
+  "rinks.noteHint": "Per esempio dove parcheggiare o da quale ingresso entrare.",
+  "season.title": "La mia stagione",
+  "season.intro": "I tuoi numeri della stagione: presenze e partite. Li vedi solo tu.",
+  "season.attendance": "Presenze",
+  "season.games": "Partite",
+  "season.mvp": "Voti MVP",
+  "season.rating": "Media dei voti ricevuti",
+  "season.ratingNote": "La media conta solo le partite in cui hai votato anche tu. Non si vede chi ha dato quale voto.",
+  "season.empty": "In questa stagione non ci sono ancora eventi per te. Appena ci saranno presenze e partite, le vedrai qui.",
+  "season.emptyShort": "Ancora nessun dato per questa stagione.",
+  "season.open": "Apri"
 }

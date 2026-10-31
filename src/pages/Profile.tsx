@@ -50,6 +50,7 @@ export default function ProfileLayout() {
   const items = [
     { to: '/profile/info', label: t('profile.info') },
     { to: '/profile/documents', label: t('docs.title'), extra: docState && <span className={`doc-status ${docState.level}`}><span className="dot" aria-hidden="true" />{docState.text}</span> },
+    { to: '/profile/season', label: t('season.title') },
     { to: '/profile/absences', label: t('absence.title') },
     { to: '/profile/notifications', label: t('reminders.title') },
     { to: '/profile/calendar', label: t('calendar.title') },

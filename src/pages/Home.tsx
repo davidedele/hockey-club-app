@@ -10,8 +10,9 @@ import { useGroupFilter } from '../lib/groupfilter'
 import { prettyName } from '../lib/league'
 import { useSession } from '../lib/session'
 import { unanswered } from '../lib/unanswered'
+import { attendancePercent, isEmptySeason, useMySeason } from '../lib/myseason'
 import { supabase } from '../lib/supabase'
-import { formatDay, formatShortDay, formatTime } from '../lib/time'
+import { formatDay, formatShortDay, formatTime, seasonOf } from '../lib/time'
 import type { Answer, EventRow, Group, LeagueMatch, LeagueStanding, MemberDocument } from '../lib/types'
 
 interface Announcement { id: string; title: string; created_at: string }
@@ -131,6 +132,7 @@ export default function Home() {
   const certToVerify = certs.filter((x) => x === 'toVerify').length
   const certBad = members === null ? null : members - certs.filter((x) => x === 'valid' || x === 'soon' || x === 'toVerify').length
 
+  const mine = useMySeason(seasonOf(new Date().toISOString()))
   if (!profile) return null
   const dash = '–'
 
@@ -194,6 +196,22 @@ export default function Home() {
               </ul>
             )}
           </section>
+
+          {asPlayer && (
+            <section className="card" aria-labelledby="home-season">
+              <div className="card-head">
+                <h2 id="home-season">{t('season.title')}</h2>
+                <Link to="/profile/season">{t('season.open')}</Link>
+              </div>
+              {!mine.loaded ? <p className="hint">{dash}</p> : !mine.data || isEmptySeason(mine.data) ? <p className="hint">{t('season.emptyShort')}</p> : (
+                <dl className="home-facts">
+                  <div><dt>{t('att.percent')}</dt><dd>{attendancePercent(mine.data) === null ? dash : `${attendancePercent(mine.data)}%`}</dd></div>
+                  <div><dt>{t('stats.games')}</dt><dd>{mine.data.games}</dd></div>
+                  <div><dt>{t('stats.colGoals')} / {t('stats.colAssists')}</dt><dd>{mine.data.goals} / {mine.data.assists}</dd></div>
+                </dl>
+              )}
+            </section>
+          )}
 
           {team && (
             <section className="card" aria-labelledby="home-league">

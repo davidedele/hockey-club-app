@@ -40,6 +40,7 @@ import Plan from './pages/Plan'
 import Login from './pages/Login'
 import MemberEdit from './pages/MemberEdit'
 import Members from './pages/Members'
+import MySeason from './pages/MySeason'
 import Home from './pages/Home'
 import ProfileLayout, { ProfileAbsences, ProfileApp, ProfileCalendar, ProfileInfo, ProfileNotifications } from './pages/Profile'
 import ResetPassword from './pages/ResetPassword'
@@ -234,6 +235,7 @@ export default function App() {
           <Route path="info" element={<ProfileInfo />} />
           <Route path="documents" element={<Documents />} />
           <Route path="absences" element={<ProfileAbsences />} />
+          <Route path="season" element={<MySeason />} />
           <Route path="notifications" element={<ProfileNotifications />} />
           <Route path="calendar" element={<ProfileCalendar />} />
           <Route path="app" element={<ProfileApp />} />
