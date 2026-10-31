@@ -283,7 +283,7 @@
   "dash.thisWeek": "Eventi questa settimana",
   "dash.myAttendance": "Le mie presenze",
   "dash.ofTotal": "{n} su {total}",
-  "dash.todo": "Da rispondere",
+  "dash.todo": "Altri eventi futuri senza risposta",
   "dash.allDone": "Hai risposto a tutti i prossimi eventi.",
   "invites.share": "Condividi",
   "invites.shareTitle": "Invito al club",

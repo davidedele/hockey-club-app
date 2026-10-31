@@ -283,7 +283,7 @@
   "dash.thisWeek": "Events this week",
   "dash.myAttendance": "My attendance",
   "dash.ofTotal": "{n} of {total}",
-  "dash.todo": "To answer",
+  "dash.todo": "Other upcoming events without an answer",
   "dash.allDone": "You have answered every coming event.",
   "invites.share": "Share",
   "invites.shareTitle": "Club invite",
