@@ -946,5 +946,9 @@
   "banner.certToVerify": "Il tuo certificato medico è da verificare: lo staff controlla il file.",
   "home.certToVerify": "Certificati da verificare",
   "bell.announcements": "{n} nuovi avvisi",
-  "bell.announcementsOne": "1 nuovo avviso"
+  "bell.announcementsOne": "1 nuovo avviso",
+  "home.now": "Adesso",
+  "home.laterOne": "1 evento senza risposta più avanti",
+  "home.laterMany": "{n} eventi senza risposta più avanti",
+  "dash.laterTitle": "Più avanti"
 }

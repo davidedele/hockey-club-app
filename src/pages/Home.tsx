@@ -91,7 +91,9 @@ export default function Home() {
   const inView = (e: EventRow) => groupId === null || e.event_groups.some((x) => x.group_id === groupId)
   const next = live.find((e) => mineOnly(e) && inView(e)) ?? live.find(inView)
   // The same events as the banner, the bell and the Eventi heading: this week, until Monday 00:00 (decision 92).
-  const pending: EventRow[] = asPlayer ? unanswered({ events, answers, notCalledUp: notCalled, myGroups }).inWindow : []
+  const due = asPlayer ? unanswered({ events, answers, notCalledUp: notCalled, myGroups }) : { inWindow: [] as EventRow[], later: [] as EventRow[] }
+  const pending = due.inWindow
+  const laterCount = due.later.length
 
   useEffect(() => {
     if (!next) return
@@ -139,6 +141,7 @@ export default function Home() {
 
       <div className="home-grid">
         <div className="home-main">
+          {next && <div className="nowline"><span>{t('home.now')}</span><i aria-hidden="true" /></div>}
           {next ? (
             <NextPanel club={club.name || t('app.name')} colours={colours(next)} event={next} groups={groupName(next)} mine={answers.get(next.id) ?? null} count={count} canAnswer={asPlayer && mineOnly(next)} busy={busy} onAnswer={(v) => void answer(next, v)} />
           ) : (
@@ -163,6 +166,12 @@ export default function Home() {
               </ul>
             )}
             {pending.length > SHOWN && <p className="hint">{t('home.pendingMore', { n: String(pending.length - SHOWN) })}</p>}
+            {loaded && laterCount > 0 && (
+              <>
+                <div className="nowline"><span>{t('dash.laterTitle')}</span><i aria-hidden="true" /></div>
+                <p className="hint"><Link to="/events">{t(laterCount === 1 ? 'home.laterOne' : 'home.laterMany', { n: String(laterCount) })}</Link></p>
+              </>
+            )}
           </section>}
         </div>
 

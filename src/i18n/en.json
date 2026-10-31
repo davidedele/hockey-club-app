@@ -946,5 +946,9 @@
   "banner.certToVerify": "Your medical certificate is to be verified: staff are checking the file.",
   "home.certToVerify": "Certificates to verify",
   "bell.announcements": "{n} new announcements",
-  "bell.announcementsOne": "1 new announcement"
+  "bell.announcementsOne": "1 new announcement",
+  "home.now": "Now",
+  "home.laterOne": "1 event without an answer later on",
+  "home.laterMany": "{n} events without an answer later on",
+  "dash.laterTitle": "Later"
 }

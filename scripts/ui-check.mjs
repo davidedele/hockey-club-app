@@ -409,6 +409,7 @@ for (const width of WIDTHS) {
   const bellText = await page.locator('.crumb-actions .bell-list').innerText()
   check(bellText.includes(bannerText), `views: the bell and the banner do not say the same: "${bellText.replace(/\s+/g, ' ')}" against "${bannerText}"`)
   await settle('/')
+  await page.screenshot({ path: join(out, 'home-player-1280.png'), fullPage: true })
   const homeN = Number(await page.locator('#home-pending .count').innerText().catch(() => 'x'))
   check(homeN === bannerN, `views: the Home tile counts ${homeN}, the banner ${bannerN}`)
   await settle('/events')
