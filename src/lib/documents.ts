@@ -12,12 +12,26 @@ export const SOON_DAYS = 30
 
 export const today = () => dayKey(new Date().toISOString())
 
-export function certificateState(doc: MemberDocument | undefined, now = today()): { level: Level; text: string } {
-  if (!doc?.valid_until) return { level: 'bad', text: t('docs.certMissing') }
+// Where a certificate stands (decisions 94 and 105). A valid one has a file, a date of issue that the
+// reader found or staff confirmed, and an end date one year after the date of issue.
+//   missing    no file (a date without a file counts for nothing)
+//   needsDate  a file, but no date of issue yet
+//   toVerify   a file and a date the member typed, or an old date: staff have to open the file and confirm
+//   expired, soon, valid   by the end date
+export type CertState = 'missing' | 'needsDate' | 'toVerify' | 'expired' | 'soon' | 'valid'
+
+export function certificateState(doc: MemberDocument | undefined, now = today()): { level: Level; text: string; state: CertState } {
+  if (!doc?.file_path) return { level: 'bad', text: t('docs.certMissing'), state: 'missing' }
+  // An old row has an end date and no date of issue: nobody read it from the file.
+  const trusted = Boolean(doc.issued_on) && (doc.issued_source === 'read' || Boolean(doc.verified_at))
+  if (!doc.issued_on && !doc.valid_until) return { level: 'bad', text: t('docs.certNeedsDate'), state: 'needsDate' }
+  if (!trusted || !doc.valid_until) {
+    return { level: 'soon', text: doc.issued_on ? t('docs.certToVerifyOn', { date: formatDateYear(doc.issued_on) }) : t('docs.certToVerify'), state: 'toVerify' }
+  }
   const date = formatDateYear(doc.valid_until)
-  if (doc.valid_until < now) return { level: 'bad', text: t('docs.certExpired', { date }) }
-  if (daysBetween(now, doc.valid_until) <= SOON_DAYS) return { level: 'soon', text: t('docs.certSoon', { date }) }
-  return { level: 'ok', text: t('docs.certValid', { date }) }
+  if (doc.valid_until < now) return { level: 'bad', text: t('docs.certExpired', { date }), state: 'expired' }
+  if (daysBetween(now, doc.valid_until) <= SOON_DAYS) return { level: 'soon', text: t('docs.certSoon', { date }), state: 'soon' }
+  return { level: 'ok', text: t('docs.certValid', { date }), state: 'valid' }
 }
 
 export function consentState(doc: MemberDocument | undefined, noticePath: string | null): { level: Level; text: string } {
@@ -36,8 +50,10 @@ export function summary(docs: MemberDocument[], noticePath: string | null, now =
   if (level === 'ok') return { level, text: t('docs.allOk') }
   if (consentFirst) return { level, text: t(level === 'bad' ? 'docs.sumConsentMissing' : 'docs.sumConsentOld') }
   const doc = docs.find((d) => d.kind === 'medical_certificate')
-  if (!doc?.valid_until) return { level, text: t('docs.sumCertMissing') }
-  return { level, text: t(level === 'bad' ? 'docs.sumCertExpired' : 'docs.sumCertSoon', { date: formatDateYear(doc.valid_until) }) }
+  if (cert.state === 'missing') return { level, text: t('docs.sumCertMissing') }
+  if (cert.state === 'needsDate') return { level, text: t('docs.sumCertNeedsDate') }
+  if (cert.state === 'toVerify') return { level, text: t('docs.sumCertToVerify') }
+  return { level, text: t(level === 'bad' ? 'docs.sumCertExpired' : 'docs.sumCertSoon', { date: formatDateYear(doc!.valid_until!) }) }
 }
 
 // Photos of a certificate are redrawn as JPEG no larger than 1800 pixels a side, which keeps them

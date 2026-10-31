@@ -1,0 +1,44 @@
+// Writes supabase/apply/apply_00NN_name.sql for Davide to paste in the SQL Editor of a Supabase project:
+// a guard that stops by itself on the wrong project or on a second run, then the migration in one transaction.
+// Run: node scripts/make-apply.mjs        (writes every file listed below)
+import { readFileSync, writeFileSync, mkdirSync } from 'node:fs'
+import { join, resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
+
+const root = resolve(fileURLToPath(import.meta.url), '../..')
+
+// number: [name, "needs" = something the migration before it left behind, "done" = what this migration adds]
+const col = (table, column) => `exists (select 1 from information_schema.columns where table_schema = 'public' and table_name = '${table}' and column_name = '${column}')`
+const FILES = {
+  '0036': ['certificate_issue_date', `to_regclass('public.profiles') is not null and to_regclass('public.member_documents') is not null and to_regprocedure('public.certificates_due(timestamptz)') is not null`, col('member_documents', 'issued_on')],
+}
+
+mkdirSync(join(root, 'supabase/apply'), { recursive: true })
+for (const [number, [name, needs, done]] of Object.entries(FILES)) {
+  const migration = readFileSync(join(root, 'supabase/migrations', `${number}_${name}.sql`), 'utf8')
+  const text = `-- Apply migration ${number} (${name}) to a Supabase project, from the SQL Editor.
+-- Paste the whole file and run it once. It stops by itself, and changes nothing, when:
+--   1. the project does not look like the club's project (the tables of the earlier migrations are missing), or
+--   2. migration ${number} was already applied (a second run).
+-- Run it on the TEST project first. Never on the club's live project before the production checklist is done.
+
+do $guard$
+begin
+  if not (${needs}) then
+    raise exception 'Wrong project, or an earlier migration is missing: migration ${number} was not applied.';
+  end if;
+  if ${done} then
+    raise exception 'Migration ${number} is already applied: nothing was changed.';
+  end if;
+end
+$guard$;
+
+begin;
+
+${migration.trim()}
+
+commit;
+`
+  writeFileSync(join(root, 'supabase/apply', `apply_${number}_${name}.sql`), text)
+  console.log(`wrote supabase/apply/apply_${number}_${name}.sql`)
+}

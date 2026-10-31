@@ -37,8 +37,11 @@ export default function DocumentsBanner() {
   const certNow = certificateState(cert)
   const consentNow = consentState(docs.find((d) => d.kind === 'privacy_consent'), club.privacyNoticePath)
   let text = ''
-  if (certNow.level === 'bad') text = t(cert?.valid_until ? 'banner.certExpired' : 'banner.certMissing')
-  else if (certNow.level === 'soon') text = t('banner.certSoon', { date: formatDateYear(cert!.valid_until!) })
+  if (certNow.state === 'missing') text = t('banner.certMissing')
+  else if (certNow.state === 'needsDate') text = t('banner.certNeedsDate')
+  else if (certNow.state === 'toVerify') text = t('banner.certToVerify')
+  else if (certNow.state === 'expired') text = t('banner.certExpired')
+  else if (certNow.state === 'soon') text = t('banner.certSoon', { date: formatDateYear(cert!.valid_until!) })
   else if (consentNow.level === 'bad' || consentNow.level === 'soon') text = t('banner.consent')
   if (!text) return null
   return (

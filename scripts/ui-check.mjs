@@ -349,6 +349,12 @@ for (const width of WIDTHS) {
   await page.keyboard.press('Escape')
   check(!(await page.isVisible('dialog[open]')), 'confirm: Escape does not close the delete window')
 
+  // The certificate: no date field without a file (decision 94); with a file the date field is there.
+  await settle('/profile/documents')
+  check((await page.locator('main input[type=date]').count()) === 0, 'certificate: a date field shows although no file was uploaded')
+  await settle(`/members/${member}/documents`)
+  check((await page.locator('main input[type=date]').count()) === 1, 'certificate: no date field although a file was uploaded')
+
   // The notification panel: fully inside the window, closes on a tap outside, on Escape and after a link, and gives the focus back.
   const bell = async (width, height, label) => {
     const target = await context.newPage()

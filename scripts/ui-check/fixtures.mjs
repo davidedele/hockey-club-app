@@ -89,10 +89,16 @@ const stats = [
   { event_id: eid(2), user_id: uid(4), goals: 3, assists: 2, penalty_minutes: 0, shots_against: null, saves: null },
 ]
 
+const day = (offset) => new Date(Date.now() + offset * 864e5).toISOString().slice(0, 10)
+const certFile = (id) => `${id}/medical_certificate-2000000000.jpg`
+// Certificates: one valid (the reader found the date), one close to the end, one typed and waiting for staff, one with a file and no date.
+const cert = (id, issuedAgo, source, verified) => ({ user_id: id, kind: 'medical_certificate', issued_on: day(-issuedAgo), issued_source: source, valid_until: new Date(Date.parse(day(-issuedAgo)) + 365 * 864e5).toISOString().slice(0, 10), file_path: certFile(id), accepted_at: null, verified_at: verified ? at(-5, 9) : null, verified_by: null, updated_by: id, updated_at: at(-20, 9) })
 const docs = [
   { user_id: ME, kind: 'privacy_consent', valid_until: null, file_path: null, accepted_at: at(-60, 9), updated_by: ME, updated_at: at(-60, 9) },
-  { user_id: uid(2), kind: 'medical_certificate', valid_until: new Date(Date.now() + 200 * 864e5).toISOString().slice(0, 10), file_path: null, accepted_at: null, updated_by: uid(2), updated_at: at(-20, 9) },
-  { user_id: uid(3), kind: 'medical_certificate', valid_until: new Date(Date.now() + 12 * 864e5).toISOString().slice(0, 10), file_path: null, accepted_at: null, updated_by: uid(3), updated_at: at(-20, 9) },
+  cert(uid(2), 165, 'read', false),
+  cert(uid(3), 353, 'read', false),
+  cert(uid(4), 20, 'typed', false),
+  { user_id: uid(5), kind: 'medical_certificate', issued_on: null, issued_source: null, valid_until: null, file_path: certFile(uid(5)), accepted_at: null, verified_at: null, verified_by: null, updated_by: uid(5), updated_at: at(-20, 9) },
 ]
 
 const standings = [
