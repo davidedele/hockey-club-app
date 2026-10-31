@@ -1,3 +1,4 @@
+import ConfirmAction from '../components/ConfirmAction'
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import PageHeader from '../components/PageHeader'
 import { errorText, t } from '../i18n'
@@ -19,7 +20,6 @@ export default function Announcements() {
   const [groupIds, setGroupIds] = useState<number[]>([])
   const [email, setEmail] = useState(false)
   const [busy, setBusy] = useState(false)
-  const [confirming, setConfirming] = useState('')
   const [error, setError] = useState('')
 
   const load = useCallback(async () => {
@@ -69,7 +69,6 @@ export default function Announcements() {
   async function remove(id: string) {
     setError('')
     const { data, error } = await supabase.from('announcements').delete().eq('id', id).select()
-    setConfirming('')
     if (error || !data || data.length === 0) {
       setError(errorText(error ?? { message: 'forbidden' }))
       return
@@ -131,14 +130,7 @@ export default function Announcements() {
                 {who ? t('ann.by', { name: who, groups: names(a) }) : names(a)}, {formatDay(a.created_at)} {formatTime(a.created_at)}
               </p>
               {canDelete && (
-                confirming === a.id ? (
-                  <div className="row">
-                    <button type="button" className="danger" onClick={() => void remove(a.id)}>{t('ann.confirmDelete')}</button>
-                    <button type="button" className="link" onClick={() => setConfirming('')}>{t('ann.cancel')}</button>
-                  </div>
-                ) : (
-                  <button type="button" className="link" onClick={() => setConfirming(a.id)}>{t('ann.delete')}</button>
-                )
+                <ConfirmAction label={t('ann.delete')} title={t('ann.deleteTitle')} body={t('ann.deleteBody', { title: a.title })} confirm={t('ann.delete')} onConfirm={() => void remove(a.id)} />
               )}
             </li>
           )

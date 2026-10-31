@@ -1,3 +1,4 @@
+import ConfirmAction from '../components/ConfirmAction'
 import { useCallback, useEffect, useState, type ChangeEvent, type FormEvent } from 'react'
 import PageHeader from '../components/PageHeader'
 import { Navigate } from 'react-router-dom'
@@ -25,7 +26,6 @@ export default function Drills() {
   const [editTitle, setEditTitle] = useState('')
   const [editNotes, setEditNotes] = useState('')
   const [editVideo, setEditVideo] = useState('')
-  const [confirming, setConfirming] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
 
@@ -148,7 +148,6 @@ export default function Drills() {
     setBusy(true)
     setError('')
     const { data, error } = await supabase.from('drills').delete().eq('id', d.id).select()
-    setConfirming('')
     if (error || !data || data.length === 0) setError(errorText(error ?? { message: 'forbidden' }))
     else if (d.file_path) await supabase.storage.from('drills').remove([d.file_path])
     await load()
@@ -228,16 +227,15 @@ export default function Drills() {
               <p className="hint">{count === 0 ? t('drills.usedNever') : t(count === 1 ? 'drills.usedOne' : 'drills.used', { n: String(count) })}</p>
               <div className="actions">
                 <button type="button" className="link" disabled={busy} onClick={() => startEdit(d)}>{t('drills.edit')}</button>
-                {confirming === d.id ? (
-                  <>
-                    <button type="button" className="danger" disabled={busy} onClick={() => void remove(d)}>{t('drills.confirmDelete')}</button>
-                    <button type="button" className="link" disabled={busy} onClick={() => setConfirming('')}>{t('common.cancel')}</button>
-                  </>
-                ) : (
-                  <button type="button" className="link" disabled={busy} onClick={() => setConfirming(d.id)}>{t('drills.delete')}</button>
-                )}
+                <ConfirmAction
+                  label={t('drills.delete')}
+                  title={t('drills.deleteTitle')}
+                  body={`${t('drills.deleteBody', { title: d.title })}${count > 0 ? ` ${t(count === 1 ? 'drills.deleteWarningOne' : 'drills.deleteWarning', { n: String(count) })}` : ''}`}
+                  confirm={t('drills.delete')}
+                  disabled={busy}
+                  onConfirm={() => void remove(d)}
+                />
               </div>
-              {confirming === d.id && count > 0 && <p className="hint">{t(count === 1 ? 'drills.deleteWarningOne' : 'drills.deleteWarning', { n: String(count) })}</p>}
             </li>
           )
         })}
