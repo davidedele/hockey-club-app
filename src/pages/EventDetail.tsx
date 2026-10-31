@@ -34,6 +34,8 @@ export default function EventDetail() {
   const [mine, setMine] = useState<Answer | null>(null)
   const [rows, setRows] = useState<AttendanceRow[]>([])
   const [going, setGoing] = useState<{ user_id: string; first_name: string; last_name: string }[]>([])
+  // Whether the staff recorded who came, as the database sees it (a person only learns this for an event of their own).
+  const [recordedByDb, setRecordedByDb] = useState(false)
   const [scoreUs, setScoreUs] = useState('')
   const [scoreThem, setScoreThem] = useState('')
   const [confirming, setConfirming] = useState(false)
@@ -73,8 +75,12 @@ export default function EventDetail() {
       const r = await supabase.rpc('event_attendance', { p_event_id: id })
       setRows((r.data ?? []) as AttendanceRow[])
     } else if (row) {
-      const r = await supabase.rpc('event_present_people', { p_event_id: id })
+      const [r, rec] = await Promise.all([
+        supabase.rpc('event_present_people', { p_event_id: id }),
+        supabase.rpc('event_presence_recorded', { p_event_id: id }),
+      ])
       setGoing((r.data ?? []) as { user_id: string; first_name: string; last_name: string }[])
+      setRecordedByDb(rec.data === true)
     }
     setLoaded(true)
   }, [id, profile, isStaff])
@@ -282,7 +288,11 @@ export default function EventDetail() {
     </section>
   )
 
-  const presentNames = isStaff ? present.map((r) => ({ user_id: r.user_id, first_name: r.first_name, last_name: r.last_name })) : going
+  // After the event has ended "present" means the people the staff recorded as on time or late. Before
+  // that, or when nothing was recorded, it means the people who answered present. Not called up is never present.
+  const recorded = isStaff ? over && rows.some((r) => r.status !== null && r.status !== 'not_called_up') : recordedByDb
+  const recordedPresent = rows.filter((r) => called(r) && (r.status === 'on_time' || r.status === 'late'))
+  const presentNames = isStaff ? (recorded ? recordedPresent : present).map((r) => ({ user_id: r.user_id, first_name: r.first_name, last_name: r.last_name })) : going
 
   return (
     <div className="page wide event-page">
@@ -406,14 +416,15 @@ export default function EventDetail() {
             <section className="card">
               <h2>{t('event.attendance')}</h2>
               <ul className="counters">
-                <li className="ok"><b>{presentNames.length}</b><span>{t('event.countPresent')}</span></li>
-                {isStaff && <li><b>{pending.length}</b><span>{t('event.countWaiting')}</span></li>}
-                {isStaff && <li className="bad"><b>{notCalled.length}</b><span>{t('event.countNotCalled')}</span></li>}
-                {isStaff && <li className="bad"><b>{absent.length}</b><span>{t('event.countAbsent')}</span></li>}
+                <li className="ok"><b>{loaded ? presentNames.length : '–'}</b><span>{t('event.countPresent')}</span></li>
+                {isStaff && <li><b>{loaded ? pending.length : '–'}</b><span>{t('event.countWaiting')}</span></li>}
+                {isStaff && <li className="bad"><b>{loaded ? notCalled.length : '–'}</b><span>{t('event.countNotCalled')}</span></li>}
+                {isStaff && <li className="bad"><b>{loaded ? absent.length : '–'}</b><span>{t('event.countAbsent')}</span></li>}
               </ul>
               {isStaff && <p><Link to={{ search: '?tab=presence' }} replace>{t('event.manage')}</Link></p>}
+              {loaded && over && !cancelled && !recorded && <p className="hint">{t('event.presenceFromAnswers')}</p>}
               <details open>
-                <summary>{t('event.presentList', { n: String(presentNames.length) })}</summary>
+                <summary>{t('event.presentNames')}</summary>
                 {presentNames.length === 0 ? (
                   <p className="hint">{t('event.nobodyYet')}</p>
                 ) : (
@@ -449,7 +460,7 @@ export default function EventDetail() {
             {!started && <p className="hint">{t('event.recordHint')}</p>}
             <div className="board">
               <section {...dropProps('present')}>
-                <h2>{t('event.presentList', { n: String(present.length) })}</h2>
+                <h2>{t(recorded ? 'event.answeredPresentList' : 'event.presentList', { n: String(present.length) })}</h2>
                 <ul className="list">{present.map(person)}</ul>
               </section>
               <section {...dropProps('waiting')}>
