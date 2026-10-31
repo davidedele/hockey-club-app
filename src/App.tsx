@@ -1,3 +1,4 @@
+import { personName } from './lib/names'
 import { PageSkeleton } from './components/Skeleton'
 import { Link, NavLink, Navigate, Outlet, Route, Routes, useLocation } from 'react-router-dom'
 import { t, type MessageKey } from './i18n'
@@ -141,7 +142,7 @@ function Protected() {
     return <Navigate to={pending ? `/join/${pending}` : '/login'} replace />
   }
   const photo = profile.avatar_path ? mine.get(profile.avatar_path) : null
-  const fullName = `${profile.first_name} ${profile.last_name}`
+  const fullName = personName(profile)
   const main = (
     <>
       <NavLink to="/" end><TabIcon name="home" />{t('nav.home')}</NavLink>

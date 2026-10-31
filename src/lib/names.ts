@@ -9,3 +9,7 @@ export function tidyName(raw: string): string {
 
 // A name may not contain digits. The database refuses them too.
 export const nameHasDigits = (s: string) => /\d/.test(s)
+
+// A person's name is written surname first everywhere, as in every list and table of the app
+// ("Rossi Marco"), so the same person never reads two ways on one screen.
+export const personName = (p: { first_name: string; last_name: string }) => `${p.last_name} ${p.first_name}`

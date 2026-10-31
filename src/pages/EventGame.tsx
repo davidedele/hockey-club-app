@@ -1,3 +1,4 @@
+import { personName } from '../lib/names'
 import TableScroll from '../components/TableScroll'
 import { useCallback, useEffect, useState } from 'react'
 import { errorText, locale, t } from '../i18n'
@@ -142,7 +143,7 @@ export default function EventGame({ eventId, myId, isStaff, started, over, reloa
               <li key={r.user_id} className="row">
                 <span>{name(r)}</span>
                 <select
-                  aria-label={t('game.ratingFor', { name: `${r.first_name} ${r.last_name}` })}
+                  aria-label={t('game.ratingFor', { name: personName(r) })}
                   value={ratings[r.user_id] ?? ''}
                   onChange={(e) => setRatings({ ...ratings, [r.user_id]: e.target.value })}
                 >

@@ -1,3 +1,4 @@
+import { personName } from '../lib/names'
 import { PageSkeleton } from '../components/Skeleton'
 import { useCallback, useEffect, useState } from 'react'
 import PageHeader from '../components/PageHeader'
@@ -91,7 +92,7 @@ export default function MemberEdit() {
     navigate('/', { replace: true })
   }
 
-  const name = `${person.first_name} ${person.last_name}`
+  const name = personName(person)
 
   return (
     <div className="page">

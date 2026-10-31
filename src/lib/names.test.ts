@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { nameHasDigits, tidyName } from './names'
+import { nameHasDigits, personName, tidyName } from './names'
 
 describe('names', () => {
   it('raises the initials of a name typed all in lower or upper case', () => {
@@ -17,5 +17,14 @@ describe('names', () => {
   it('finds digits', () => {
     expect(nameHasDigits('3 Prova')).toBe(true)
     expect(nameHasDigits('Rossi')).toBe(false)
+  })
+})
+
+describe('personName', () => {
+  it('writes the surname first', () => {
+    expect(personName({ first_name: 'Marco', last_name: 'Rossi' })).toBe('Rossi Marco')
+  })
+  it('keeps a compound surname together', () => {
+    expect(personName({ first_name: 'Anna', last_name: 'De Luca' })).toBe('De Luca Anna')
   })
 })

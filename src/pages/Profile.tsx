@@ -8,7 +8,7 @@ import { shrinkPhoto, useAvatarUrls } from '../lib/avatars'
 import { signOut, useSession } from '../lib/session'
 import { supabase } from '../lib/supabase'
 import { formatPhone } from '../lib/phone'
-import { nameHasDigits, tidyName } from '../lib/names'
+import { nameHasDigits, personName, tidyName } from '../lib/names'
 import AbsencePeriods from '../components/AbsencePeriods'
 import CalendarFeed from '../components/CalendarFeed'
 import ReminderSwitch from '../components/ReminderSwitch'
@@ -62,7 +62,7 @@ export default function ProfileLayout() {
         <div className="shell-card">
           <Avatar first={profile.first_name} last={profile.last_name} url={profile.avatar_path ? photos.get(profile.avatar_path) : null} size="large" />
           <div>
-            <p className="shell-title">{profile.first_name} {profile.last_name}</p>
+            <p className="shell-title">{personName(profile)}</p>
             <p className="hint">{myGroups.length ? myGroups.join(', ') : t('profile.noGroups')}</p>
             {realRoles.length > 0 && <p className="hint">{realRoles.map((r) => t(`role.${r}` as MessageKey)).join(', ')}</p>}
           </div>

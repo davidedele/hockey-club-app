@@ -1,3 +1,4 @@
+import { personName } from '../lib/names'
 import { PageSkeleton } from '../components/Skeleton'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom'
@@ -193,7 +194,7 @@ export default function EventDetail() {
   const stateOf = (r: AttendanceRow): State => (!called(r) ? 'not_called_up' : r.answer === 'present' ? 'present' : r.answer === 'absent' ? 'absent' : 'waiting')
 
   function person(r: AttendanceRow) {
-    const full = `${r.first_name} ${r.last_name}`
+    const full = personName(r)
     return (
       <li
         key={r.user_id}
@@ -475,7 +476,7 @@ export default function EventDetail() {
                   <div className="actions share-row">
                     <a
                       className="button secondary small"
-                      href={whatsappLink(t('share.missingText', { title: matchName, day: dayLabel, names: pending.map((r) => `${r.first_name} ${r.last_name}`).join(', '), url: link }))}
+                      href={whatsappLink(t('share.missingText', { title: matchName, day: dayLabel, names: pending.map((r) => personName(r)).join(', '), url: link }))}
                       target="_blank"
                       rel="noopener noreferrer"
                     >

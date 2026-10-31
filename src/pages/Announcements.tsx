@@ -1,3 +1,4 @@
+import { personName } from '../lib/names'
 import ConfirmAction from '../components/ConfirmAction'
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import PageHeader from '../components/PageHeader'
@@ -118,7 +119,7 @@ export default function Announcements() {
         {items.map((a) => {
           const isNew = !seenAt || new Date(a.created_at) > new Date(seenAt)
           const canDelete = isBoard || a.author_id === profile?.id
-          const who = a.profiles ? `${a.profiles.first_name} ${a.profiles.last_name}` : ''
+          const who = a.profiles ? personName(a.profiles) : ''
           return (
             <li key={a.id} className="ann">
               <div className="row">
