@@ -211,23 +211,25 @@ export default function EventForm() {
           {t('form.title')}
           <input required maxLength={80} value={shownTitle} onChange={(e) => { setTitle(e.target.value); setTitleTouched(true) }} />
         </label>
-        <label>
-          {t('form.date')}
-          <input type="date" required value={date} onChange={(e) => setDate(e.target.value)} />
-        </label>
-        <label>
-          {t('form.start')}
-          <input type="time" required value={startTime} onChange={(e) => setStartTime(e.target.value)} />
-        </label>
-        <label>
-          {t('form.end')}
-          <input type="time" required value={shownEnd} onChange={(e) => { setEndTime(e.target.value); setEndTouched(true) }} />
-          {startTime && shownEnd && shownEnd <= startTime && <span className="hint">{t('form.endNextDay')}</span>}
-        </label>
-        <label>
-          {t('form.meetup')}
-          <input type="time" value={shownMeetup} onChange={(e) => { setMeetupTime(e.target.value); setMeetupTouched(true) }} />
-        </label>
+        <div className="when-grid">
+          <label>
+            {t('form.date')}
+            <input type="date" required value={date} onChange={(e) => setDate(e.target.value)} />
+          </label>
+          <label>
+            {t('form.start')}
+            <input type="time" required value={startTime} onChange={(e) => setStartTime(e.target.value)} />
+          </label>
+          <label>
+            {t('form.end')}
+            <input type="time" required value={shownEnd} onChange={(e) => { setEndTime(e.target.value); setEndTouched(true) }} />
+            {startTime && shownEnd && shownEnd <= startTime && <span className="hint">{t('form.endNextDay')}</span>}
+          </label>
+          <label>
+            {t('form.meetup')}
+            <input type="time" value={shownMeetup} onChange={(e) => { setMeetupTime(e.target.value); setMeetupTouched(true) }} />
+          </label>
+        </div>
         <label>
           {t('form.venue')}
           <input maxLength={120} value={venue} onChange={(e) => setVenue(e.target.value)} />

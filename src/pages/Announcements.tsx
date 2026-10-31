@@ -1,3 +1,4 @@
+import { useGroupFilter } from '../lib/groupfilter'
 import { personName } from '../lib/names'
 import ConfirmAction from '../components/ConfirmAction'
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
@@ -18,7 +19,9 @@ export default function Announcements() {
   const [loaded, setLoaded] = useState(false)
   const [title, setTitle] = useState('')
   const [body, setBody] = useState('')
-  const [groupIds, setGroupIds] = useState<number[]>([])
+  const { groupId: chosenGroup } = useGroupFilter()
+  // A new announcement starts on the group chosen in the selector.
+  const [groupIds, setGroupIds] = useState<number[]>(() => (chosenGroup !== null ? [chosenGroup] : []))
   const [email, setEmail] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
@@ -62,7 +65,7 @@ export default function Announcements() {
     }
     setTitle('')
     setBody('')
-    setGroupIds([])
+    setGroupIds(chosenGroup !== null ? [chosenGroup] : [])
     setEmail(false)
     await load()
   }
