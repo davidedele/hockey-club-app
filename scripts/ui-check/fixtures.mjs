@@ -45,7 +45,7 @@ const ev = (n, o) => ({
 const week = '20000000-0000-4000-8000-000000000001'
 const events = [
   ev(1, { starts_at: at(-30, 20), ends_at: at(-30, 21, 30), series_id: week }),
-  ev(2, { type: 'game', title: 'Partita', opponent: 'HC Esempio', home_away: 'home', starts_at: at(-12, 18), ends_at: at(-12, 19, 30), meetup_at: at(-12, 17), score_for: 5, score_against: 3, rink_id: null }),
+  ev(2, { type: 'game', title: 'Partita', opponent: 'HC Esempio', home_away: 'home', starts_at: at(-12, 18), ends_at: at(-12, 19, 30), meetup_at: at(-12, 17), score_for: 5, score_against: 3, rink_id: null, video_url: 'https://example.test/video-partita' }),
   ev(3, { type: 'game', title: 'Partita', opponent: 'HC Prova Uno', home_away: 'away', starts_at: at(-6, 21), ends_at: at(-6, 22, 30), score_for: 2, score_against: 4, rink_id: null }),
   ev(4, { starts_at: at(-3, 20), ends_at: at(-3, 21, 30), series_id: week }),
   ev(5, { starts_at: at(1, 20), ends_at: at(1, 21, 30), series_id: week, meetup_at: at(1, 19, 30) }),
@@ -152,10 +152,11 @@ export const fixtures = {
     user_roles: [{ user_id: ME, role: 'board' }, { user_id: ME, role: 'coach' }],
     events, event_groups: eventGroups, attendance_answers: answers, attendance_records: records,
     club_settings: [{ id: true, name: 'Hockey Club Sample', logo_path: null, game_dark: '#fffb00', game_light: '#000000', jersey_light_name: 'Chiara', jersey_dark_name: 'Scura', privacy_notice_path: null }],
+    game_predictions: [{ event_id: eid(6), pred_for: 4, pred_against: 2 }],
     game_stats: stats, mvp_votes: [], game_ratings: [],
     announcements: [
-      { id: '30000000-0000-4000-8000-000000000001', author_id: ME, title: 'Cambio orario del martedì', body: 'Da questa settimana ci si trova alle 20 e 15.', email: false, created_at: at(-1, 9) },
-      { id: '30000000-0000-4000-8000-000000000002', author_id: ME, title: 'Quota di iscrizione', body: 'La quota va versata entro la fine del mese.', email: false, created_at: at(-9, 9) },
+      { id: '30000000-0000-4000-8000-000000000002', author_id: ME, title: 'Quota di iscrizione', body: 'La quota va versata entro la fine del mese.', email: false, pinned_at: at(-8, 9), created_at: at(-9, 9) },
+      { id: '30000000-0000-4000-8000-000000000001', author_id: ME, title: 'Cambio orario del martedì', body: 'Da questa settimana ci si trova alle 20 e 15.', email: false, pinned_at: null, created_at: at(-1, 9) },
     ],
     announcement_groups: [
       { announcement_id: '30000000-0000-4000-8000-000000000001', group_id: 1 },
@@ -172,6 +173,10 @@ export const fixtures = {
     event_lineup: [{ event_id: eid(5), slot: 'goalie', unit: 1, user_id: uid(2), set_by: ME, set_at: at(-1, 9) }],
     event_messages: [{ id: '60000000-0000-4000-8000-000000000001', event_id: eid(5), user_id: uid(2), body: 'Porto io i pettorali.', created_at: at(-1, 15) }],
     event_message_seen: [{ event_id: eid(5), user_id: ME, seen_at: at(-1, 9) }],
+    club_documents: [
+      { id: '80000000-0000-4000-8000-000000000001', title: 'Statuto del club', file_path: 'club/doc-2000000001.pdf', created_by: ME, created_at: at(-40, 9) },
+      { id: '80000000-0000-4000-8000-000000000002', title: 'Regolamento della lega, stagione in corso, con le norme sulle iscrizioni e sui tesseramenti', file_path: 'club/doc-2000000002.pdf', created_by: ME, created_at: at(-10, 9) },
+    ],
     member_documents: docs, absence_periods: [],
     rinks: [{ id: 1, name: 'Grande', address: 'Via Esempio 1, Milano', note: 'Parcheggio sul retro' }, { id: 2, name: 'Piccola', address: null, note: null }],
     rink_prices: [{ rink_id: 1, price_cents: 15000 }, { rink_id: 2, price_cents: 9000 }],
@@ -186,6 +191,13 @@ export const fixtures = {
   },
   rpc: {
     my_season: [{ events_total: '12', answered_present: '9', answered_absent: '2', no_answer: '1', on_time: '8', late: '1', excused: '2', unexcused: '0', injured: '0', not_called_up: '1', games: 5, goals: 3, assists: 4, penalty_minutes: 6, mvp: 1, rating_avg: '7.5', rated_games: 3 }],
+    my_milestones: [
+      { kind: 'streak', level: 10, reached_at: at(-5, 21) },
+      { kind: 'goals', level: 10, reached_at: at(-12, 18) },
+      { kind: 'goals', level: 1, reached_at: at(-60, 18) },
+    ],
+    prediction_table: people.filter((p) => p.groups.includes(1)).slice(0, 5).map((p, i) => ({ user_id: p.id, first_name: p.first_name, last_name: p.last_name, predictions: 4 - (i % 2), exact: i === 0 ? 2 : 0, points: 40 - 6 * i })),
+    game_prediction_list: people.filter((p) => p.groups.includes(1)).slice(0, 4).map((p, i) => ({ user_id: p.id, first_name: p.first_name, last_name: p.last_name, pred_for: 5 - i, pred_against: 2, points: i === 0 ? 13 : i === 1 ? 1 : 7 })),
     is_staff: true, is_board: true, is_member: true,
     attendance_summary: summary,
     attendance_grid: gridRows,
@@ -195,6 +207,10 @@ export const fixtures = {
     unanswered_people: people.filter((p) => p.groups.includes(1) && p.id !== ME).slice(0, 4).map((p, i) => ({ user_id: p.id, first_name: p.first_name, last_name: p.last_name, email: `${p.first_name}.${p.last_name}@example.test`.toLowerCase(), phone: null, missing: 1 + (i % 3) })),
     my_event_threads: [{ event_id: eid(5), last_message_at: at(-1, 15), messages: 1, unread: 1, archived: false }],
     game_results: people.filter((p) => p.groups.includes(1) && p.id !== ME).slice(0, 4).map((p, i) => ({ user_id: p.id, first_name: p.first_name, last_name: p.last_name, jersey_number: p.jersey_number, position: p.position, played: true, goals: i, assists: 1, penalty_minutes: i === 1 ? 4 : 0, shots_against: i === 0 ? 28 : null, saves: i === 0 ? 25 : null, rating_avg: 7 + i * 0.5, rating_count: 3, mvp_votes: i === 2 ? 2 : 0, my_rating: null })),
+    opponent_history: [
+      { starts_at: at(-20, 18), home_away: 'home', score_for: 5, score_against: 2, source: 'club' },
+      { starts_at: at(-90, 18), home_away: 'away', score_for: 1, score_against: 4, source: 'league' },
+    ],
     season_record: [{ games: 4, wins: 3, draws: 0, losses: 1, goals_for: 14, goals_against: 9 }],
     season_results: events.filter((e) => e.type === 'game' && e.score_for !== null).map((e) => ({ event_id: e.id, starts_at: e.starts_at, opponent: e.opponent, home_away: e.home_away, score_for: e.score_for, score_against: e.score_against })),
     season_player_stats: people.filter((p) => p.groups.includes(1) && p.id !== ME).map((p, i) => ({ user_id: p.id, first_name: p.first_name, last_name: p.last_name, jersey_number: p.jersey_number, position: p.position, games: 4, goals: 6 - i, assists: 3, points: 9 - i, penalty_minutes: 2 * i, shots_against: p.position === 'goalie' ? 90 : null, saves: p.position === 'goalie' ? 80 : null, mvp: i === 0 ? 2 : 0, rating_avg: 7.4 })),

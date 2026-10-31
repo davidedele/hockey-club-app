@@ -40,6 +40,7 @@ import Plan from './pages/Plan'
 import Login from './pages/Login'
 import MemberEdit from './pages/MemberEdit'
 import Members from './pages/Members'
+import ClubDocuments from './pages/ClubDocuments'
 import MySeason from './pages/MySeason'
 import Security from './pages/Security'
 import MfaGate from './components/MfaGate'
@@ -240,6 +241,7 @@ export default function App() {
           <Route path="info" element={<ProfileInfo />} />
           <Route path="documents" element={<Documents />} />
           <Route path="absences" element={<ProfileAbsences />} />
+          <Route path="club-documents" element={<ClubDocuments />} />
           <Route path="season" element={<MySeason />} />
           <Route path="security" element={<Security />} />
           <Route path="notifications" element={<ProfileNotifications />} />

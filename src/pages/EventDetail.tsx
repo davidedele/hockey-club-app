@@ -5,6 +5,8 @@ import { PageSkeleton } from '../components/Skeleton'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { errorText, t, type MessageKey } from '../i18n'
+import Predictions from '../components/Predictions'
+import OpponentHistory from '../components/OpponentHistory'
 import EventGame from './EventGame'
 import EventThread from '../components/EventThread'
 import Lineup from './Lineup'
@@ -458,12 +460,16 @@ export default function EventDetail() {
                 <><dt>{t('event.scoreTitle')}</dt><dd>{t('event.scoreValue', { us: String(event.score_for), them: String(event.score_against) })}</dd></>
               )}
             </dl>
-            <p><MapsButton rink={rink} venue={event.venue} /></p>
+            <p className="button-row"><MapsButton rink={rink} venue={event.venue} />{game && event.video_url && <a className="button secondary" href={event.video_url} target="_blank" rel="noopener noreferrer">{t('event.videoOpen')}</a>}</p>
             <div className="actions share-row">
               {!over && !cancelled && <a className="button secondary small" href={whatsappLink(shareText)} target="_blank" rel="noopener noreferrer">{t('share.whatsapp')}</a>}
               {hasScore && <a className="button secondary small" href={whatsappLink(resultText)} target="_blank" rel="noopener noreferrer">{t('share.result')}</a>}
             </div>
             {!cancelled && !over && isStaff && <p className="hint">{t('event.cancelHint')}</p>}
+            {game && !cancelled && profile && (inMyGroups || started) && (
+              <Predictions eventId={id} myId={profile.id} started={started} canGuess={!isStaff && inMyGroups} />
+            )}
+            {game && event.opponent && <OpponentHistory eventId={id} opponent={event.opponent} />}
           </div>
         </div>
       )}

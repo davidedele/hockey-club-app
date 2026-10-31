@@ -60,6 +60,7 @@ export interface EventRow {
   rink_id: number | null
   cancelled_at: string | null
   league_match_id: number | null
+  video_url: string | null
   event_groups: { group_id: number }[]
 }
 
@@ -267,6 +268,7 @@ export interface Announcement {
   title: string
   body: string
   email: boolean
+  pinned_at: string | null
   created_at: string
   announcement_groups: { group_id: number }[]
   profiles: { first_name: string; last_name: string } | null

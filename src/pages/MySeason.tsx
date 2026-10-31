@@ -1,8 +1,10 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import PageHeader from '../components/PageHeader'
 import { locale, t } from '../i18n'
 import { attendancePercent, isEmptySeason, useMySeason } from '../lib/myseason'
-import { seasonLabel, seasonOf } from '../lib/time'
+import { milestoneKey, type Milestone } from '../lib/milestones'
+import { supabase } from '../lib/supabase'
+import { dayKey, formatDateYear, seasonLabel, seasonOf } from '../lib/time'
 
 // The app holds no games before this season.
 const FIRST_SEASON = 2026
@@ -19,6 +21,10 @@ export default function MySeason() {
   const percent = data ? attendancePercent(data) : null
   const empty = loaded && data !== null && isEmptySeason(data)
   const n = (v: number | undefined) => (loaded && data ? String(v ?? 0) : dash)
+  const [milestones, setMilestones] = useState<Milestone[] | null>(null)
+  useEffect(() => {
+    void supabase.rpc('my_milestones').then(({ data: rows }) => setMilestones((rows ?? []) as Milestone[]))
+  }, [])
 
   return (
     <div className="section my-season">
@@ -58,6 +64,24 @@ export default function MySeason() {
             <div><dt>{t('season.rating')}</dt><dd>{loaded && data?.rating_avg != null ? decimal.format(data.rating_avg) : dash}</dd></div>
           </dl></section>
           <p className="hint">{t('season.ratingNote')}</p>
+        </>
+      )}
+      {milestones !== null && (
+        <>
+          <h2>{t('milestone.title')}</h2>
+          {milestones.length === 0 ? (
+            <p className="hint">{t('milestone.none')}</p>
+          ) : (
+            <section className="card">
+              <ul className="list milestones">
+                {milestones.flatMap((m) => {
+                  const k = milestoneKey(m)
+                  return k ? [<li key={`${m.kind}-${m.level}`} className="row"><span>{t(k.key, { n: k.n })}</span><span className="hint">{formatDateYear(dayKey(m.reached_at))}</span></li>] : []
+                })}
+              </ul>
+              <p className="hint">{t('milestone.intro')}</p>
+            </section>
+          )}
         </>
       )}
     </div>
