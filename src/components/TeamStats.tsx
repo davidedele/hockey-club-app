@@ -100,6 +100,7 @@ export default function TeamStats({ results, loaded }: { results: Result[]; load
 
       <section className="card span-3">
         <h2>{t('stats.lastTitle', { n: String(s.last.length) })}</h2>
+        <p className="hint">{t('stats.lastNote')}</p>
         <ol className="last-games">
           {s.last.map((g) => (
             <li key={g.result.event_id} className={g.outcome === 'W' ? 'ok' : g.outcome === 'L' ? 'bad' : 'neutral'}>

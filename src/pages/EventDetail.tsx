@@ -17,7 +17,7 @@ import type { Answer, AttendanceRow, EventRow, Group, Rink, Status } from '../li
 
 const STATUSES: Status[] = ['on_time', 'late', 'excused', 'unexcused', 'injured', 'not_called_up']
 
-type NearEvent = Pick<EventRow, 'id' | 'type' | 'title' | 'starts_at' | 'opponent' | 'score_for' | 'score_against' | 'cancelled_at'>
+type NearEvent = Pick<EventRow, 'id' | 'type' | 'title' | 'starts_at' | 'opponent' | 'home_away' | 'score_for' | 'score_against' | 'cancelled_at'>
 type Tab = 'info' | 'presence' | 'game' | 'discussion' | 'lineup' | 'plan'
 type State = 'present' | 'absent' | 'waiting' | 'not_called_up'
 
@@ -58,7 +58,7 @@ export default function EventDetail() {
       supabase.from('group_members').select('group_id').eq('user_id', profile.id),
       supabase.from('attendance_answers').select('answer').eq('event_id', id).eq('user_id', profile.id).maybeSingle(),
       supabase.from('rinks').select('id, name'),
-      supabase.from('events').select('id, type, title, starts_at, opponent, score_for, score_against, cancelled_at').order('starts_at', { ascending: false }).limit(1000),
+      supabase.from('events').select('id, type, title, starts_at, opponent, home_away, score_for, score_against, cancelled_at').order('starts_at', { ascending: false }).limit(1000),
     ])
     setNear(((nb.data ?? []) as NearEvent[]).slice().reverse())
     const row = (e.data as EventRow | null) ?? null
@@ -116,9 +116,6 @@ export default function EventDetail() {
     jerseyLabel ? t('share.jerseyText', { jersey: jerseyLabel.toLowerCase() }) : '',
     t('share.answerText', { url: link }),
   ].filter(Boolean).join(' ')
-  const resultText = hasScore
-    ? t('share.resultText', { match: matchName, us: String(event.score_for), them: String(event.score_against), url: link })
-    : ''
 
   // A change that a rule silently refuses must not look like it worked.
   async function guarded(change: () => PromiseLike<{ error: { message?: string; code?: string } | null; data?: unknown[] | null }>) {
@@ -260,7 +257,11 @@ export default function EventDetail() {
   // The neighbouring events, to move between them without going back to the list.
   const at = near.findIndex((x) => x.id === id)
   const strip = at < 0 ? [] : near.slice(Math.max(0, at - 2), at + 3)
-  const nearTitle = (x: NearEvent) => (x.type === 'game' && x.opponent ? t('events.vs', { club: club.name || t('app.name'), opponent: x.opponent }) : x.title)
+  // Where both team names are shown, the home side comes first, in the names and in the score.
+  const nearTitle = (x: NearEvent) => (x.type === 'game' && x.opponent
+    ? t('events.vs', x.home_away === 'away' ? { club: x.opponent, opponent: club.name || t('app.name') } : { club: club.name || t('app.name'), opponent: x.opponent })
+    : x.title)
+  const nearScore = (x: NearEvent) => (x.home_away === 'away' ? `${x.score_against} : ${x.score_for}` : `${x.score_for} : ${x.score_against}`)
 
   // A game uses the colours of its first group that has its own; otherwise the club colours.
   const teamGroup = event.event_groups.map((x) => groups.find((y) => y.id === x.group_id)).find((y) => y?.game_dark && y?.game_light)
@@ -269,6 +270,9 @@ export default function EventDetail() {
   const away = event.home_away === 'away'
   const sides = game && event.opponent ? (away ? [event.opponent, clubName] : [clubName, event.opponent]) : null
   const scores = hasScore ? (away ? [event.score_against, event.score_for] : [event.score_for, event.score_against]) : null
+  const resultText = scores && hasScore
+    ? t('share.resultText', { home: (sides ?? [clubName, t('event.scoreThem')])[0], homeScore: String(scores[0]), away: (sides ?? [clubName, t('event.scoreThem')])[1], awayScore: String(scores[1]), url: link })
+    : ''
   const typeLabel = event.title === t(`eventType.${event.type}` as MessageKey) ? '' : t(`eventType.${event.type}` as MessageKey)
 
   const scoreForm = isStaff && game && (
@@ -310,7 +314,7 @@ export default function EventDetail() {
                 <Link className={x.id === id ? 'on' : undefined} aria-current={x.id === id ? 'page' : undefined} to={`/events/${x.id}`}>
                   <span className="when">{formatShortDay(x.starts_at)}</span>
                   <span className="what">{nearTitle(x)}</span>
-                  {x.score_for !== null && x.score_against !== null && <span className="res">{x.score_for} : {x.score_against}</span>}
+                  {x.score_for !== null && x.score_against !== null && <span className="res">{nearScore(x)}</span>}
                 </Link>
               </li>
             ))}
