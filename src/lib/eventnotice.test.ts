@@ -31,7 +31,7 @@ describe('calendar email', () => {
     const m = buildEventNotice('Pia', rows, 'https://a.it')
     expect(m.text).toContain('1. Allenamento, ogni settimana, da giovedì 5 novembre, 20:30 (3 date) (Pista grande)')
     expect(m.text).not.toContain('2. ')
-    expect(m.subject).toBe('Novità dal calendario')
+    expect(m.subject).toBe('Aggiornamenti del calendario')
     expect(m.newEvents).toEqual(['s0', 's1', 's2'])
   })
 

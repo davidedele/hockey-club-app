@@ -8,6 +8,8 @@ import GroupBadge from '../components/GroupBadge'
 import SeasonTabs from '../components/SeasonTabs'
 import { useAvatarUrls } from '../lib/avatars'
 import TeamStats from '../components/TeamStats'
+import HallOfFame from '../components/HallOfFame'
+import PredictionTable from '../components/PredictionTable'
 import { useGroupFilter } from '../lib/groupfilter'
 import { useSession } from '../lib/session'
 import type { Result } from '../lib/teamstats'
@@ -33,7 +35,8 @@ export default function Stats() {
   const [record, setRecord] = useState<SeasonRecord | null>(null)
   const [results, setResults] = useState<Result[]>([])
   const [params] = useSearchParams()
-  const tab = params.get('tab') === 'players' ? 'players' : 'team'
+  const asked = params.get('tab')
+  const tab = asked === 'players' || asked === 'predictions' || asked === 'hall' ? asked : 'team'
   const [avatars, setAvatars] = useState<Map<string, string | null>>(new Map())
   const [loaded, setLoaded] = useState(false)
   const [error, setError] = useState('')
@@ -92,7 +95,7 @@ export default function Stats() {
       <PageHeader title={t('stats.title')} />
       <SeasonTabs />
       <p className="hint">{t('stats.intro')}</p>
-      <div className="stats-filters">
+      {tab !== 'hall' && <div className="stats-filters">
         {seasons.length > 1 ? (
           <div>
             <label htmlFor="season">{t('stats.season')}</label>
@@ -103,22 +106,28 @@ export default function Stats() {
         ) : (
           <p className="season-name">{t('stats.season')} {seasonLabel(season)}</p>
         )}
-        <div className="chips">
+        {tab !== 'predictions' && <div className="chips">
           <button className={group === null ? 'chip on' : 'chip'} aria-pressed={group === null} onClick={() => setGroup(null)}>{t('stats.allGroups')}</button>
           {groups.map((g) => (
             <button key={g.id} className={group === g.id ? 'chip on' : 'chip'} aria-pressed={group === g.id} onClick={() => setGroup(g.id)}>
               <GroupBadge group={g} size="small" />{g.name}
             </button>
           ))}
-        </div>
-      </div>
+        </div>}
+      </div>}
 
       {error && <p className="error" role="alert">{error}</p>}
 
       <nav className="ev-tabs" aria-label={t('stats.tabs')}>
         <Link to={{ search: '' }} replace aria-current={tab === 'team' ? 'page' : undefined}>{t('stats.tabTeam')}</Link>
         <Link to={{ search: '?tab=players' }} replace aria-current={tab === 'players' ? 'page' : undefined}>{t('stats.tabPlayers')}</Link>
+        <Link to={{ search: '?tab=predictions' }} replace aria-current={tab === 'predictions' ? 'page' : undefined}>{t('predict.tab')}</Link>
+        <Link to={{ search: '?tab=hall' }} replace aria-current={tab === 'hall' ? 'page' : undefined}>{t('hall.tab')}</Link>
       </nav>
+
+      {tab === 'hall' && <HallOfFame seasons={seasons} />}
+
+      {tab === 'predictions' && <PredictionTable season={season} />}
 
       {tab === 'team' && <div style={colours}><TeamStats results={results} loaded={loaded} /></div>}
 

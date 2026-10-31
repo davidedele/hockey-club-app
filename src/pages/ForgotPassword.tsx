@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { t } from '../i18n'
+import { checked } from '../lib/formcheck'
 import { supabase } from '../lib/supabase'
 import Brand from '../components/Brand'
 
@@ -22,7 +23,7 @@ export default function ForgotPassword() {
       {sent ? (
         <p>{t('reset.sent')}</p>
       ) : (
-        <form onSubmit={submit}>
+        <form {...checked(submit)}>
           <label>
             {t('common.email')}
             <input type="email" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)} />

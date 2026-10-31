@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState, type ChangeEvent, type FormEvent } fr
 import PageHeader from '../components/PageHeader'
 import { Navigate } from 'react-router-dom'
 import { errorText, t } from '../i18n'
+import { checked } from '../lib/formcheck'
 import { shrinkDocument } from '../lib/documents'
 import { useSession } from '../lib/session'
 import { supabase } from '../lib/supabase'
@@ -159,7 +160,7 @@ export default function Drills() {
       <PageHeader title={t('drills.title')} description={t('drills.intro')} />
       {error && <p className="error" role="alert">{error}</p>}
 
-      <form onSubmit={add} aria-label={t('drills.new')}>
+      <form {...checked(add)} aria-label={t('drills.new')}>
         <h2>{t('drills.new')}</h2>
         <label>
           {t('drills.name')}
@@ -184,7 +185,7 @@ export default function Drills() {
             {file && <span className="hint">{file.name}</span>}
           </div>
         </div>
-        <button type="submit" disabled={busy || !title.trim()}>{busy ? t('drills.saving') : t('drills.add')}</button>
+        <button type="submit" disabled={busy}>{busy ? t('drills.saving') : t('drills.add')}</button>
       </form>
 
       {loaded && items.length === 0 && <p className="hint">{t('drills.empty')}</p>}
@@ -195,7 +196,7 @@ export default function Drills() {
           if (editing === d.id) {
             return (
               <li key={d.id} className="ann">
-                <form onSubmit={saveEdit} aria-label={t('drills.edit')}>
+                <form {...checked(saveEdit)} aria-label={t('drills.edit')}>
                   <label>
                     {t('drills.name')}
                     <input value={editTitle} maxLength={80} required onChange={(e) => setEditTitle(e.target.value)} />

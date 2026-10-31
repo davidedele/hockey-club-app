@@ -10,6 +10,7 @@ import { useClub } from '../lib/club'
 import { refreshLeague } from '../lib/league'
 import { useGroupFilter } from '../lib/groupfilter'
 import { useSession } from '../lib/session'
+import { unanswered } from '../lib/unanswered'
 import { supabase } from '../lib/supabase'
 import { dayKey, formatDay, formatMonth, formatShortDay, formatTime, italyToIso, rangeParts, seasonOf, weekOf } from '../lib/time'
 import type { Answer, EventRow, Group } from '../lib/types'
@@ -23,6 +24,8 @@ const Cross = () => (
 
 export default function Events() {
   const { isStaff, profile } = useSession()
+  // Being present at an event is a player thing: the answer buttons and the unanswered list show in the Giocatore view only (decision 93).
+  const asPlayer = !isStaff
   const club = useClub()
   const [allEvents, setEvents] = useState<EventRow[]>([])
   const { groupId } = useGroupFilter()
@@ -37,6 +40,7 @@ export default function Events() {
   const [picked, setPicked] = useState<string | null>(null)
   const [extra, setExtra] = useState(0)
   const [todoExtra, setTodoExtra] = useState(0)
+  const [laterOpen, setLaterOpen] = useState(false)
   const [loaded, setLoaded] = useState(false)
   const [records, setRecords] = useState<Map<string, string>>(new Map())
   const [memberCount, setMemberCount] = useState<number | null>(null)
@@ -52,7 +56,7 @@ export default function Events() {
       supabase.from('group_members').select('group_id').eq('user_id', profile.id),
       supabase.from('attendance_answers').select('event_id, answer').eq('user_id', profile.id),
       supabase.from('attendance_records').select('event_id, status').eq('user_id', profile.id),
-      supabase.from('profiles').select('id', { count: 'exact', head: true }),
+      supabase.from('profiles').select('id', { count: 'exact', head: true }).is('deleted_at', null),
     ])
     setRecords(new Map(((r.data ?? []) as { event_id: string; status: string }[]).map((x) => [x.event_id, x.status])))
     setMemberCount(n.count ?? null)
@@ -103,7 +107,7 @@ export default function Events() {
     return { came, total: mine.length }
   }, [events, myGroups, records, answers])
 
-  const canAnswer = (e: EventRow) => e.cancelled_at === null && e.event_groups.some((x) => myGroups.includes(x.group_id))
+  const canAnswer = (e: EventRow) => asPlayer && e.cancelled_at === null && e.event_groups.some((x) => myGroups.includes(x.group_id))
   // A game uses the colours of its first group that has its own; otherwise the club colours.
   const teamColours = (e: EventRow): CSSProperties | undefined => {
     const g = e.event_groups.map((x) => groups.find((y) => y.id === x.group_id)).find((y) => y?.game_dark && y?.game_light)
@@ -131,9 +135,13 @@ export default function Events() {
   // The phone home shows one week at a time: this week by default, other weeks with the arrows.
   const inWeek = (e: EventRow) => { const k = dayKey(e.starts_at); return k >= week[0].date && k <= week[6].date }
   const next = view === 'upcoming' && weekShift === 0 ? live[0] : undefined
-  // Every coming event still waiting for the person's answer. The panel shows five at a time, and its
-  // heading counts all of them, so answering one makes the number go down.
-  const pending = live.slice(1).filter((e) => e.event_groups.some((x) => myGroups.includes(x.group_id)) && !answers.has(e.id) && records.get(e.id) !== 'not_called_up')
+  // Every event of this week still waiting for the person's answer, from the one helper that the banner,
+  // the bell and the Home tile use too (decision 92). The later ones are kept apart under "Più avanti".
+  // The heading counts all of them whatever group is chosen in the selector, so it matches the bell.
+  const notCalledUp = new Set([...records].filter(([, status]) => status === 'not_called_up').map(([id]) => id))
+  const due: { inWindow: EventRow[]; later: EventRow[] } = asPlayer ? unanswered({ events: allEvents, answers, notCalledUp, myGroups }) : { inWindow: [], later: [] }
+  const pending = due.inWindow
+  const laterPending = due.later
   const todo = pending.slice(0, 5 + todoExtra)
   const weekRest = upcoming.filter((e) => e !== next && inWeek(e))
   // This week in full; when it has fewer than 5 events, the next ones fill it up to 5. "Show more" adds 5 at a time.
@@ -166,7 +174,7 @@ export default function Events() {
             <button className={mine === 'present' ? 'on present' : ''} aria-pressed={mine === 'present'} aria-label={t('answer.present')} disabled={busy === e.id} onClick={() => void answer(e, 'present')}><Tick /></button>
             <button className={mine === 'absent' ? 'on absent' : ''} aria-pressed={mine === 'absent'} aria-label={t('answer.absent')} disabled={busy === e.id} onClick={() => void answer(e, 'absent')}><Cross /></button>
           </div>
-        ) : over && mine ? (
+        ) : asPlayer && over && mine ? (
           <span className="state">{t(mine === 'present' ? 'answer.present' : 'answer.absent')}</span>
         ) : null}
       </li>
@@ -189,7 +197,7 @@ export default function Events() {
             <button className={mine === 'present' ? 'on present' : ''} aria-pressed={mine === 'present'} aria-label={t('answer.present')} disabled={busy === e.id} onClick={() => void answer(e, 'present')}><Tick /></button>
             <button className={mine === 'absent' ? 'on absent' : ''} aria-pressed={mine === 'absent'} aria-label={t('answer.absent')} disabled={busy === e.id} onClick={() => void answer(e, 'absent')}><Cross /></button>
           </div>
-        ) : mine ? (
+        ) : asPlayer && mine ? (
           <span className="state">{t(mine === 'present' ? 'answer.present' : 'answer.absent')}</span>
         ) : null}
         {savedFor === e.id && <span className="m" role="status">{t('events.savedShort')}</span>}
@@ -279,11 +287,17 @@ export default function Events() {
 
       <div className="evgrid dash">
         {next && <NextPanel club={club.name || t('app.name')} colours={teamColours(next)} event={next} groups={groupsOf(next)} mine={answers.get(next.id) ?? null} count={counts.get(next.id)} canAnswer={canAnswer(next)} busy={busy === next.id} onAnswer={(v) => void answer(next, v)} />}
-        {view === 'upcoming' && (
+        {view === 'upcoming' && asPlayer && (
           <section className="todo desk-only" aria-label={t('dash.todo')}>
             <h2>{t('dash.todo')}{pending.length > 0 && <span className="count">{pending.length}</span>}</h2>
             {pending.length === 0 ? <p className="hint">{t('dash.allDone')}</p> : <ul className="evrows">{todo.map(row)}</ul>}
             {pending.length > todo.length && <button className="link" onClick={() => setTodoExtra(todoExtra + 5)}>{t('dash.todoMore', { n: String(Math.min(5, pending.length - todo.length)) })}</button>}
+            {laterPending.length > 0 && (
+              <div className="later-open">
+                <button className="link disclosure" aria-expanded={laterOpen} aria-controls="later-list" onClick={() => setLaterOpen(!laterOpen)}>{t(laterOpen ? 'dash.laterHide' : 'dash.later', { n: String(laterPending.length) })}</button>
+                {laterOpen && <ul id="later-list" className="evrows">{laterPending.map(row)}</ul>}
+              </div>
+            )}
           </section>
         )}
         {loaded && view === 'upcoming' && upcoming.length > 0 && !next && rest.length === 0 && (

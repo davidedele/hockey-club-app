@@ -15,6 +15,8 @@ Read this file, and the open items of `docs/UI_BACKLOG.md`, before touching a pa
 7. No row of loose links at the bottom of a page. An action belongs to the page or panel it concerns, or to the navigation.
 8. A wait longer than a second shows a skeleton of what is coming, not a line of text or a spinner; a loading number shows an en dash.
 
+9. A settings page with more than two groups of settings shows them as folded rows (`Fold` in `src/components/Fold.tsx`): a real button with `aria-expanded`, the title and a one line summary of what is set. All are closed on first load, only one is open at a time, and the open one stays open after a save because the page keeps its state and the closed bodies are only hidden.
+
 ## 2. Controls
 
 1. Text fields, selects, buttons and chips are 44 pixels tall. A select looks like a text field (same border, radius, padding and font), never like the small native control.
@@ -24,7 +26,10 @@ Read this file, and the open items of `docs/UI_BACKLOG.md`, before touching a pa
 5. Destructive actions, and actions that tell other people (cancelling an event), ask for confirmation naming the thing, in the same window (`ConfirmDialog` in `src/components/ConfirmAction.tsx`): Annulla has the focus, Escape closes it and does nothing, no choice is inline in the page. Print and export open a window first.
 6. A menu (for example the event actions) closes as soon as one of its actions is chosen.
 7. Removing something (an invite, a logo, a file, a photo, a consent) goes through `ConfirmAction`: the window names the thing, the action is red and Annulla has the focus.
-8. On phones the tab bar has at most five places. Pages that do not fit (the drill library) are in the computer sidebar and reachable from where they are used.
+8. Form errors are written by the app, not by the browser. Every form is built with `checked(handler)` from `src/lib/formcheck.ts`: the browser check is turned off (`noValidate`), the app checks required fields and the `minLength`, `maxLength`, email and number range rules when the button is pressed, writes an Italian message under each field with a problem, sets `aria-invalid` and `aria-describedby` on it and moves the focus to the first one. The message disappears as soon as the field is edited. A submit button is never disabled just because a field is empty, because then no message can show. The browser's own bubbles are not used, because iPhone Safari blocks the submit without showing them. `scripts/ui-check.mjs` submits every form empty and expects the message.
+9. Two fields share a row at phone width only when both are short (two times, two small numbers, two colour swatches, two short names), and never two date fields: they stack one under the other, each with its own label ("Dal", "Al"), and sit side by side from 600 pixels. At 320 pixels every field must still fit; the checker reports a field that reaches past the window edge.
+10. Date and time fields (`input[type=date]`, `time`) follow one rule in `src/styles.css`: `min-width: 0; max-width: 100%; appearance: none` and a left aligned, shrinkable `::-webkit-date-and-time-value`, because iPhone Safari gives them a width of their own that ignores `width: 100%`. Their parents (labels, grid cells) may shrink (`min-width: 0`).
+11. On phones the tab bar has at most five places. Pages that do not fit (the drill library) are in the computer sidebar and reachable from where they are used.
 
 ## 3. Text
 
@@ -33,9 +38,11 @@ Read this file, and the open items of `docs/UI_BACKLOG.md`, before touching a pa
 3. A heading with a number says exactly what is counted, and the same quantity shows the same number everywhere (banner, bell, panels). If a list shows only part of a set, the heading says so ("Prossimi 5 senza risposta") or shows the full count with a link to the rest.
 4. Singular and plural are both written out ("1 membro", "2 membri").
 5. People's names are shown with capital initials and never contain digits. The database tidies names on save and refuses digits; the forms say so before saving.
-6. Filter and toggle labels use standard words ("Tutte le partite", "Solo Sgularat"), not invented ones.
+6. Filter and toggle labels use standard words ("Tutte le squadre", "Solo Sgularat"); a list that shows part of a set says how many of how many ("10 di 24") and has a button for ten more, not invented ones.
 7. A person's name is written surname first, "Rossi Marco", in lists, headings, messages and the sidebar, through `personName` in `src/lib/names.ts`. A greeting uses the first name only. The same person never reads two ways on one screen.
 8. Scores: where both team names are shown, the home side comes first, in the names and in the score. Where only our result is shown, our score comes first and the text says so ("Noi 4, avversari 2", "In ogni partita il nostro punteggio è scritto per primo.").
+
+9. Words for what the app sends (decision 100). "Notifiche" is the general word, for what reaches a person by push or by email. The bell panel is "Notifiche". The profile page where the person chooses what they receive is "Preferenze di notifica". "Avvisi" is only the announcements that staff write. "Email" appears only where the channel is the point ("Ricevi le notifiche per email", the confirmation email at sign up). "Promemoria" is only the reminder about an event that has no answer. "Novità" is not used. The same words are used in the server function texts (`supabase/functions/send-reminders`). The card on Home for staff is "Da gestire".
 
 ## 4. Tables and data
 
@@ -49,6 +56,14 @@ Read this file, and the open items of `docs/UI_BACKLOG.md`, before touching a pa
 
 1. One group selector for the whole app, at the top of the sidebar (in the phone header on phones). Every page that can be narrowed to a group follows it; no page has its own separate group chips.
 2. People with more than one role (Direttivo, Allenatore, Giocatore) can choose the view in the top bar. The view only hides; it never grants anything, and the database rules stay the same whatever is chosen.
+3. Player things belong to the Giocatore view only (decisions 93 and 106): the unanswered events banner, the answer buttons and the "La tua risposta" box, the list of events to answer on Home and Eventi, the pending count in the bell, and the person's own certificate and privacy line. The Direttivo and Allenatore views never show them. The bell keeps announcements and discussion messages in every view. A person who is also a player switches to the Giocatore view to get the reminders. `scripts/ui-check.mjs` checks it.
+4. "Events without an answer" always means the calendar week in Italian time, from now until the next Monday 00:00 (decision 92), computed by `weekEnd` and `unanswered` in `src/lib/unanswered.ts`. The banner, the bell, the Home tile and the Eventi heading use that one function, say "questa settimana", and show the same number. Later events wait under a collapsed "Più avanti".
+
+4. The controls of the phone top bar (group, view, bell, gear, picture) are one family: round, 44 pixels, flat, the same focus ring. The group selector shows the code of the chosen group (A, B, C1, C2, S) in a 36 pixel circle like the profile picture, or an icon for all groups; the list that opens shows the full names.
+5. The red "now" line with the small circle in the middle, like the centre line and circle of a rink (`.nowline`), is the club's hockey mark. It is used at most twice on a screen: above the next event ("Adesso") and as the divider before what comes later ("Più avanti"). Red stays otherwise for danger and errors.
+
+6. Match predictions and other club fun (decision 119): the form to guess is part of the Giocatore view only; the list of guesses after the start and the tables are club information and show in every view. A person's guess is never shown to others before the game starts. Where a score has our side first, the text says so.
+7. A row with a long name and an action (club documents) lets the action drop under the name instead of leaving the window.
 
 ## 6. How to check
 

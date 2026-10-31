@@ -24,7 +24,7 @@ export const noticeWords = {
   hello: 'Ciao',
   newTraining: 'Nuovo allenamento',
   newGame: 'Nuova partita',
-  newMany: 'Novità dal calendario',
+  newMany: 'Aggiornamenti del calendario',
   changed: 'Cambio',
   cancelled: 'Annullato',
   restored: 'Di nuovo in programma',
@@ -41,7 +41,7 @@ export const noticeWords = {
   now: 'ora',
   unset: 'non indicato',
   open: 'Vedi il calendario nell\'app',
-  off: 'Non vuoi più ricevere le email del club? Puoi disattivarle dal tuo profilo:',
+  off: 'Non vuoi più ricevere le notifiche per email? Puoi cambiare le preferenze di notifica dal tuo profilo:',
 }
 
 const MAX_LINES = 10

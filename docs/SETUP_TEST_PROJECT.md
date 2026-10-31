@@ -14,3 +14,38 @@ Checks that run without Supabase:
 2. `npm test` runs the text file tests, and `npm run typecheck` checks the code.
 
 Email setup (custom sender and email confirmation) is in `docs/SETUP_EMAIL.md`.
+
+## Interface checker on the iPhone engine and other settings
+
+`node scripts/ui-check.mjs` opens every page at 320, 375, 390, 430, 768 and 1280 pixels. Settings are environment variables:
+
+1. `UI_CHECK_WEBKIT=1 node scripts/ui-check.mjs` runs it on WebKit, the engine of iPhone Safari. WebKit could not run in the cloud container used for the build, so run it once on the Mac: `npx playwright install webkit`, then the command above. Screenshots go to `ui-check/<width>-webkit`.
+2. `UI_CHECK_DARK=1` runs the dark colour scheme, `UI_CHECK_LARGE=1` a larger text size. They can be combined with the first one. Screenshots go to `ui-check/<width>-dark`, `-large` and so on.
+3. `UI_CHECK_WIDTHS=375,1280` limits the widths for a quick run.
+
+## Applying the new migrations to the test project (0036 to 0049)
+
+1. Apply the files of `supabase/apply` in number order in the SQL Editor of the TEST project: `apply_0036_certificate_issue_date.sql`, `apply_0037_rink_address.sql`, `apply_0038_my_season.sql`, `apply_0039_push_notifications.sql`, `apply_0040_delete_member_data.sql`, `apply_0041_board_two_step.sql`, `apply_0042_keep_history_on_account_delete.sql`, `apply_0043_opponent_history.sql`, `apply_0044_club_documents.sql`, `apply_0045_match_video.sql`, `apply_0046_pinned_announcements.sql`, `apply_0047_my_milestones.sql`, `apply_0048_game_predictions.sql`, `apply_0049_season_leaders.sql`. Each stops by itself on the wrong project or on a second run. `bash scripts/test-apply.sh` checks the files on a local Postgres. Regenerate them with `node scripts/make-apply.mjs` after any change to a migration.
+2. Deploy the new server function `delete-member` (Verify JWT on; deploy it again if you deployed the first version, because it now disables the sign in account instead of deleting it) and deploy `send-reminders` again (it now sends push). See `docs/SETUP_PUSH.md`.
+3. `QA_WRITE=1 node scripts/qa-real.mjs` reads the test project as the test player and the test board account, and compares the numbers on screen with the database. Without QA_WRITE it writes nothing.
+
+## Trying the member deletion on the test project (decision 96, migration 0042)
+
+The deletion erases the personal data and disables the sign in account. It must not delete the account, because that would erase the whole history of the person.
+
+1. Make one throwaway member named "Prova QA 4" (an invite link, a sign up with a spare email address, join a team). Give the person some history: answer one event, and ask a coach to record their attendance or a game statistic.
+2. Signed in as a board member, open the member page of "Prova QA 4" and use "Elimina i dati". Confirm in the window that names the person.
+3. In the Supabase dashboard, Authentication, Users, find the account by its old email: it is gone from the list. Search for `deleted.invalid`: there is one user whose email is `deleted-<long id>@deleted.invalid`. Open it: the user is banned (banned until a date about a hundred years away), the raw user metadata is empty (`{}`), and the user has no factors.
+4. In the SQL Editor run (replace the id with the id shown in the dashboard):
+
+```sql
+select id, first_name, last_name, deleted_at from public.profiles where last_name = 'Eliminato';
+select count(*) from public.attendance_answers where user_id = '<id>';
+select count(*) from public.attendance_records where user_id = '<id>';
+select count(*) from public.game_stats where user_id = '<id>';
+select count(*) from public.event_messages where user_id = '<id>';
+```
+
+The profile reads "Utente Eliminato", and the counts are the ones the person had before (not zero). The Statistiche and Presenze pages show the same totals as before, under the name "Utente Eliminato".
+5. Try to sign in with the old email and password: refused. Try the "Password dimenticata" link with the old email: no mail arrives.
+6. As a last check run `delete from auth.users where id = '<id>';` in a transaction you roll back (`begin; delete ...; rollback;`): it must fail with `profiles_id_fkey`.

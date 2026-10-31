@@ -1,9 +1,11 @@
 import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react'
 import ConfirmAction from '../components/ConfirmAction'
 import { Navigate } from 'react-router-dom'
+import Fold, { useFolds } from '../components/Fold'
 import PageHeader from '../components/PageHeader'
 import Crest from '../components/Crest'
 import { errorText, t } from '../i18n'
+import { checked } from '../lib/formcheck'
 import { useClub } from '../lib/club'
 import { useSession } from '../lib/session'
 import { supabase } from '../lib/supabase'
@@ -131,6 +133,7 @@ export default function ClubSettings() {
     setBusy(false)
   }
 
+  const folds = useFolds()
   const status = (group: 'identity' | 'colours' | 'docs') => (
     <>
       {error && savedGroup === group && <p className="error" role="alert">{error}</p>}
@@ -143,11 +146,8 @@ export default function ClubSettings() {
       <PageHeader title={t('club.title')} back={{ to: '/settings', label: t('settings.title') }} description={t('club.intro')} crumb={t('settings.club')} />
       {error && savedGroup === null && <p className="error" role="alert">{error}</p>}
 
-      <section className="set-group" aria-labelledby="club-identity">
-        <div className="set-label">
-          <h2 id="club-identity">{t('club.groupIdentity')}</h2>
-          <p className="hint">{t('club.groupIdentityHint')}</p>
-        </div>
+      <Fold id="identity" title={t('club.groupIdentity')} summary={club.logoPath ? t('club.sumIdentityLogo', { name: club.name }) : t('club.sumIdentityNoLogo', { name: club.name })} open={folds.open === 'identity'} onToggle={() => folds.toggle('identity')}>
+        <p className="hint">{t('club.groupIdentityHint')}</p>
         <div className="set-body">
           <div className="logo-row">
             <span className="logo-big"><Crest /></span>
@@ -163,7 +163,7 @@ export default function ClubSettings() {
               <p className="hint">{t('club.logoHint')}</p>
             </div>
           </div>
-          <form onSubmit={(e) => void save(e, 'identity')}>
+          <form {...checked((e) => void save(e, 'identity'))}>
             <label>{t('club.name')}
               <input required maxLength={60} value={name} onChange={(e) => setName(e.target.value)} />
             </label>
@@ -171,14 +171,11 @@ export default function ClubSettings() {
             <button type="submit" disabled={busy}>{t('common.save')}</button>
           </form>
         </div>
-      </section>
+      </Fold>
 
-      <section className="set-group" aria-labelledby="club-colours">
-        <div className="set-label">
-          <h2 id="club-colours">{t('club.groupColours')}</h2>
-          <p className="hint">{t('club.coloursHint')}</p>
-        </div>
-        <form className="set-body" onSubmit={(e) => void save(e, 'colours')}>
+      <Fold id="colours" title={t('club.groupColours')} summary={t('club.sumColours', { light: club.jerseyLight, dark: club.jerseyDark })} open={folds.open === 'colours'} onToggle={() => folds.toggle('colours')}>
+        <p className="hint">{t('club.coloursHint')}</p>
+        <form className="set-body" {...checked((e) => void save(e, 'colours'))}>
           <h3>{t('club.colours')}</h3>
           <div className="colours">
             <label>{t('club.dark')}
@@ -205,13 +202,10 @@ export default function ClubSettings() {
           {status('colours')}
           <button type="submit" disabled={busy}>{t('common.save')}</button>
         </form>
-      </section>
+      </Fold>
 
-      <section className="set-group" aria-labelledby="club-docs">
-        <div className="set-label">
-          <h2 id="club-docs">{t('club.groupDocs')}</h2>
-          <p className="hint">{t('club.noticeHint')}</p>
-        </div>
+      <Fold id="docs" title={t('club.groupDocs')} summary={club.privacyNoticePath ? t('club.sumDocsYes') : t('club.sumDocsNo')} open={folds.open === 'docs'} onToggle={() => folds.toggle('docs')}>
+        <p className="hint">{t('club.noticeHint')}</p>
         <div className="set-body">
           <h3>{t('club.notice')}</h3>
           {club.privacyNoticePath ? (
@@ -225,7 +219,7 @@ export default function ClubSettings() {
             <input type="file" accept="application/pdf" disabled={busy} onChange={(e) => void uploadNotice(e)} />
           </label>
         </div>
-      </section>
+      </Fold>
     </div>
   )
 }

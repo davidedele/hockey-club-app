@@ -1,6 +1,7 @@
 import { personName } from '../lib/names'
 import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
 import { errorText, t } from '../i18n'
+import { checked } from '../lib/formcheck'
 import { useSession } from '../lib/session'
 import { supabase } from '../lib/supabase'
 import { formatDay, formatTime } from '../lib/time'
@@ -129,7 +130,7 @@ export default function EventThread({ eventId }: { eventId: string }) {
       </ol>
       <div ref={end} />
       {error && <p className="error" role="alert">{error}</p>}
-      <form onSubmit={send} className="compose">
+      <form {...checked(send)} className="compose">
         <label htmlFor="thread-text">{t('thread.label')}</label>
         <textarea id="thread-text" rows={3} maxLength={1000} value={text} onChange={(e) => setText(e.target.value)} />
         <div className="row">

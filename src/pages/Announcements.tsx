@@ -4,6 +4,7 @@ import ConfirmAction from '../components/ConfirmAction'
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import PageHeader from '../components/PageHeader'
 import { errorText, t } from '../i18n'
+import { checked } from '../lib/formcheck'
 import { useSession } from '../lib/session'
 import { supabase } from '../lib/supabase'
 import { formatDay, formatTime } from '../lib/time'
@@ -29,7 +30,7 @@ export default function Announcements() {
   const load = useCallback(async () => {
     if (!profile) return
     const [a, g, s] = await Promise.all([
-      supabase.from('announcements').select('*, announcement_groups(group_id), profiles:author_id(first_name, last_name)').order('created_at', { ascending: false }).limit(50),
+      supabase.from('announcements').select('*, announcement_groups(group_id), profiles:author_id(first_name, last_name)').order('pinned_at', { ascending: false, nullsFirst: false }).order('created_at', { ascending: false }).limit(50),
       supabase.from('groups').select('*').order('id'),
       supabase.from('announcement_seen').select('seen_at').eq('user_id', profile.id).maybeSingle(),
     ])
@@ -80,6 +81,13 @@ export default function Announcements() {
     await load()
   }
 
+  async function pin(id: string, pinned: boolean) {
+    setError('')
+    const { error } = await supabase.rpc('pin_announcement', { p_id: id, p_pinned: pinned })
+    if (error) return setError(errorText(error))
+    await load()
+  }
+
   const names = (a: Announcement) =>
     groups.filter((g) => a.announcement_groups.some((x) => x.group_id === g.id)).map((g) => g.name).join(', ')
 
@@ -87,7 +95,7 @@ export default function Announcements() {
     <div className="page narrow two-col">
       <PageHeader title={t('ann.title')} back={{ to: '/events', label: t('nav.events') }} description={t('ann.intro')} />
       {isStaff && (
-        <form onSubmit={post} aria-label={t('ann.new')}>
+        <form {...checked(post)} aria-label={t('ann.new')}>
           <h2>{t('ann.new')}</h2>
           <label>
             {t('ann.fieldTitle')}
@@ -124,15 +132,17 @@ export default function Announcements() {
           const canDelete = isBoard || a.author_id === profile?.id
           const who = a.profiles ? personName(a.profiles) : ''
           return (
-            <li key={a.id} className="ann">
+            <li key={a.id} className={a.pinned_at ? 'ann pinned' : 'ann'}>
               <div className="row">
                 <h2>{a.title}</h2>
+                {a.pinned_at && <span className="tag">{t('ann.pinned')}</span>}
                 {isNew && <span className="tag todo">{t('ann.newBadge')}</span>}
               </div>
               <p className="ann-body">{a.body}</p>
               <p className="hint">
                 {who ? t('ann.by', { name: who, groups: names(a) }) : names(a)}, {formatDay(a.created_at)} {formatTime(a.created_at)}
               </p>
+              {isBoard && <button type="button" className="link" onClick={() => void pin(a.id, !a.pinned_at)}>{a.pinned_at ? t('ann.unpin') : t('ann.pin')}</button>}
               {canDelete && (
                 <ConfirmAction label={t('ann.delete')} title={t('ann.deleteTitle')} body={t('ann.deleteBody', { title: a.title })} confirm={t('ann.delete')} onConfirm={() => void remove(a.id)} />
               )}

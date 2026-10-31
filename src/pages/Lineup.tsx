@@ -1,3 +1,4 @@
+import ShiftTimer from '../components/ShiftTimer'
 import { PageSkeleton } from '../components/Skeleton'
 import { useCallback, useEffect, useState } from 'react'
 import { Link, Navigate, useParams } from 'react-router-dom'
@@ -174,6 +175,7 @@ export default function Lineup({ embedded = false }: { embedded?: boolean }) {
       {!embedded && <h1>{t('lineup.title')}</h1>}
       {!embedded && <p className="hint">{event.title}, {formatDay(event.starts_at)} {formatTime(event.starts_at)}</p>}
       {error && <p className="error" role="alert">{error}</p>}
+      {isStaff && event.type === 'game' && !over && !cancelled && new Date(event.starts_at).getTime() <= Date.now() && <ShiftTimer />}
       {canEdit && <p className="hint">{t('lineup.help')}</p>}
       {isStaff && over && <p className="hint">{t('lineup.overHint')}</p>}
       {isStaff && cancelled && <p className="hint">{t('lineup.cancelledHint')}</p>}

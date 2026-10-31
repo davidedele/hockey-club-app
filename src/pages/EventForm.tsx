@@ -3,6 +3,7 @@ import { useEffect, useState, type FormEvent } from 'react'
 import PageHeader from '../components/PageHeader'
 import { Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { errorText, t } from '../i18n'
+import { checked } from '../lib/formcheck'
 import { jerseyName, useClub } from '../lib/club'
 import { useGroupFilter } from '../lib/groupfilter'
 import { useSession } from '../lib/session'
@@ -46,6 +47,7 @@ export default function EventForm() {
   const [repeat, setRepeat] = useState(false)
   const [weeks, setWeeks] = useState('12')
   const [opponent, setOpponent] = useState('')
+  const [video, setVideo] = useState('')
   const [homeAway, setHomeAway] = useState<'home' | 'away'>('home')
   const [jersey, setJersey] = useState<'light' | 'dark' | ''>('')
   const [busy, setBusy] = useState(false)
@@ -77,6 +79,7 @@ export default function EventForm() {
         setMeetupTouched(true)
         setVenue(e.venue ?? '')
         setOpponent(e.opponent ?? '')
+        setVideo(e.video_url ?? '')
         setHomeAway(e.home_away ?? 'home')
         setJersey(e.jersey ?? '')
         setRinkId(e.rink_id)
@@ -117,6 +120,7 @@ export default function EventForm() {
       setError(t('form.tooLong'))
       return
     }
+    if (type === 'game' && video.trim() !== '' && !/^https:\/\/\S+$/.test(video.trim())) return setError(t('form.videoInvalid'))
     setBusy(true)
     const meetupAt = shownMeetup ? meetupIso(date, startTime, shownMeetup) : null
     const isGame = type === 'game'
@@ -134,6 +138,7 @@ export default function EventForm() {
           home_away: isGame ? homeAway : null,
           jersey: isGame ? jersey || null : null,
           rink_id: rinkId,
+          video_url: isGame ? video.trim() || null : null,
         })
         .eq('id', id!)
         .select()
@@ -194,7 +199,7 @@ export default function EventForm() {
   return (
     <div className="page narrow">
       <PageHeader title={editing ? t('form.editTitle') : t('form.newTitle')} back={editing ? { to: `/events/${id}`, label: t('event.backToEvent') } : { to: '/events', label: t('nav.events') }} />
-      <form onSubmit={submit}>
+      <form {...checked(submit)}>
         {!editing && (
           <div className="field">
             <span className="label">{t('form.type')}</span>
@@ -269,6 +274,15 @@ export default function EventForm() {
                 ))}
               </div>
             </div>
+            {editing && (
+              <>
+                <label>
+                  {t('form.video')}
+                  <input type="url" inputMode="url" autoCapitalize="none" maxLength={300} placeholder="https://" value={video} onChange={(e) => setVideo(e.target.value)} />
+                </label>
+                <p className="hint">{t('form.videoHint')}</p>
+              </>
+            )}
             <div className="field">
               <span className="label">{t('form.jersey')}</span>
               <div className="chips">

@@ -4,9 +4,10 @@ import ConfirmAction from '../components/ConfirmAction'
 import { Navigate, useParams } from 'react-router-dom'
 import PageHeader from '../components/PageHeader'
 import { errorText, t } from '../i18n'
+import { checked } from '../lib/formcheck'
 import { useClub } from '../lib/club'
 import { certificateState, consentState, shrinkDocument, today, type Level } from '../lib/documents'
-import { findExpiry } from '../lib/expiry'
+import { findIssueDate } from '../lib/issued'
 import { readText } from '../lib/ocr'
 import { useSession } from '../lib/session'
 import { supabase } from '../lib/supabase'
@@ -38,6 +39,8 @@ export default function Documents() {
   const [message, setMessage] = useState('')
   // True once the person typed a date, so a late reading of the photo does not replace it.
   const typed = useRef(false)
+  // The date the reader found in the photo, kept to tell a date that was read from one that was typed.
+  const proposed = useRef<string | null>(null)
 
   const load = useCallback(async () => {
     if (!userId) return
@@ -49,7 +52,8 @@ export default function Documents() {
     setPerson((p.data as { first_name: string; last_name: string } | null) ?? null)
     setDocs(list)
     const cert = list.find((x) => x.kind === 'medical_certificate')
-    setDate(cert?.valid_until ?? '')
+    setDate(cert?.issued_on ?? '')
+    proposed.current = cert?.issued_source === 'read' ? (cert.issued_on ?? null) : null
     const paths = [cert?.file_path, club.privacyNoticePath].filter((x): x is string => Boolean(x))
     if (paths.length) {
       const { data } = await supabase.storage.from('documents').createSignedUrls(paths, LINK_SECONDS)
@@ -90,20 +94,28 @@ export default function Documents() {
     return added.error
   }
 
-  async function writeCertificate(values: { valid_until?: string | null; file_path?: string | null }) {
+  async function writeCertificate(values: { issued_on?: string | null; issued_source?: 'read' | 'typed' | null; file_path?: string | null }) {
     const error = await saveDocument('medical_certificate', {
-      valid_until: cert?.valid_until ?? null,
+      issued_on: cert?.issued_on ?? null,
+      issued_source: cert?.issued_source ?? null,
       file_path: cert?.file_path ?? null,
       ...values,
     })
     return error ? errorText(error) : ''
   }
 
+  // The member saves the date of issue: 'read' when it is the one the reader found, 'typed' otherwise.
+  // Staff confirm it instead, after opening the file (the database refuses a date without a file).
   async function saveDate(e: FormEvent) {
     e.preventDefault()
     if (!date) return
     setBusy(true)
-    await finish(await writeCertificate({ valid_until: date }), t('common.saved'))
+    if (!own && isStaff) {
+      const { error } = await supabase.rpc('verify_certificate', { p_user: userId, p_issued_on: date })
+      await finish(error ? errorText(error) : '', t('docs.certConfirmed'))
+      return
+    }
+    await finish(await writeCertificate({ issued_on: date, issued_source: date === proposed.current ? 'read' : 'typed' }), t('common.saved'))
   }
 
   async function upload(e: ChangeEvent<HTMLInputElement>) {
@@ -116,6 +128,7 @@ export default function Documents() {
     setBusy(true)
     setError('')
     typed.current = false
+    proposed.current = null
     let body: Blob = file
     if (!pdf) {
       try {
@@ -127,25 +140,25 @@ export default function Documents() {
     const path = `${userId}/medical_certificate-${Date.now()}.${pdf ? 'pdf' : 'jpg'}`
     const up = await supabase.storage.from('documents').upload(path, body, { contentType: pdf ? 'application/pdf' : 'image/jpeg' })
     if (up.error) return finish(errorText(up.error))
-    const problem = await writeCertificate({ file_path: path })
+    // A new file starts again: its date of issue is read or typed and then confirmed, never carried over.
+    const problem = await writeCertificate({ file_path: path, issued_on: null, issued_source: null })
     if (problem) await supabase.storage.from('documents').remove([path])
     else if (cert?.file_path) await supabase.storage.from('documents').remove([cert.file_path])
-    // A file without a date tells nobody anything and no warning email can be sent, so ask for it.
-    const needsDate = !cert?.valid_until || cert.valid_until < today()
-    await finish(problem, needsDate ? t('docs.certNowDate') : t('docs.certNewFile'))
-    // A new photo is always read, because it is usually a new certificate with a later date.
+    await finish(problem, pdf ? t('docs.certPdf') : t('docs.certNowDate'))
+    // A photo is read here on the phone. A PDF is not read: the member types the date and staff confirm it.
     if (!problem && !pdf) await propose(body)
   }
 
-  // The photo is read here on the phone to save the member typing the date. The picture is not
-  // sent anywhere for this, and the date that comes out still has to be checked and saved by hand.
+  // The photo is read here on the phone to save the member typing the date. The picture is not sent
+  // anywhere for this, and the date that comes out still has to be checked and saved by the member.
   async function propose(image: Blob) {
     setReading(true)
     try {
-      const found = findExpiry(await readText(image), today())
+      const found = findIssueDate(await readText(image), today())
       if (found && typed.current) {
         setMessage('')
       } else if (found) {
+        proposed.current = found
         setDate(found)
         setMessage(t('docs.certDateRead'))
       } else {
@@ -162,7 +175,8 @@ export default function Documents() {
     if (!cert?.file_path) return
     setBusy(true)
     const old = cert.file_path
-    const problem = await writeCertificate({ file_path: null })
+    // The date goes with the file: a date without a file counts for nothing.
+    const problem = await writeCertificate({ file_path: null, issued_on: null, issued_source: null })
     if (!problem) await supabase.storage.from('documents').remove([old])
     await finish(problem)
   }
@@ -197,16 +211,20 @@ export default function Documents() {
       <section className="doc-card" aria-labelledby="cert-title">
         <h2 id="cert-title">{t('docs.cert')}</h2>
         {loaded && <Status level={certNow.level} text={certNow.text} />}
-        <form onSubmit={saveDate}>
-          <label>
-            {t('docs.certDate')}
-            <input type="date" required value={date} onChange={(e) => { typed.current = true; setDate(e.target.value) }} />
-            <span className="hint">{t('docs.certDateHint')}</span>{' '}
-            <span className="hint">{t('docs.certWarnHint')}</span>
-          </label>
-          <button type="submit" className="secondary" disabled={busy || !date || date === cert?.valid_until}>{t('docs.certSaveDate')}</button>
-          {reading && <p className="hint" role="status">{t('docs.certReading')}</p>}
-        </form>
+        {cert?.file_path && (
+          <form {...checked(saveDate)}>
+            <label>
+              {t('docs.certDate')}
+              <input type="date" required max={today()} value={date} onChange={(e) => { typed.current = true; setDate(e.target.value) }} />
+              <span className="hint">{t('docs.certDateHint')}</span>{' '}
+              <span className="hint">{t('docs.certWarnHint')}</span>
+            </label>
+            <button type="submit" className="secondary" disabled={busy || (own && date === (cert.issued_on ?? '') && Boolean(cert.issued_on)) || (!own && Boolean(cert.verified_at) && date === (cert.issued_on ?? ''))}>
+              {own ? t('docs.certSaveDate') : t('docs.certConfirm')}
+            </button>
+            {reading && <p className="hint" role="status">{t('docs.certReading')}</p>}
+          </form>
+        )}
         <div className="doc-file">
           {cert?.file_path ? (
             certLink && <a href={certLink} target="_blank" rel="noopener noreferrer">{t('docs.certOpen')}</a>

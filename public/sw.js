@@ -62,3 +62,38 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(file(request))
   }
 })
+
+// Push notifications: the server sends a short title, a line and a path (see send-reminders/push.ts).
+// Nothing else is shown, and tapping opens that path in the app.
+self.addEventListener('push', (event) => {
+  let data = {}
+  try {
+    data = event.data ? event.data.json() : {}
+  } catch {
+    // A message that is not JSON still shows something.
+  }
+  event.waitUntil(
+    self.registration.showNotification(data.title || 'Hockey Club', {
+      body: data.body || '',
+      icon: '/icon-192.png',
+      badge: '/icon-192.png',
+      data: { url: data.url || '/' },
+    }),
+  )
+})
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close()
+  const url = (event.notification.data && event.notification.data.url) || '/'
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((list) => {
+      for (const client of list) {
+        if (new URL(client.url).origin === self.location.origin && 'focus' in client) {
+          client.navigate(url)
+          return client.focus()
+        }
+      }
+      return self.clients.openWindow(url)
+    }),
+  )
+})

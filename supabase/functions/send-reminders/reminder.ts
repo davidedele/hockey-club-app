@@ -15,7 +15,7 @@ export const words = {
   intro: 'Non hai ancora risposto per questo evento:',
   introMany: 'Non hai ancora risposto per questi eventi:',
   answer: 'Rispondi nell\'app',
-  off: 'Non vuoi più ricevere i promemoria? Puoi disattivarli dal tuo profilo:',
+  off: 'Non vuoi più ricevere le notifiche per email? Puoi cambiare le preferenze di notifica dal tuo profilo:',
   game: 'Partita',
 }
 

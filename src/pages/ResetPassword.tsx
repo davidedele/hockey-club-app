@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { errorText, t } from '../i18n'
+import { checked } from '../lib/formcheck'
 import { supabase } from '../lib/supabase'
 import Brand from '../components/Brand'
 
@@ -23,7 +24,7 @@ export default function ResetPassword() {
       {done ? (
         <p>{t('reset.done')} <Link to="/">{t('nav.home')}</Link></p>
       ) : (
-        <form onSubmit={submit}>
+        <form {...checked(submit)}>
           <label>
             {t('common.password')}
             <input type="password" autoComplete="new-password" minLength={8} required value={password} onChange={(e) => setPassword(e.target.value)} />

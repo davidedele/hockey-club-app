@@ -5,6 +5,8 @@ import { PageSkeleton } from '../components/Skeleton'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { errorText, t, type MessageKey } from '../i18n'
+import Predictions from '../components/Predictions'
+import OpponentHistory from '../components/OpponentHistory'
 import EventGame from './EventGame'
 import EventThread from '../components/EventThread'
 import Lineup from './Lineup'
@@ -12,6 +14,7 @@ import Plan from './Plan'
 import { ConfirmDialog } from '../components/ConfirmAction'
 import { jerseyName, useClub } from '../lib/club'
 import { useCrumb } from '../lib/crumb'
+import MapsButton from '../components/MapsButton'
 import { useSession } from '../lib/session'
 import type { CSSProperties } from 'react'
 import { whatsappLink } from '../lib/whatsapp'
@@ -62,7 +65,7 @@ export default function EventDetail() {
       supabase.from('groups').select('*').order('id'),
       supabase.from('group_members').select('group_id').eq('user_id', profile.id),
       supabase.from('attendance_answers').select('answer').eq('event_id', id).eq('user_id', profile.id).maybeSingle(),
-      supabase.from('rinks').select('id, name'),
+      supabase.from('rinks').select('id, name, address, note'),
       supabase.from('events').select('id, type, title, starts_at, opponent, home_away, score_for, score_against, cancelled_at, event_groups(group_id)').order('starts_at', { ascending: false }).limit(1000),
     ])
     // The strip follows the group chosen in the selector; the event being looked at is always in it.
@@ -103,7 +106,8 @@ export default function EventDetail() {
   const now = Date.now()
   const over = new Date(event.ends_at).getTime() < now
   const cancelled = event.cancelled_at !== null
-  const rinkName = rinks.find((r) => r.id === event.rink_id)?.name ?? ''
+  const rink = rinks.find((r) => r.id === event.rink_id) ?? null
+  const rinkName = rink?.name ?? ''
   const started = new Date(event.starts_at).getTime() <= now
   const inMyGroups = event.event_groups.some((x) => myGroupIds.includes(x.group_id))
   const groupNames = event.event_groups
@@ -403,7 +407,7 @@ export default function EventDetail() {
       {tab === 'info' && (
         <div className="ev-cols">
           <div className="ev-aside">
-            {inMyGroups && !cancelled && (
+            {!isStaff && inMyGroups && !cancelled && (
               <section className="card">
                 <h2>{t('event.myAnswer')}</h2>
                 {over ? (
@@ -448,17 +452,24 @@ export default function EventDetail() {
               {event.meetup_at && (<><dt>{t('event.meetup')}</dt><dd>{formatTime(event.meetup_at)}</dd></>)}
               {event.venue && (<><dt>{t('event.venue')}</dt><dd>{event.venue}</dd></>)}
               {rinkName && (<><dt>{t('event.rink')}</dt><dd>{rinkName}</dd></>)}
+              {rink?.address && (<><dt>{t('event.address')}</dt><dd>{rink.address}</dd></>)}
+              {rink?.note && (<><dt>{t('event.rinkNote')}</dt><dd>{rink.note}</dd></>)}
               {event.opponent && (<><dt>{t('event.opponent')}</dt><dd>{event.opponent}{event.home_away ? ` · ${t(event.home_away === 'home' ? 'event.home' : 'event.away')}` : ''}</dd></>)}
               {event.jersey && (<><dt>{t('event.jersey')}</dt><dd>{jerseyLabel}</dd></>)}
               {hasScore && (
                 <><dt>{t('event.scoreTitle')}</dt><dd>{t('event.scoreValue', { us: String(event.score_for), them: String(event.score_against) })}</dd></>
               )}
             </dl>
+            <p className="button-row"><MapsButton rink={rink} venue={event.venue} />{game && event.video_url && <a className="button secondary" href={event.video_url} target="_blank" rel="noopener noreferrer">{t('event.videoOpen')}</a>}</p>
             <div className="actions share-row">
               {!over && !cancelled && <a className="button secondary small" href={whatsappLink(shareText)} target="_blank" rel="noopener noreferrer">{t('share.whatsapp')}</a>}
               {hasScore && <a className="button secondary small" href={whatsappLink(resultText)} target="_blank" rel="noopener noreferrer">{t('share.result')}</a>}
             </div>
             {!cancelled && !over && isStaff && <p className="hint">{t('event.cancelHint')}</p>}
+            {game && !cancelled && profile && (inMyGroups || started) && (
+              <Predictions eventId={id} myId={profile.id} started={started} canGuess={!isStaff && inMyGroups} />
+            )}
+            {game && event.opponent && <OpponentHistory eventId={id} opponent={event.opponent} />}
           </div>
         </div>
       )}

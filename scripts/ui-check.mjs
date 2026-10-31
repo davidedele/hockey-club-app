@@ -6,6 +6,12 @@
 // Run: node scripts/ui-check.mjs            (all pages)
 //      node scripts/ui-check.mjs settings   (only routes whose name contains "settings")
 // Needs Playwright with Chromium: npm i --no-save playwright && npx playwright install chromium
+//
+// Options, as environment variables:
+//   UI_CHECK_WEBKIT=1   use WebKit (the iPhone engine) instead of Chromium. Needs: npx playwright install webkit
+//   UI_CHECK_DARK=1     dark colour scheme
+//   UI_CHECK_LARGE=1    larger text size (the root font size is raised by a third)
+//   UI_CHECK_WIDTHS=375,1280   other window widths (default 320, 375, 390, 430, 768, 1280)
 
 import { execSync } from 'node:child_process'
 import { createReadStream, existsSync, mkdirSync, rmSync, statSync, writeFileSync } from 'node:fs'
@@ -16,10 +22,17 @@ import { fileURLToPath } from 'node:url'
 import { fixtures, ME } from './ui-check/fixtures.mjs'
 
 const require = createRequire(import.meta.url)
-const { chromium } = require('playwright')
+const playwright = require('playwright')
+const engine = process.env.UI_CHECK_WEBKIT ? playwright.webkit : playwright.chromium
+const DARK = Boolean(process.env.UI_CHECK_DARK)
+const LARGE = Boolean(process.env.UI_CHECK_LARGE)
+const WIDTHS = (process.env.UI_CHECK_WIDTHS ?? '320,375,390,430,768,1280').split(',').map(Number)
+const contextOptions = { serviceWorkers: 'block', locale: 'it-IT', timezoneId: 'Europe/Rome', colorScheme: DARK ? 'dark' : 'light' }
+const largeText = (large) => { if (large) document.addEventListener('DOMContentLoaded', () => { document.documentElement.style.fontSize = '133%' }) }
 
 const root = resolve(fileURLToPath(import.meta.url), '../..')
 const out = join(root, 'ui-check')
+const tag = `${process.env.UI_CHECK_WEBKIT ? '-webkit' : ''}${DARK ? '-dark' : ''}${LARGE ? '-large' : ''}`
 const dist = join(out, 'dist')
 const API = 'http://mock.supabase.test'
 const only = process.argv[2] ?? ''
@@ -148,16 +161,16 @@ async function answer(route) {
 }
 
 // 4. The pages. "sub" pages must offer a way back; "auth" pages are outside the app frame.
-const { training, game, member } = fixtures.ids
+const { training, game, member, futureGame } = fixtures.ids
 const ROUTES = [
-  ['home', '/'], ['events', '/events'], ['members', '/members'], ['championship', '/campionato'], ['league-match', '/campionato/partita/501', 'sub'], ['stats', '/stats'],
+  ['home', '/'], ['events', '/events'], ['members', '/members'], ['championship', '/campionato'], ['league-match', '/campionato/partita/501', 'sub'], ['stats', '/stats'], ['stats-predictions', '/stats?tab=predictions'], ['stats-hall', '/stats?tab=hall'],
   ['attendance', '/attendance'], ['attendance-events', '/attendance?tab=events'],
-  ['event-training', `/events/${training}`, 'sub'], ['event-game', `/events/${game}`, 'sub'],
+  ['event-training', `/events/${training}`, 'sub'], ['event-game', `/events/${game}`, 'sub'], ['event-future-game', `/events/${futureGame}`, 'sub'],
   ['event-new', '/events/new', 'sub'], ['attendance-missing', '/attendance?tab=missing'],
   ['announcements', '/announcements', 'sub'], ['drills', '/drills'],
   ['member-edit', `/members/${member}`, 'sub'], ['member-documents', `/members/${member}/documents`, 'sub'],
   ['profile', '/profile'], ['profile-info', '/profile/info', 'sub'], ['profile-documents', '/documents', 'sub'],
-  ['profile-absences', '/profile/absences', 'sub'], ['profile-notifications', '/profile/notifications', 'sub'],
+  ['profile-absences', '/profile/absences', 'sub'], ['profile-season', '/profile/season', 'sub'], ['profile-club-documents', '/profile/club-documents', 'sub'], ['profile-security', '/profile/security', 'sub'], ['profile-notifications', '/profile/notifications', 'sub'],
   ['profile-calendar', '/profile/calendar', 'sub'], ['profile-app', '/profile/app', 'sub'],
   ['settings', '/settings'], ['settings-club', '/settings/club', 'sub'], ['settings-groups', '/settings/groups', 'sub'],
   ['settings-rinks', '/settings/rinks', 'sub'], ['settings-ice', '/settings/ice', 'sub'], ['settings-invites', '/settings/invites', 'sub'],
@@ -170,7 +183,17 @@ function measure() {
   const name = (el) => (el.getAttribute('aria-label') || el.textContent || el.getAttribute('placeholder') || el.tagName).replace(/\s+/g, ' ').trim().slice(0, 40)
   const doc = document.documentElement
   const problems = []
-  if (doc.scrollWidth > doc.clientWidth + 1) problems.push(`sideways scroll: page is ${doc.scrollWidth}px wide in a ${doc.clientWidth}px window`)
+  if (doc.scrollWidth > doc.clientWidth + 1) {
+    // Name the widest offenders, so the cause can be found without a debugger.
+    const wide = [...document.querySelectorAll('body *')].filter((el) => el.getBoundingClientRect().right > doc.clientWidth + 1 && visible(el) && !(() => { for (let p = el.parentElement; p && p !== document.body; p = p.parentElement) if (/(auto|scroll|hidden)/.test(getComputedStyle(p).overflowX)) return true; return false })()).slice(0, 3).map((el) => `${el.tagName.toLowerCase()}.${String(el.className).split(' ')[0]}`)
+    problems.push(`sideways scroll: page is ${doc.scrollWidth}px wide in a ${doc.clientWidth}px window (${wide.join(', ')})`)
+  }
+  // No field or control reaches past the window edge, even when an ancestor hides the overflow (iPhone date fields).
+  for (const el of document.querySelectorAll('main input, main select, main textarea, main button, main label')) {
+    if (!visible(el) || el.closest('.scroll, .table-wrap, .chips, .days')) continue
+    const r = el.getBoundingClientRect()
+    if (r.right > doc.clientWidth + 1 || r.left < -1) problems.push(`box outside the window: ${el.tagName.toLowerCase()} "${name(el)}" spans ${Math.round(r.left)} to ${Math.round(r.right)} in a ${doc.clientWidth}px window`)
+  }
   // Controls: 44 pixels tall. Links inside running text are exempt.
   for (const el of document.querySelectorAll('main button, main input:not([type=checkbox]):not([type=radio]):not([type=file]):not([type=color]), main select, main summary, main [role=button], .side button, .top button, .top a, .side select')) {
     if (!visible(el) || el.closest('.sr-only')) continue
@@ -219,12 +242,13 @@ function measure() {
 }
 
 // 6. Visit everything at both widths.
-const browser = await chromium.launch()
+const browser = await engine.launch()
 const report = []
-for (const width of [375, 1280]) {
-  mkdirSync(join(out, String(width)), { recursive: true })
-  const context = await browser.newContext({ viewport: { width, height: width === 375 ? 812 : 800 }, serviceWorkers: 'block', locale: 'it-IT', timezoneId: 'Europe/Rome' })
+for (const width of WIDTHS) {
+  mkdirSync(join(out, `${width}${tag}`), { recursive: true })
+  const context = await browser.newContext({ viewport: { width, height: width < 700 ? 812 : 800 }, ...contextOptions })
   await context.route(`${API}/**`, answer)
+  await context.addInitScript(largeText, LARGE)
   await context.addInitScript(([me, email]) => {
     if (location.pathname === '/login') return
     const session = { access_token: 'sample', refresh_token: 'sample', token_type: 'bearer', expires_in: 3600, expires_at: Math.floor(Date.now() / 1000) + 36000, user: { id: me, email, aud: 'authenticated', role: 'authenticated', app_metadata: {}, user_metadata: {} } }
@@ -232,8 +256,9 @@ for (const width of [375, 1280]) {
   }, [ME, fixtures.me.email])
   // The login page is opened in a fresh context with no saved session. In the shared one the sign in
   // stored by the other pages would send it straight to the home page.
-  const fresh = await browser.newContext({ viewport: { width, height: width === 375 ? 812 : 800 }, serviceWorkers: 'block', locale: 'it-IT', timezoneId: 'Europe/Rome' })
+  const fresh = await browser.newContext({ viewport: { width, height: width < 700 ? 812 : 800 }, ...contextOptions })
   await fresh.route(`${API}/**`, answer)
+  await fresh.addInitScript(largeText, LARGE)
   for (const [name, path, kind] of ROUTES) {
     const page = await (kind === 'auth' ? fresh : context).newPage()
     const errors = []
@@ -251,7 +276,7 @@ for (const width of [375, 1280]) {
     // bottom of the window (the phone tab bar) stays at the bottom instead of cutting across the middle.
     const height = await page.evaluate(() => document.documentElement.scrollHeight)
     await page.setViewportSize({ width, height: Math.min(Math.max(height, 800), 6000) })
-    await page.screenshot({ path: join(out, String(width), `${name}.png`) })
+    await page.screenshot({ path: join(out, `${width}${tag}`, `${name}.png`) })
     report.push({ width, name, path, kind: kind ?? 'page', ...m, errors })
     await page.close()
   }
@@ -260,8 +285,9 @@ for (const width of [375, 1280]) {
 }
 // 6b. Interactions that a screenshot cannot prove, at computer width.
 {
-  const context = await browser.newContext({ viewport: { width: 1280, height: 800 }, serviceWorkers: 'block', locale: 'it-IT', timezoneId: 'Europe/Rome' })
+  const context = await browser.newContext({ viewport: { width: 1280, height: 800 }, ...contextOptions })
   await context.route(`${API}/**`, answer)
+  await context.addInitScript(largeText, LARGE)
   await context.addInitScript(([me, email]) => {
     const session = { access_token: 'sample', refresh_token: 'sample', token_type: 'bearer', expires_in: 3600, expires_at: Math.floor(Date.now() / 1000) + 36000, user: { id: me, email, aud: 'authenticated', role: 'authenticated', app_metadata: {}, user_metadata: {} } }
     localStorage.setItem('sb-mock-auth-token', JSON.stringify(session))
@@ -327,6 +353,164 @@ for (const width of [375, 1280]) {
   await page.keyboard.press('Escape')
   check(!(await page.isVisible('dialog[open]')), 'confirm: Escape does not close the delete window')
 
+  // Deleting a member's data asks first, in a window that names the person; Annulla has the focus.
+  await settle(`/members/${member}`)
+  await page.click('button.danger:has-text("Elimina i dati")')
+  check(await page.isVisible('dialog[open]'), 'delete member: the button does not open a window')
+  check(/Rossi Luca/.test(await page.locator('dialog[open]').innerText()), 'delete member: the window does not name the person')
+  check((await active()).text === 'Annulla', 'delete member: Annulla does not have the focus')
+  await page.keyboard.press('Escape')
+  check(!(await page.isVisible('dialog[open]')), 'delete member: Escape does not close the window')
+
+  // Settings groups are folded rows: all closed on first load, one open at a time, a real button with aria-expanded.
+  await settle('/settings/club')
+  const heads = page.locator('main .fold-head')
+  check((await heads.count()) === 3, 'folds: the club settings do not show three folded groups')
+  check((await page.locator('main .fold-head[aria-expanded=true]').count()) === 0, 'folds: a group of the club settings is open on first load')
+  await heads.nth(0).click()
+  check((await page.locator('main .fold-head[aria-expanded=true]').count()) === 1 && (await page.locator('main .fold-body:visible').count()) === 1, 'folds: opening a group does not show exactly one body')
+  await heads.nth(1).click()
+  check((await page.locator('main .fold-head[aria-expanded=true]').count()) === 1 && (await heads.nth(0).getAttribute('aria-expanded')) === 'false', 'folds: opening a second group does not close the first')
+  await heads.nth(1).focus()
+  await page.keyboard.press('Enter')
+  check((await heads.nth(1).getAttribute('aria-expanded')) === 'false', 'folds: Enter on the open group does not close it')
+  await page.keyboard.press('Space')
+  check((await heads.nth(1).getAttribute('aria-expanded')) === 'true', 'folds: Space does not open the group')
+
+  // The venue button: Apple Maps on an iPhone, Google Maps elsewhere; 44 pixels; on the event page and the next event panel.
+  await settle(`/events/${training}`)
+  const maps = page.locator('main a.maps-button').first()
+  check((await maps.count()) === 1, 'maps: the event page has no "Apri in Mappe" button')
+  check(/google\.com\/maps.*Via%20Esempio/.test((await maps.getAttribute('href')) ?? ''), 'maps: the link does not search the address in Google Maps')
+  check(((await maps.boundingBox())?.height ?? 0) >= 43.5, 'maps: the button is under 44 pixels')
+  await settle('/')
+  check((await page.locator('main a.maps-button').count()) >= 1, 'maps: the next event on Home has no "Apri in Mappe" button')
+
+  // The certificate: no date field without a file (decision 94); with a file the date field is there.
+  await settle('/profile/documents')
+  check((await page.locator('main input[type=date]').count()) === 0, 'certificate: a date field shows although no file was uploaded')
+  await settle(`/members/${member}/documents`)
+  check((await page.locator('main input[type=date]').count()) === 1, 'certificate: no date field although a file was uploaded')
+
+  // The notification panel: fully inside the window, closes on a tap outside, on Escape and after a link, and gives the focus back.
+  const bell = async (width, height, label) => {
+    const target = await context.newPage()
+    await target.setViewportSize({ width, height })
+    await target.goto(origin + '/members')
+    await target.waitForLoadState('networkidle').catch(() => {})
+    await target.waitForTimeout(300)
+    const summary = width < 768 ? '.top .bell summary' : '.crumb-actions .bell summary'
+    await target.click(summary)
+    await target.screenshot({ path: join(out, `bell-${label}.png`) })
+    const box = await target.locator(width < 768 ? '.top .bell-list' : '.crumb-actions .bell-list').boundingBox()
+    check(box && box.x >= 0 && box.y >= 0 && box.x + box.width <= width && box.y + box.height <= height, `bell at ${label}: the panel is not fully inside the window (${JSON.stringify(box)})`)
+    if (width < 768 && box) check(Math.abs((box.x + box.width / 2) - width / 2) <= 1, `bell at ${label}: the panel is not centred on the phone`)
+    await target.mouse.click(5, height - 5)
+    check(!(await target.locator('.bell[open]').count()), `bell at ${label}: a tap outside does not close the panel`)
+    await target.click(summary)
+    await target.keyboard.press('Escape')
+    check(!(await target.locator('.bell[open]').count()), `bell at ${label}: Escape does not close the panel`)
+    check(await target.evaluate(() => document.activeElement?.tagName === 'SUMMARY'), `bell at ${label}: the focus does not return to the bell after Escape`)
+    await target.click(summary)
+    await target.waitForTimeout(100)
+    check(await target.locator('.bell[open]').count(), `bell at ${label}: the panel does not open again after Escape`)
+    if (!(await target.locator('.bell[open]').count())) { await target.close(); return }
+    await target.locator(width < 768 ? '.top .bell-list a' : '.crumb-actions .bell-list a').first().click()
+    await target.waitForTimeout(200)
+    check(!(await target.locator('.bell[open]').count()), `bell at ${label}: the panel stays open after a link is followed`)
+    await target.close()
+  }
+  for (const [w, h] of [[320, 640], [375, 812], [430, 932], [1280, 800]]) await bell(w, h, `${w}px`)
+
+  // Player things stay out of the staff views (decision 93, 106): no unanswered events banner, no certificate line
+  // and no pending count in the bell. In the Giocatore view they show, and the same number is everywhere (decision 92).
+  const asView = async (view, path) => { await page.goto(origin + '/'); await page.evaluate((v) => localStorage.setItem('view-as', v), view); await settle(path) }
+  for (const view of ['board', 'coach']) {
+    await asView(view, '/members')
+    check(!(await page.locator('.banners .banner:visible').count()), `views: the ${view} view shows a banner about the person's own events or certificate`)
+    await page.click('.crumb-actions .bell summary')
+    check(!/senza risposta/.test(await page.locator('.crumb-actions .bell-list').innerText()), `views: the bell of the ${view} view counts events without an answer`)
+    await settle('/events/' + training)
+    check(!(await page.locator('main h2:has-text("La tua risposta")').count()), `views: the ${view} view shows the box "La tua risposta"`)
+    await settle('/events')
+    check(!(await page.locator('main .answers button, main .quick button').count()), `views: the ${view} view shows answer buttons on the events page`)
+    await settle('/')
+    check(!(await page.locator('#home-season').count()), `views: the ${view} view shows the season tile of the player`)
+    check(!(await page.locator('#home-pending').count()), `views: the ${view} view shows the list of events to answer on the home page`)
+  }
+  await asView('player', '/members')
+  const bannerText = await page.locator('.banners .banner[role=status] > span').first().innerText().catch(() => '')
+  const bannerN = Number((bannerText.match(/Hai (\d+) event/) ?? [, bannerText.includes('Hai 1 evento') ? '1' : ''])[1])
+  check(/questa settimana/.test(bannerText) && bannerN >= 1, `views: the player view shows no banner with the window ("questa settimana"): "${bannerText}"`)
+  check(await page.locator('.doc-banner').count() >= 1, 'views: the player view does not show the certificate line')
+  await page.click('.crumb-actions .bell summary')
+  const bellText = await page.locator('.crumb-actions .bell-list').innerText()
+  check(bellText.includes(bannerText), `views: the bell and the banner do not say the same: "${bellText.replace(/\s+/g, ' ')}" against "${bannerText}"`)
+  await settle('/')
+  await page.screenshot({ path: join(out, 'home-player-1280.png'), fullPage: true })
+  check(await page.locator('#home-season').count() === 1, 'season: the player view of Home has no "La mia stagione" tile')
+  const homeN = Number(await page.locator('#home-pending .count').innerText().catch(() => 'x'))
+  check(homeN === bannerN, `views: the Home tile counts ${homeN}, the banner ${bannerN}`)
+  await settle('/events')
+  const eventsN = Number(await page.locator('.todo .count').innerText().catch(() => 'x'))
+  check(eventsN === bannerN, `views: the Eventi heading counts ${eventsN}, the banner ${bannerN}`)
+  await page.goto(origin + '/')
+  await page.evaluate(() => localStorage.removeItem('view-as'))
+
+  // Forms: pressing the button with a required field empty shows an Italian message under the field,
+  // marks it aria-invalid, moves the focus to it and does not rely on the browser's own check.
+  const emptyForm = async (target, label, path, prep) => {
+    await target.goto(origin + path)
+    await target.waitForLoadState('networkidle').catch(() => {})
+    await target.waitForTimeout(300)
+    if (prep) await prep(target)
+    // The first visible form that has a required field with nothing in it.
+    await target.evaluate(() => {
+      for (const f of document.querySelectorAll('form')) {
+        const r = f.getBoundingClientRect()
+        const empty = [...f.querySelectorAll('[required]')].some((el) => !String(el.value ?? '').trim())
+        if (empty && r.width > 0 && r.height > 0) { f.setAttribute('data-ui-empty', ''); break }
+      }
+    })
+    const form = target.locator('form[data-ui-empty]').first()
+    if (!(await form.count())) { problems.push(`forms: ${label}: no form with a required field found`); return }
+    check(await form.evaluate((f) => f.noValidate), `forms: ${label}: the browser check is not turned off (noValidate)`)
+    const submitButton = form.locator('button[type=submit]:visible').first()
+    if (await submitButton.isDisabled()) { problems.push(`forms: ${label}: the submit button is disabled while a required field is empty, so no message can show`); return }
+    await submitButton.click()
+    await target.waitForTimeout(200)
+    mkdirSync(join(out, 'forms'), { recursive: true })
+    await target.screenshot({ path: join(out, 'forms', `${label.replace(/ /g, '-')}.png`) })
+    const shown = await target.evaluate(() => {
+      const bad = document.querySelector('[aria-invalid=true]')
+      const message = bad ? document.getElementById((bad.getAttribute('aria-describedby') || '').split(' ').find((x) => x.startsWith('fe-')) || '') : null
+      return { bad: Boolean(bad), text: message?.textContent?.trim() ?? '', focused: Boolean(bad) && document.activeElement === bad }
+    })
+    check(shown.bad, `forms: ${label}: no field is marked aria-invalid after an empty submit`)
+    check(/\S/.test(shown.text) && !/^check\./.test(shown.text), `forms: ${label}: no message under the field`)
+    check(shown.focused, `forms: ${label}: the focus did not move to the first field with a problem`)
+  }
+  await emptyForm(page, 'event form', '/events/new')
+  await emptyForm(page, 'rink form', '/settings/rinks')
+  await emptyForm(page, 'announcement form', '/announcements', async (pg) => { const b = pg.locator('main button:has-text("Nuovo avviso")'); if (await b.count()) await b.first().click() })
+  await emptyForm(page, 'drill form', '/drills', async (pg) => { const b = pg.locator('main button:has-text("Nuovo esercizio")'); if (await b.count()) await b.first().click() })
+  await emptyForm(page, 'profile form', '/profile/info', async (pg) => { await pg.locator('form input[autocomplete="given-name"]').fill('') })
+  await emptyForm(page, 'absence form', '/profile/absences', async (pg) => { await pg.locator('main input[type=date]').first().fill('') })
+  await emptyForm(page, 'group settings', '/settings/groups', async (pg) => { const b = pg.locator('main button:has-text("Aggiungi gruppo")'); if (await b.count()) await b.first().click() })
+  await emptyForm(page, 'club settings', '/settings/club', async (pg) => { await pg.locator('main .fold-head').first().click(); await pg.locator('form input[required]:visible').first().fill('') })
+  const anon = await browser.newContext({ viewport: { width: 375, height: 812 }, ...contextOptions })
+  await anon.route(`${API}/**`, answer)
+  const guest = await anon.newPage()
+  await emptyForm(guest, 'login form', '/login')
+  await emptyForm(guest, 'forgot password form', '/forgot-password')
+  await emptyForm(guest, 'join form', '/join/sample-invite')
+  await guest.goto(origin + '/login')
+  await guest.fill('input[type=email]', 'persona@example.org')
+  await guest.fill('input[type=password]', 'corta')
+  // Login does not check the length, so the sign up form is the one with the 8 character rule.
+  await emptyForm(guest, 'reset password form', '/reset-password')
+  await anon.close()
+
   report.push({ width: 1280, name: 'interactions', path: '-', kind: 'auth', problems, errors: [] })
   await context.close()
 }
@@ -336,7 +520,7 @@ server.close()
 
 // 7. Rules across pages: the frame starts at the same place, sub pages offer a way back.
 const failures = []
-for (const width of [375, 1280]) {
+for (const width of WIDTHS) {
   const rows = report.filter((r) => r.width === width && r.kind !== 'auth' && r.frameLeft !== null)
   const counts = new Map()
   for (const r of rows) counts.set(r.frameLeft, (counts.get(r.frameLeft) ?? 0) + 1)
@@ -345,13 +529,13 @@ for (const width of [375, 1280]) {
 }
 for (const r of report) {
   if (r.kind !== 'auth' && r.frameLeft === null) r.problems.push('no .page frame found')
-  if (r.kind === 'sub' && r.width === 375 && !r.hasBack) r.problems.push('sub page without a back button on phones')
-  if (r.kind === 'sub' && r.width === 1280 && !r.hasBack && !r.hasShellNav && !r.hasCrumbs) r.problems.push('sub page without a way back on computers')
+  if (r.kind === 'sub' && r.width < 700 && !r.hasBack) r.problems.push('sub page without a back button on phones')
+  if (r.kind === 'sub' && r.width >= 1024 && !r.hasBack && !r.hasShellNav && !r.hasCrumbs) r.problems.push('sub page without a way back on computers')
   for (const e of r.errors) r.problems.push(`script error: ${e.slice(0, 160)}`)
   if (r.problems.length) failures.push(r)
 }
 
-const lines = ['# Interface check', '', `${report.length} page views, ${failures.length} with problems. Screenshots in ui-check/375 and ui-check/1280.`, '']
+const lines = ['# Interface check', '', `${report.length} page views, ${failures.length} with problems. Screenshots in ui-check/<width>${tag}.`, '']
 for (const r of failures) {
   lines.push(`## ${r.name} at ${r.width}px (${r.path})`)
   const seen = new Map()

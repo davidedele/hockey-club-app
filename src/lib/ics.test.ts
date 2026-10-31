@@ -79,6 +79,7 @@ describe('calendar feed text', () => {
   it('puts the rink and the venue in the location once', () => {
     expect(location({ ...base, rink: 'Pista grande', venue: 'Agorà' })).toBe('Pista grande, Agorà')
     expect(location({ ...base, rink: 'Agorà', venue: 'Agorà' })).toBe('Agorà')
+    expect(location({ ...base, rink: 'Pista grande', address: 'Via Roma 1, Milano', venue: null })).toBe('Pista grande, Via Roma 1, Milano')
     expect(location(base)).toBe('')
   })
 

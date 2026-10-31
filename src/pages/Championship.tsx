@@ -26,6 +26,9 @@ export default function Championship() {
   const { groupId } = useGroupFilter()
   const [compId, setCompId] = useState<number | null>(null)
   const [onlyOurs, setOnlyOurs] = useState(false)
+  // How many more of each list were asked for, ten at a time.
+  const [moreNext, setMoreNext] = useState(0)
+  const [moreResults, setMoreResults] = useState(0)
   const [refreshing, setRefreshing] = useState(false)
   const [loaded, setLoaded] = useState(false)
 
@@ -73,8 +76,10 @@ export default function Championship() {
   const ours = (m: LeagueMatch) => m.home === team || m.away === team
   const inComp = matches.filter((m) => m.championship_id === comp?.id && (!onlyOurs || ours(m)))
   const now = Date.now()
-  const upcoming = inComp.filter((m) => m.home_score === null && Date.parse(m.starts_at) > now - 3 * 3600 * 1000).slice(0, SHOWN)
-  const results = inComp.filter((m) => m.home_score !== null).reverse().slice(0, SHOWN)
+  const allUpcoming = inComp.filter((m) => m.home_score === null && Date.parse(m.starts_at) > now - 3 * 3600 * 1000)
+  const allResults = inComp.filter((m) => m.home_score !== null).reverse()
+  const upcoming = allUpcoming.slice(0, SHOWN + moreNext)
+  const results = allResults.slice(0, SHOWN + moreResults)
   const table = standings.filter((s) => s.championship_id === comp?.id)
 
   async function forceRefresh() {
@@ -105,6 +110,17 @@ export default function Championship() {
       <li key={m.id} className={ours(m) ? 'lmatch ours' : 'lmatch'}>
         {to ? <Link to={to}>{body}</Link> : <div>{body}</div>}
       </li>
+    )
+  }
+
+  // Under a list: how many of how many are shown, and a button for ten more.
+  function more(shown: number, total: number, onMore: () => void) {
+    if (total <= SHOWN) return null
+    return (
+      <div className="list-more">
+        <span className="hint" role="status">{t('champ.count', { shown: String(shown), total: String(total) })}</span>
+        {shown < total && <button type="button" className="secondary" onClick={onMore}>{t('champ.more', { n: String(Math.min(SHOWN, total - shown)) })}</button>}
+      </div>
     )
   }
 
@@ -139,7 +155,7 @@ export default function Championship() {
           {comps.length > 1 && (
             <div className="chips" role="group" aria-label={t('champ.competition')}>
               {comps.map((c) => (
-                <button key={c.id} className={c.id === comp?.id ? 'chip on' : 'chip'} aria-pressed={c.id === comp?.id} onClick={() => setCompId(c.id)}>
+                <button key={c.id} className={c.id === comp?.id ? 'chip on' : 'chip'} aria-pressed={c.id === comp?.id} onClick={() => { setCompId(c.id); setMoreNext(0); setMoreResults(0) }}>
                   {prettyName(c.name)}
                 </button>
               ))}
@@ -183,14 +199,16 @@ export default function Championship() {
               <div className="row league-head">
                 <h2 id="games-title">{t('champ.next')}</h2>
                 <div className="chips">
-                  <button className={!onlyOurs ? 'chip on' : 'chip'} aria-pressed={!onlyOurs} onClick={() => setOnlyOurs(false)}>{t('champ.allGames')}</button>
-                  <button className={onlyOurs ? 'chip on' : 'chip'} aria-pressed={onlyOurs} onClick={() => setOnlyOurs(true)}>{t('champ.onlyTeam', { team: prettyName(team) })}</button>
+                  <button className={!onlyOurs ? 'chip on' : 'chip'} aria-pressed={!onlyOurs} onClick={() => { setOnlyOurs(false); setMoreNext(0); setMoreResults(0) }}>{t('champ.allGames')}</button>
+                  <button className={onlyOurs ? 'chip on' : 'chip'} aria-pressed={onlyOurs} onClick={() => { setOnlyOurs(true); setMoreNext(0); setMoreResults(0) }}>{t('champ.onlyTeam', { team: prettyName(team) })}</button>
                 </div>
               </div>
               {upcoming.length === 0 ? <p className="hint">{t('champ.noNext')}</p> : <ul className="list lmatches">{upcoming.map(row)}</ul>}
+              {more(upcoming.length, allUpcoming.length, () => setMoreNext(moreNext + SHOWN))}
               <h2>{t('champ.results')}</h2>
               {results.length > 0 && <p className="hint">{t('champ.resultsHint')}</p>}
               {results.length === 0 ? <p className="hint">{t('champ.noResults')}</p> : <ul className="list lmatches">{results.map(row)}</ul>}
+              {more(results.length, allResults.length, () => setMoreResults(moreResults + SHOWN))}
             </section>
           </div>
         </>

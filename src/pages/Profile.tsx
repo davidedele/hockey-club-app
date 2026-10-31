@@ -1,6 +1,7 @@
 import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react'
 import ConfirmAction from '../components/ConfirmAction'
 import { errorText, t, type MessageKey } from '../i18n'
+import { checked } from '../lib/formcheck'
 import Avatar from '../components/Avatar'
 import PageHeader from '../components/PageHeader'
 import SectionShell from '../components/SectionShell'
@@ -11,11 +12,13 @@ import { formatPhone, isPhoneValid } from '../lib/phone'
 import { nameHasDigits, personName, tidyName } from '../lib/names'
 import AbsencePeriods from '../components/AbsencePeriods'
 import CalendarFeed from '../components/CalendarFeed'
+import NotificationSettings from '../components/NotificationSettings'
 import ReminderSwitch from '../components/ReminderSwitch'
 import InstallApp from '../components/InstallApp'
 import LanguageChoice from '../components/LanguageChoice'
 import { useClub } from '../lib/club'
 import { summary } from '../lib/documents'
+import { takenNumbers, wearing, type Holder } from '../lib/jersey'
 import type { MemberDocument, Position } from '../lib/types'
 
 const back = () => ({ to: '/profile', label: t('profile.back') })
@@ -49,8 +52,11 @@ export default function ProfileLayout() {
   const items = [
     { to: '/profile/info', label: t('profile.info') },
     { to: '/profile/documents', label: t('docs.title'), extra: docState && <span className={`doc-status ${docState.level}`}><span className="dot" aria-hidden="true" />{docState.text}</span> },
+    { to: '/profile/club-documents', label: t('clubdocs.title') },
+    { to: '/profile/season', label: t('season.title') },
     { to: '/profile/absences', label: t('absence.title') },
     { to: '/profile/notifications', label: t('reminders.title') },
+    { to: '/profile/security', label: t('profile.security') },
     { to: '/profile/calendar', label: t('calendar.title') },
     { to: '/profile/app', label: t('profile.app') },
   ]
@@ -90,6 +96,7 @@ export function ProfileInfo() {
   const [photoBusy, setPhotoBusy] = useState(false)
   const [photoError, setPhotoError] = useState('')
   const photos = useAvatarUrls([profile?.avatar_path])
+  const [holders, setHolders] = useState<Holder[]>([])
 
   useEffect(() => {
     if (!profile) return
@@ -100,6 +107,15 @@ export function ProfileInfo() {
     void supabase.from('profile_contacts').select('phone').eq('user_id', profile.id).maybeSingle().then(({ data }) => {
       setPhone(formatPhone((data as { phone: string | null } | null)?.phone))
     })
+    // The numbers already worn in the person's teams, as a hint when choosing a number.
+    void (async () => {
+      const mine = await supabase.from('group_members').select('group_id').eq('user_id', profile.id)
+      const ids = ((mine.data ?? []) as { group_id: number }[]).map((x) => x.group_id)
+      if (ids.length === 0) return setHolders([])
+      const team = await supabase.from('group_members').select('profiles:user_id(id, first_name, last_name, jersey_number)').in('group_id', ids)
+      const rows = ((team.data ?? []) as unknown as { profiles: Holder | null }[]).map((x) => x.profiles).filter((x): x is Holder => x !== null)
+      setHolders(rows)
+    })()
   }, [profile])
 
   if (!profile) return null
@@ -194,7 +210,7 @@ export function ProfileInfo() {
           {photoError && <p className="error" role="alert">{photoError}</p>}
         </div>
       </div>
-      <form className="form-col" onSubmit={save}>
+      <form className="form-col" {...checked(save)}>
         <div className="colours">
           <label>{t('common.firstName')}
             <input required autoComplete="given-name" autoCapitalize="words" value={firstName} aria-invalid={Boolean(nameError)} onChange={(e) => { setFirstName(e.target.value); setNameError('') }} onBlur={() => { setFirstName(tidyName(firstName)); checkNames() }} />
@@ -218,6 +234,14 @@ export function ProfileInfo() {
             </select>
           </div>
         </div>
+        {takenNumbers(holders, profile.id).length > 0 && (
+          <p className="hint" id="jersey-hint">
+            {t('jersey.taken', { numbers: takenNumbers(holders, profile.id).join(', ') })}
+            {jersey !== '' && wearing(holders, profile.id, Number(jersey)).length > 0 && (
+              <> {t('jersey.sameAs', { n: jersey, names: wearing(holders, profile.id, Number(jersey)).map((h) => personName(h)).join(', ') })}</>
+            )}
+          </p>
+        )}
         <label>{t('common.phone')}
           <input type="tel" autoComplete="tel" maxLength={30} placeholder="333 123 4567" value={phone} aria-invalid={Boolean(phoneError)} onChange={(e) => { setPhone(e.target.value); setPhoneError('') }} onBlur={() => { setPhone(formatPhone(phone)); setPhoneError(isPhoneValid(phone) ? '' : t('error.phone_invalid')) }} />
         </label>
@@ -244,6 +268,8 @@ export function ProfileNotifications() {
   return (
     <div className="section">
       <PageHeader title={t('reminders.title')} back={back()} />
+      <NotificationSettings />
+      <h2>{t('push.emailTitle')}</h2>
       <ReminderSwitch heading={false} />
     </div>
   )

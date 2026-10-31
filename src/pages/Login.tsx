@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { Navigate } from 'react-router-dom'
 import { Link } from 'react-router-dom'
 import { errorText, t } from '../i18n'
+import { checked } from '../lib/formcheck'
 import { getPendingInvite } from '../lib/invite'
 import { signOut, useSession } from '../lib/session'
 import { supabase } from '../lib/supabase'
@@ -31,7 +32,7 @@ export default function Login() {
     <div className="page narrow">
       <Brand />
       <h1>{t('login.title')}</h1>
-      <form onSubmit={submit}>
+      <form {...checked(submit)}>
         <label>
           {t('common.email')}
           <input type="email" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)} />

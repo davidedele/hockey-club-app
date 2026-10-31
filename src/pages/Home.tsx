@@ -9,8 +9,10 @@ import { certificateState } from '../lib/documents'
 import { useGroupFilter } from '../lib/groupfilter'
 import { prettyName } from '../lib/league'
 import { useSession } from '../lib/session'
+import { unanswered } from '../lib/unanswered'
+import { attendancePercent, isEmptySeason, useMySeason } from '../lib/myseason'
 import { supabase } from '../lib/supabase'
-import { formatDay, formatShortDay, formatTime } from '../lib/time'
+import { formatDay, formatShortDay, formatTime, seasonOf } from '../lib/time'
 import type { Answer, EventRow, Group, LeagueMatch, LeagueStanding, MemberDocument } from '../lib/types'
 
 interface Announcement { id: string; title: string; created_at: string }
@@ -27,6 +29,8 @@ function greeting(name: string): string {
 // The next event can be answered here, as on the events page.
 export default function Home() {
   const { profile, isStaff } = useSession()
+  // Being present at an event is a player thing: the answer buttons and the list of events to answer are in the Giocatore view only (decision 93).
+  const asPlayer = !isStaff
   const club = useClub()
   const { groupId } = useGroupFilter()
   const [events, setEvents] = useState<EventRow[]>([])
@@ -69,7 +73,7 @@ export default function Home() {
     if (isStaff) {
       const [d, p, u] = await Promise.all([
         supabase.from('member_documents').select('*').eq('kind', 'medical_certificate'),
-        supabase.from('profiles').select('id'),
+        supabase.from('profiles').select('id').is('deleted_at', null),
         supabase.rpc('unanswered_people', { p_days: 7 }),
       ])
       setDocs((d.data ?? []) as MemberDocument[])
@@ -87,7 +91,10 @@ export default function Home() {
   const mineOnly = (e: EventRow) => e.event_groups.some((x) => myGroups.includes(x.group_id))
   const inView = (e: EventRow) => groupId === null || e.event_groups.some((x) => x.group_id === groupId)
   const next = live.find((e) => mineOnly(e) && inView(e)) ?? live.find(inView)
-  const pending = live.filter((e) => e !== next && mineOnly(e) && !answers.has(e.id) && !notCalled.has(e.id))
+  // The same events as the banner, the bell and the Eventi heading: this week, until Monday 00:00 (decision 92).
+  const due = asPlayer ? unanswered({ events, answers, notCalledUp: notCalled, myGroups }) : { inWindow: [] as EventRow[], later: [] as EventRow[] }
+  const pending = due.inWindow
+  const laterCount = due.later.length
 
   useEffect(() => {
     if (!next) return
@@ -119,10 +126,13 @@ export default function Home() {
     const g = e.event_groups.map((x) => groups.find((y) => y.id === x.group_id)).find((y) => y?.game_dark && y?.game_light)
     return g ? ({ '--team-dark': g.game_dark, '--team-light': g.game_light, '--band-ink': readableInk(g.game_dark) } as CSSProperties) : undefined
   }
-  const certs = isStaff ? [...new Set(docs.map((d) => d.user_id))].map((id) => certificateState(docs.find((d) => d.user_id === id)).level) : []
-  const certSoon = certs.filter((l) => l === 'soon').length
-  const certBad = members === null ? null : members - certs.filter((l) => l === 'ok' || l === 'soon').length
+  // The same states as the Members column and the member's own page. A certificate to verify is neither valid nor missing.
+  const certs = isStaff ? [...new Set(docs.map((d) => d.user_id))].map((id) => certificateState(docs.find((d) => d.user_id === id)).state) : []
+  const certSoon = certs.filter((x) => x === 'soon').length
+  const certToVerify = certs.filter((x) => x === 'toVerify').length
+  const certBad = members === null ? null : members - certs.filter((x) => x === 'valid' || x === 'soon' || x === 'toVerify').length
 
+  const mine = useMySeason(seasonOf(new Date().toISOString()))
   if (!profile) return null
   const dash = '–'
 
@@ -133,13 +143,14 @@ export default function Home() {
 
       <div className="home-grid">
         <div className="home-main">
+          {next && <div className="nowline"><span>{t('home.now')}</span><i aria-hidden="true" /></div>}
           {next ? (
-            <NextPanel club={club.name || t('app.name')} colours={colours(next)} event={next} groups={groupName(next)} mine={answers.get(next.id) ?? null} count={count} canAnswer={mineOnly(next)} busy={busy} onAnswer={(v) => void answer(next, v)} />
+            <NextPanel club={club.name || t('app.name')} colours={colours(next)} event={next} groups={groupName(next)} mine={answers.get(next.id) ?? null} count={count} canAnswer={asPlayer && mineOnly(next)} busy={busy} onAnswer={(v) => void answer(next, v)} />
           ) : (
             loaded && <section className="card"><h2>{t('home.next')}</h2><p className="hint">{t('events.empty')}</p></section>
           )}
 
-          <section className="card" aria-labelledby="home-pending">
+          {asPlayer && <section className="card" aria-labelledby="home-pending">
             <div className="card-head">
               <h2 id="home-pending">{t('dash.todo')}{loaded && pending.length > 0 && <span className="count">{pending.length}</span>}</h2>
               <Link to="/events">{t('home.toEvents')}</Link>
@@ -157,7 +168,13 @@ export default function Home() {
               </ul>
             )}
             {pending.length > SHOWN && <p className="hint">{t('home.pendingMore', { n: String(pending.length - SHOWN) })}</p>}
-          </section>
+            {loaded && laterCount > 0 && (
+              <>
+                <div className="nowline"><span>{t('dash.laterTitle')}</span><i aria-hidden="true" /></div>
+                <p className="hint"><Link to="/events">{t(laterCount === 1 ? 'home.laterOne' : 'home.laterMany', { n: String(laterCount) })}</Link></p>
+              </>
+            )}
+          </section>}
         </div>
 
         <div className="home-side">
@@ -179,6 +196,22 @@ export default function Home() {
               </ul>
             )}
           </section>
+
+          {asPlayer && (
+            <section className="card" aria-labelledby="home-season">
+              <div className="card-head">
+                <h2 id="home-season">{t('season.title')}</h2>
+                <Link to="/profile/season">{t('season.open')}</Link>
+              </div>
+              {!mine.loaded ? <p className="hint">{dash}</p> : !mine.data || isEmptySeason(mine.data) ? <p className="hint">{t('season.emptyShort')}</p> : (
+                <dl className="home-facts">
+                  <div><dt>{t('att.percent')}</dt><dd>{attendancePercent(mine.data) === null ? dash : `${attendancePercent(mine.data)}%`}</dd></div>
+                  <div><dt>{t('stats.games')}</dt><dd>{mine.data.games}</dd></div>
+                  <div><dt>{t('stats.colGoals')} / {t('stats.colAssists')}</dt><dd>{mine.data.goals} / {mine.data.assists}</dd></div>
+                </dl>
+              )}
+            </section>
+          )}
 
           {team && (
             <section className="card" aria-labelledby="home-league">
@@ -216,6 +249,10 @@ export default function Home() {
                 <div>
                   <dt>{t('home.certBad')}</dt>
                   <dd><Link to="/members">{certBad === null ? dash : t(certBad === 1 ? 'home.peopleOne' : 'home.peopleMany', { n: String(certBad) })}</Link></dd>
+                </div>
+                <div>
+                  <dt>{t('home.certToVerify')}</dt>
+                  <dd><Link to="/members">{members === null ? dash : t(certToVerify === 1 ? 'home.peopleOne' : 'home.peopleMany', { n: String(certToVerify) })}</Link></dd>
                 </div>
                 <div>
                   <dt>{t('home.certSoon')}</dt>

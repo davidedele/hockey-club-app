@@ -29,9 +29,11 @@ create function pg_temp.u(p text) returns uuid language sql as $$ select ('00000
 create function pg_temp.day(n integer) returns date language sql as $$ select ((select local from base))::date + n $$;
 create function pg_temp.cert(p_user text, p_days integer) returns void language plpgsql as $$
 begin
-  insert into public.member_documents (user_id, kind, valid_until)
-    values (pg_temp.u(p_user), 'medical_certificate', pg_temp.day(p_days))
-    on conflict (user_id, kind) do update set valid_until = excluded.valid_until;
+  -- The end date is the date of issue plus one year, so the date of issue is one year before it.
+  insert into public.member_documents (user_id, kind, issued_on, issued_source, file_path)
+    values (pg_temp.u(p_user), 'medical_certificate', (pg_temp.day(p_days) - interval '1 year')::date, 'read',
+            pg_temp.u(p_user)::text || '/medical_certificate-2000000000.pdf')
+    on conflict (user_id, kind) do update set issued_on = excluded.issued_on, issued_source = excluded.issued_source, file_path = excluded.file_path;
 end $$;
 
 -- p1 is far away, p2 to p6 are at each of the five moments, p7 plays nowhere, p8 said no emails.

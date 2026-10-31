@@ -60,6 +60,7 @@ export interface EventRow {
   rink_id: number | null
   cancelled_at: string | null
   league_match_id: number | null
+  video_url: string | null
   event_groups: { group_id: number }[]
 }
 
@@ -159,6 +160,12 @@ export interface MemberDocument {
   valid_until: string | null
   file_path: string | null
   accepted_at: string | null
+  // Medical certificate: the date of issue, who found it ('read' by the reader, 'typed' by the member)
+  // and when staff confirmed it after opening the file. valid_until is issued_on plus one year.
+  issued_on?: string | null
+  issued_source?: 'read' | 'typed' | null
+  verified_at?: string | null
+  verified_by?: string | null
 }
 
 export interface LeagueChampionship {
@@ -198,6 +205,8 @@ export interface LeagueSync {
 export interface Rink {
   id: number
   name: string
+  address?: string | null
+  note?: string | null
 }
 
 export interface RinkPrice {
@@ -259,6 +268,7 @@ export interface Announcement {
   title: string
   body: string
   email: boolean
+  pinned_at: string | null
   created_at: string
   announcement_groups: { group_id: number }[]
   profiles: { first_name: string; last_name: string } | null

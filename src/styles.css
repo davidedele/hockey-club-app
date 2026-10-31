@@ -57,6 +57,10 @@ h2 { font: 600 1.375rem/1.2 var(--font-display); margin: 1.75rem 0 .5rem; }
 h3 { font: 500 1rem/1.4 var(--font-body); margin: 1.25rem 0 .5rem; color: var(--muted); }
 .hint { color: var(--muted); font-size: .875rem; font-weight: 400; }
 .error { color: var(--danger); }
+/* Form messages written by the app under a field with a problem (src/lib/formcheck.ts). */
+.field-error { margin: .25rem 0 1rem; color: var(--danger); font-size: .9375rem; font-weight: 500; }
+label + .field-error { margin-top: -.625rem; }
+[aria-invalid='true'] { border-color: var(--danger); }
 .center { text-align: center; padding: 2rem 1rem; }
 
 /* Brand mark on the signed out pages */
@@ -64,6 +68,11 @@ h3 { font: 500 1rem/1.4 var(--font-body); margin: 1.25rem 0 .5rem; color: var(--
 .brand svg { color: var(--accent); }
 
 /* Forms */
+/* Date and time fields: iPhone Safari gives them a width of their own that ignores width: 100%, so they must be allowed to shrink. */
+input[type="date"], input[type="time"], input[type="datetime-local"] { min-width: 0; max-width: 100%; -webkit-appearance: none; appearance: none; }
+input[type="date"]::-webkit-date-and-time-value, input[type="time"]::-webkit-date-and-time-value { text-align: left; min-width: 0; }
+input[type="date"]::-webkit-datetime-edit, input[type="time"]::-webkit-datetime-edit { padding: 0; }
+form label, .when-grid > *, .absence-dates > * { min-width: 0; }
 label { display: block; margin-bottom: 1rem; font-weight: 500; }
 .field { margin-bottom: 1rem; }
 .field .label { display: block; font-weight: 500; margin-bottom: .375rem; }
@@ -393,11 +402,11 @@ label[for] + select { margin-bottom: 1rem; }
   .club-banner { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem; padding: 1rem 1.25rem; border-radius: var(--radius); background: var(--team-dark); color: var(--band-ink, #fff); }
   .club-banner .crest { width: 56px; height: 52px; }
   .cb-title { flex: 1 1 12rem; min-width: 0; }
-  .cb-title h1 { margin: 0; color: #fff; font-size: 1.75rem; }
-  .cb-title span { color: rgba(255, 255, 255, .72); font-size: .875rem; }
+  .cb-title h1 { margin: 0; color: inherit; font-size: 1.75rem; }
+  .cb-title span { color: inherit; opacity: .85; font-size: .875rem; }
   .cb-stats { display: flex; gap: 1.75rem; margin: 0; }
-  .cb-stats dt { font-size: .8125rem; color: rgba(255, 255, 255, .72); }
-  .cb-stats dd { margin: 0; font: 600 1.5rem/1.2 var(--font-display); color: var(--team-light); }
+  .cb-stats dt { font-size: .8125rem; color: inherit; opacity: .85; }
+  .cb-stats dd { margin: 0; font: 600 1.5rem/1.2 var(--font-display); color: inherit; }
   a.button.light { background: var(--team-light); color: var(--team-dark); }
 
   .evgrid.dash { grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 1rem; margin-bottom: 1rem; }
@@ -473,10 +482,10 @@ button.secondary { background: var(--surface); color: var(--accent); border: 1px
 .statgrid label { margin: 0; font-size: .875rem; color: var(--muted); }
 .statgrid input { color: var(--ink); font-variant-numeric: tabular-nums; }
 
-/* Absences: the two dates side by side */
+/* Absences: the two dates one under the other on phones (never two date fields on one row there), side by side from 600px */
 .absence-form { margin-top: 1rem; }
-.absence-dates { display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; }
-.absence-dates label { margin-bottom: .75rem; }
+.absence-dates { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0 1rem; }
+@media (min-width: 600px) { .absence-dates { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .list li.row > span { min-width: 0; }
 .absence-reason { display: block; }
 
@@ -748,7 +757,8 @@ details > summary { display: flex; align-items: center; min-height: 44px; font-w
 .bell > summary::-webkit-details-marker { display: none; }
 .bell svg { width: 22px; height: 22px; }
 .bell-count { position: absolute; top: 2px; right: 2px; min-width: 18px; height: 18px; padding: 0 4px; border-radius: 9px; background: var(--now); color: var(--on-signal); font: 600 .6875rem/18px var(--font-body); text-align: center; }
-.bell-list { position: absolute; right: 0; top: calc(100% + .25rem); z-index: 6; width: min(20rem, calc(100vw - 2rem)); padding: .5rem; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: 0 6px 24px rgba(14, 34, 54, .12); }
+.bell-list { position: fixed; top: 3.75rem; left: 0; right: 0; z-index: 6; margin: 0 auto; width: calc(100% - 2rem); max-width: 22rem; max-height: calc(100dvh - 5rem); overflow-y: auto; padding: .5rem; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: 0 6px 24px rgba(14, 34, 54, .12); }
+@media (min-width: 768px) { .bell-list { position: absolute; top: calc(100% + .25rem); left: auto; right: 0; margin: 0; width: min(20rem, calc(100vw - 2rem)); } }
 .bell-list h2 { margin: 0; padding: .25rem .5rem; font-size: 1rem; }
 .bell-list a { display: flex; align-items: center; min-height: 44px; padding: 0 .5rem; border-radius: 8px; color: var(--ink); text-decoration: none; }
 .bell-list a:hover { background: var(--surface-2); }
@@ -1043,9 +1053,9 @@ label > select, .field select, .cal-field select, .att-filters select, select.fu
 .side .ms-button { color: #fff; background: rgba(255, 255, 255, .06); border-color: rgba(255, 255, 255, .18); }
 .side .ms-button:hover { background: rgba(255, 255, 255, .12); }
 .side .ms-label { color: var(--side-muted); }
-.top-switch { flex: 0 1 auto; min-width: 0; }
-.top-switch .ms-button { min-height: 44px; padding: .25rem .625rem; background: var(--surface-2); border-color: transparent; }
-.top-switch .ms-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+/* The group selector of the phone top bar is one of the round 44 pixel controls (view, bell, gear, picture). */
+.top-switch { flex: none; min-width: 0; }
+.grp-badge { display: grid; place-items: center; min-width: 36px; height: 36px; padding: 0 .25rem; border-radius: 999px; background: var(--surface-2); box-shadow: 0 0 0 1px var(--line); color: var(--ink); font: 600 .8125rem/1 var(--font-body); }
 .crumb-actions { display: flex; align-items: center; gap: .75rem; }
 .crumb-actions .ms-button { min-height: 44px; background: var(--surface); }
 .crumb-actions .ms-text { flex-direction: row; align-items: baseline; gap: .375rem; }
@@ -1176,3 +1186,55 @@ input[type="color"] { padding: .25rem; }
   .when-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   .when-grid > label:first-child { grid-column: auto; }
 }
+
+/* Settings groups as folded rows (docs/UI_RULES.md 1.9): a button with a one line summary, one open at a time. */
+.fold { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); margin: 0 0 .75rem; overflow: hidden; }
+.fold h2 { margin: 0; font: inherit; }
+button.fold-head { display: flex; align-items: center; justify-content: space-between; gap: .75rem; width: 100%; min-height: 64px; padding: .75rem 1rem; color: var(--ink); background: none; border-radius: 0; text-align: left; font: inherit; }
+.fold-text { display: flex; flex-direction: column; gap: .125rem; min-width: 0; }
+.fold-title { font: 600 1.125rem/1.25 var(--font-display); }
+.fold-summary { color: var(--muted); font-size: .875rem; font-weight: 400; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fold-head .chev { width: 20px; height: 20px; flex: none; color: var(--muted); transition: transform 120ms ease-out; }
+.fold-head[aria-expanded="true"] .chev { transform: rotate(180deg); }
+.fold-head:focus-visible { outline-offset: -2px; }
+.fold-body { padding: 0 1rem 1.25rem; border-top: 1px solid var(--line); }
+.fold-body[hidden] { display: none; }
+.fold-body > .hint:first-child { margin: 1rem 0; }
+.fold-body .set-body { max-width: 34rem; }
+@media (prefers-reduced-motion: reduce) { .fold-head .chev { transition: none; } }
+
+/* Under a list that shows part of a set: "10 di 24" and a button for more. */
+.list-more { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem 1rem; margin: .75rem 0 0; }
+.list-more .hint { margin: 0; }
+
+/* The QR code of the authenticator app sits on white, so every phone camera reads it in the dark theme too. */
+.qr { display: block; margin: 1rem 0; padding: .5rem; background: #fff; border: 1px solid var(--line); border-radius: var(--radius); }
+
+/* With the largest text size a row of buttons or tabs must wrap or scroll inside itself, never widen the page. */
+.pager-size, .pager-pages { flex-wrap: wrap; }
+.ev-tabs, .segments { min-width: 0; max-width: 100%; }
+.facts dt, .facts dd { min-width: 0; overflow-wrap: anywhere; }
+.facts { grid-template-columns: minmax(max-content, 40%) minmax(0, 1fr); }
+
+/* "Apri in Mappe": a 44 pixel button with a small pin, on the event page and in the next event panel. */
+.maps-button { gap: .5rem; white-space: nowrap; }
+.maps-button svg { width: 20px; height: 20px; flex: none; }
+.next-in .maps-button { margin: .75rem 0 0; justify-self: start; }
+
+/* Club documents (V3): the name may be long, the actions drop below it instead of leaving the window. */
+.club-docs .row { flex-wrap: wrap; align-items: flex-start; }
+.club-docs .row > span:first-child { flex: 1 1 12rem; min-width: 0; overflow-wrap: anywhere; }
+.row-actions { display: flex; flex-wrap: wrap; gap: .25rem 1rem; align-items: center; }
+.button-row { display: flex; flex-wrap: wrap; gap: .5rem .75rem; }
+.ev-main .card { margin-top: 1rem; }
+.history .row { gap: .5rem 1rem; }
+
+/* Substitution timer (V10): big tap targets, the line on the ice is filled. */
+.shift-timer select { max-width: 14rem; }
+.shift-lines { list-style: none; margin: .75rem 0; padding: 0; display: grid; gap: .5rem; grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr)); }
+.shift { width: 100%; min-height: 56px; display: flex; justify-content: space-between; align-items: center; gap: .75rem; background: var(--surface); color: var(--ink); border: 1px solid var(--line); border-radius: var(--radius); padding: .5rem .875rem; }
+.shift.on { background: var(--accent); color: var(--accent-ink, #fff); border-color: var(--accent); }
+.shift-times { display: grid; justify-items: end; font-variant-numeric: tabular-nums; }
+.shift-times b { font-size: 1.25rem; }
+.shift-times b.over { text-decoration: underline; }
+.milestones .row { flex-wrap: wrap; gap: .25rem 1rem; }
