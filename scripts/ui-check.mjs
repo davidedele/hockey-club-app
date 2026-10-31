@@ -183,7 +183,11 @@ function measure() {
   const name = (el) => (el.getAttribute('aria-label') || el.textContent || el.getAttribute('placeholder') || el.tagName).replace(/\s+/g, ' ').trim().slice(0, 40)
   const doc = document.documentElement
   const problems = []
-  if (doc.scrollWidth > doc.clientWidth + 1) problems.push(`sideways scroll: page is ${doc.scrollWidth}px wide in a ${doc.clientWidth}px window`)
+  if (doc.scrollWidth > doc.clientWidth + 1) {
+    // Name the widest offenders, so the cause can be found without a debugger.
+    const wide = [...document.querySelectorAll('body *')].filter((el) => el.getBoundingClientRect().right > doc.clientWidth + 1 && visible(el) && !(() => { for (let p = el.parentElement; p && p !== document.body; p = p.parentElement) if (/(auto|scroll|hidden)/.test(getComputedStyle(p).overflowX)) return true; return false })()).slice(0, 3).map((el) => `${el.tagName.toLowerCase()}.${String(el.className).split(' ')[0]}`)
+    problems.push(`sideways scroll: page is ${doc.scrollWidth}px wide in a ${doc.clientWidth}px window (${wide.join(', ')})`)
+  }
   // No field or control reaches past the window edge, even when an ancestor hides the overflow (iPhone date fields).
   for (const el of document.querySelectorAll('main input, main select, main textarea, main button, main label')) {
     if (!visible(el) || el.closest('.scroll, .table-wrap, .chips, .days')) continue

@@ -402,11 +402,11 @@ label[for] + select { margin-bottom: 1rem; }
   .club-banner { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem; padding: 1rem 1.25rem; border-radius: var(--radius); background: var(--team-dark); color: var(--band-ink, #fff); }
   .club-banner .crest { width: 56px; height: 52px; }
   .cb-title { flex: 1 1 12rem; min-width: 0; }
-  .cb-title h1 { margin: 0; color: #fff; font-size: 1.75rem; }
-  .cb-title span { color: rgba(255, 255, 255, .72); font-size: .875rem; }
+  .cb-title h1 { margin: 0; color: inherit; font-size: 1.75rem; }
+  .cb-title span { color: inherit; opacity: .85; font-size: .875rem; }
   .cb-stats { display: flex; gap: 1.75rem; margin: 0; }
-  .cb-stats dt { font-size: .8125rem; color: rgba(255, 255, 255, .72); }
-  .cb-stats dd { margin: 0; font: 600 1.5rem/1.2 var(--font-display); color: var(--team-light); }
+  .cb-stats dt { font-size: .8125rem; color: inherit; opacity: .85; }
+  .cb-stats dd { margin: 0; font: 600 1.5rem/1.2 var(--font-display); color: inherit; }
   a.button.light { background: var(--team-light); color: var(--team-dark); }
 
   .evgrid.dash { grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 1rem; margin-bottom: 1rem; }
@@ -1209,3 +1209,14 @@ button.fold-head { display: flex; align-items: center; justify-content: space-be
 
 /* The QR code of the authenticator app sits on white, so every phone camera reads it in the dark theme too. */
 .qr { display: block; margin: 1rem 0; padding: .5rem; background: #fff; border: 1px solid var(--line); border-radius: var(--radius); }
+
+/* With the largest text size a row of buttons or tabs must wrap or scroll inside itself, never widen the page. */
+.pager-size, .pager-pages { flex-wrap: wrap; }
+.ev-tabs, .segments { min-width: 0; max-width: 100%; }
+.facts dt, .facts dd { min-width: 0; overflow-wrap: anywhere; }
+.facts { grid-template-columns: minmax(max-content, 40%) minmax(0, 1fr); }
+
+/* "Apri in Mappe": a 44 pixel button with a small pin, on the event page and in the next event panel. */
+.maps-button { gap: .5rem; white-space: nowrap; }
+.maps-button svg { width: 20px; height: 20px; flex: none; }
+.next-in .maps-button { margin: .75rem 0 0; justify-self: start; }
