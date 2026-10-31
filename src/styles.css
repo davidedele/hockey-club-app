@@ -1206,3 +1206,6 @@ button.fold-head { display: flex; align-items: center; justify-content: space-be
 /* Under a list that shows part of a set: "10 di 24" and a button for more. */
 .list-more { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem 1rem; margin: .75rem 0 0; }
 .list-more .hint { margin: 0; }
+
+/* The QR code of the authenticator app sits on white, so every phone camera reads it in the dark theme too. */
+.qr { display: block; margin: 1rem 0; padding: .5rem; background: #fff; border: 1px solid var(--line); border-radius: var(--radius); }

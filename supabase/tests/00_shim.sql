@@ -35,3 +35,9 @@ create table storage.objects (
 alter table storage.objects enable row level security;
 grant usage on schema storage to anon, authenticated;
 grant select, insert, update, delete on storage.objects to anon, authenticated;
+
+-- The claims of the signed in session, as Supabase reads them from the token (used for the aal level).
+create function auth.jwt() returns jsonb language sql stable as $$
+  select coalesce(nullif(current_setting('request.jwt.claims', true), ''), '{}')::jsonb
+$$;
+grant execute on function auth.jwt() to anon, authenticated;

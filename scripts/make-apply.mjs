@@ -15,6 +15,7 @@ const FILES = {
   '0038': ['my_season', `to_regclass('public.game_ratings') is not null and ${col('rinks', 'address')}`, `to_regprocedure('public.my_season(integer)') is not null`],
   '0039': ['push_notifications', `to_regclass('public.reminder_prefs') is not null and to_regprocedure('public.my_season(integer)') is not null`, `to_regclass('public.push_subscriptions') is not null`],
   '0040': ['delete_member_data', `to_regclass('public.push_subscriptions') is not null`, col('profiles', 'deleted_at')],
+  '0041': ['board_two_step', col('profiles', 'deleted_at'), col('club_settings', 'mfa_required_from')],
 }
 
 mkdirSync(join(root, 'supabase/apply'), { recursive: true })

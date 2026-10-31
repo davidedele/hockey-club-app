@@ -170,7 +170,7 @@ const ROUTES = [
   ['announcements', '/announcements', 'sub'], ['drills', '/drills'],
   ['member-edit', `/members/${member}`, 'sub'], ['member-documents', `/members/${member}/documents`, 'sub'],
   ['profile', '/profile'], ['profile-info', '/profile/info', 'sub'], ['profile-documents', '/documents', 'sub'],
-  ['profile-absences', '/profile/absences', 'sub'], ['profile-season', '/profile/season', 'sub'], ['profile-notifications', '/profile/notifications', 'sub'],
+  ['profile-absences', '/profile/absences', 'sub'], ['profile-season', '/profile/season', 'sub'], ['profile-security', '/profile/security', 'sub'], ['profile-notifications', '/profile/notifications', 'sub'],
   ['profile-calendar', '/profile/calendar', 'sub'], ['profile-app', '/profile/app', 'sub'],
   ['settings', '/settings'], ['settings-club', '/settings/club', 'sub'], ['settings-groups', '/settings/groups', 'sub'],
   ['settings-rinks', '/settings/rinks', 'sub'], ['settings-ice', '/settings/ice', 'sub'], ['settings-invites', '/settings/invites', 'sub'],

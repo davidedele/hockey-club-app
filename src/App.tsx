@@ -41,6 +41,9 @@ import Login from './pages/Login'
 import MemberEdit from './pages/MemberEdit'
 import Members from './pages/Members'
 import MySeason from './pages/MySeason'
+import Security from './pages/Security'
+import MfaGate from './components/MfaGate'
+import { useNeedsSecondStep } from './lib/mfa'
 import Home from './pages/Home'
 import ProfileLayout, { ProfileAbsences, ProfileApp, ProfileCalendar, ProfileInfo, ProfileNotifications } from './pages/Profile'
 import ResetPassword from './pages/ResetPassword'
@@ -135,6 +138,7 @@ function Protected() {
   const mine = useAvatarUrls([profile?.avatar_path])
   const { pathname } = useLocation()
   const note = useNotifications()
+  const second = useNeedsSecondStep(session?.user.id)
   const { groups } = useGroupFilter()
   if (loading) return <PageSkeleton />
   if (!session) return <Navigate to="/login" replace />
@@ -142,6 +146,7 @@ function Protected() {
     const pending = getPendingInvite()
     return <Navigate to={pending ? `/join/${pending}` : '/login'} replace />
   }
+  if (second.needed) return <MfaGate onDone={second.done} />
   const photo = profile.avatar_path ? mine.get(profile.avatar_path) : null
   const fullName = personName(profile)
   const main = (
@@ -236,6 +241,7 @@ export default function App() {
           <Route path="documents" element={<Documents />} />
           <Route path="absences" element={<ProfileAbsences />} />
           <Route path="season" element={<MySeason />} />
+          <Route path="security" element={<Security />} />
           <Route path="notifications" element={<ProfileNotifications />} />
           <Route path="calendar" element={<ProfileCalendar />} />
           <Route path="app" element={<ProfileApp />} />

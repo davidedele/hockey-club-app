@@ -54,6 +54,7 @@ export default function ProfileLayout() {
     { to: '/profile/season', label: t('season.title') },
     { to: '/profile/absences', label: t('absence.title') },
     { to: '/profile/notifications', label: t('reminders.title') },
+    { to: '/profile/security', label: t('profile.security') },
     { to: '/profile/calendar', label: t('calendar.title') },
     { to: '/profile/app', label: t('profile.app') },
   ]
