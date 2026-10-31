@@ -39,7 +39,7 @@ export default function Members() {
     void (async () => {
       const [g, p, m, c, d] = await Promise.all([
         supabase.from('groups').select('*').order('id'),
-        supabase.from('profiles').select('*').order('last_name'),
+        supabase.from('profiles').select('*').is('deleted_at', null).order('last_name'),
         supabase.from('group_members').select('group_id, user_id'),
         isStaff ? supabase.from('profile_contacts').select('*') : Promise.resolve({ data: [] }),
         isStaff ? supabase.from('member_documents').select('*') : Promise.resolve({ data: [] }),

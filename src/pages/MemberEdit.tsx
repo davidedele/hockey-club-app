@@ -1,3 +1,4 @@
+import { ConfirmDialog } from '../components/ConfirmAction'
 import { personName } from '../lib/names'
 import { PageSkeleton } from '../components/Skeleton'
 import { useCallback, useEffect, useState } from 'react'
@@ -76,20 +77,20 @@ export default function MemberEdit() {
     )
   }
 
+  // Deleting a member's data: the database function and the server function that removes the files and
+  // the sign in account run together in delete-member. The club's history stays on an anonymous profile.
   async function remove() {
     setBusy(true)
     setError('')
-    const photo = person!.avatar_path
-    const { error, data } = await supabase.from('profiles').delete().eq('id', id).select()
-    if (error || !data || data.length === 0) {
-      setError(errorText(error ?? { message: 'forbidden' }))
+    const { data, error } = await supabase.functions.invoke('delete-member', { body: { user_id: id } })
+    const code = (data as { error?: string } | null)?.error
+    if (error || code) {
+      setError(t(code === 'last_board' ? 'member.deleteLastBoard' : code === 'cannot_delete_self' ? 'member.deleteSelf' : 'member.deleteFailed'))
       setConfirming(false)
       setBusy(false)
       return
     }
-    // A removed member's picture goes too. Only the storage API removes the file itself.
-    if (photo) await supabase.storage.from('avatars').remove([photo])
-    navigate('/', { replace: true })
+    navigate('/members', { replace: true })
   }
 
   const name = personName(person)
@@ -141,23 +142,18 @@ export default function MemberEdit() {
           {!isMe && (
             <>
               <h2>{t('member.remove')}</h2>
-              {!confirming ? (
-                <button className="danger" disabled={busy} onClick={() => setConfirming(true)}>
-                  {t('member.removeStart')}
-                </button>
-              ) : (
-                <div className="box" role="alertdialog" aria-label={t('member.remove')}>
-                  <p>{t('member.removeConfirm', { name })}</p>
-                  <div className="actions">
-                    <button className="danger" disabled={busy} onClick={() => void remove()}>
-                      {t('member.removeNow', { name })}
-                    </button>
-                    <button className="link" disabled={busy} onClick={() => setConfirming(false)}>
-                      {t('common.cancel')}
-                    </button>
-                  </div>
-                </div>
-              )}
+              <p className="hint">{t('member.removeHint')}</p>
+              <button className="danger" disabled={busy} onClick={() => setConfirming(true)}>
+                {t('member.removeStart')}
+              </button>
+              <ConfirmDialog
+                open={confirming}
+                title={t('member.removeTitle', { name })}
+                body={t('member.removeConfirm', { name })}
+                busy={busy}
+                choices={[{ label: t('member.removeNow', { name }), onChoose: () => void remove() }]}
+                onClose={() => setConfirming(false)}
+              />
             </>
           )}
         </>

@@ -73,7 +73,7 @@ export default function Home() {
     if (isStaff) {
       const [d, p, u] = await Promise.all([
         supabase.from('member_documents').select('*').eq('kind', 'medical_certificate'),
-        supabase.from('profiles').select('id'),
+        supabase.from('profiles').select('id').is('deleted_at', null),
         supabase.rpc('unanswered_people', { p_days: 7 }),
       ])
       setDocs((d.data ?? []) as MemberDocument[])

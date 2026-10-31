@@ -349,6 +349,15 @@ for (const width of WIDTHS) {
   await page.keyboard.press('Escape')
   check(!(await page.isVisible('dialog[open]')), 'confirm: Escape does not close the delete window')
 
+  // Deleting a member's data asks first, in a window that names the person; Annulla has the focus.
+  await settle(`/members/${member}`)
+  await page.click('button.danger:has-text("Elimina i dati")')
+  check(await page.isVisible('dialog[open]'), 'delete member: the button does not open a window')
+  check(/Rossi Luca/.test(await page.locator('dialog[open]').innerText()), 'delete member: the window does not name the person')
+  check((await active()).text === 'Annulla', 'delete member: Annulla does not have the focus')
+  await page.keyboard.press('Escape')
+  check(!(await page.isVisible('dialog[open]')), 'delete member: Escape does not close the window')
+
   // Settings groups are folded rows: all closed on first load, one open at a time, a real button with aria-expanded.
   await settle('/settings/club')
   const heads = page.locator('main .fold-head')

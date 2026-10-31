@@ -56,7 +56,7 @@ export default function Events() {
       supabase.from('group_members').select('group_id').eq('user_id', profile.id),
       supabase.from('attendance_answers').select('event_id, answer').eq('user_id', profile.id),
       supabase.from('attendance_records').select('event_id, status').eq('user_id', profile.id),
-      supabase.from('profiles').select('id', { count: 'exact', head: true }),
+      supabase.from('profiles').select('id', { count: 'exact', head: true }).is('deleted_at', null),
     ])
     setRecords(new Map(((r.data ?? []) as { event_id: string; status: string }[]).map((x) => [x.event_id, x.status])))
     setMemberCount(n.count ?? null)

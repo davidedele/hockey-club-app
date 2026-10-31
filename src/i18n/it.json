@@ -59,10 +59,10 @@
   "member.groupsHint": "Tocca un gruppo per aggiungere o togliere la persona.",
   "member.roles": "Ruoli",
   "member.rolesHint": "Senza ruoli la persona è un giocatore. Solo il direttivo assegna i ruoli.",
-  "member.remove": "Rimuovi dal club",
-  "member.removeStart": "Rimuovi questo membro",
-  "member.removeConfirm": "Stai per rimuovere {name} dal club. Perde l'accesso e il profilo viene cancellato. Non si può annullare.",
-  "member.removeNow": "Rimuovi {name}",
+  "member.remove": "Elimina i dati del membro",
+  "member.removeStart": "Elimina i dati di questo membro",
+  "member.removeConfirm": "Stai per eliminare i dati di {name}. Il nome diventa Utente Eliminato, contatto, documenti, foto e certificato vengono cancellati e la persona non può più accedere. Le presenze, i risultati e i voti restano, senza nome. I messaggi scritti dalla persona restano con l'autore Utente Eliminato. Non si può annullare.",
+  "member.removeNow": "Elimina i dati di {name}",
   "profile.title": "Il mio profilo",
   "profile.groups": "I miei gruppi",
   "profile.noGroups": "Non fai ancora parte di nessun gruppo.",
@@ -995,5 +995,10 @@
   "push.channel.push": "Solo notifica sul telefono",
   "push.channel.email": "Solo email",
   "push.channel.off": "Nessuna",
-  "push.emailTitle": "Email"
+  "push.emailTitle": "Email",
+  "member.removeHint": "Il nome diventa Utente Eliminato. Contatto, documenti, assenze, calendario e preferenze vengono cancellati, e la persona non può più accedere. Presenze, risultati e voti restano, senza nome.",
+  "member.removeTitle": "Eliminare i dati di {name}?",
+  "member.deleteLastBoard": "Non si può eliminare l'ultimo membro del direttivo.",
+  "member.deleteSelf": "Non puoi eliminare i tuoi dati: chiedi a un altro membro del direttivo.",
+  "member.deleteFailed": "Qualcosa non ha funzionato. Riprova: se la cancellazione era già iniziata, riprovare la completa."
 }
