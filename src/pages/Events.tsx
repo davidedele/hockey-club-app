@@ -191,6 +191,7 @@ export default function Events() {
         ) : mine ? (
           <span className="state">{t(mine === 'present' ? 'answer.present' : 'answer.absent')}</span>
         ) : null}
+        {savedFor === e.id && <span className="m" role="status">{t('events.savedShort')}</span>}
       </article>
     )
   }
