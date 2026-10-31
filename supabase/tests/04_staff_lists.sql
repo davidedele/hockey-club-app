@@ -14,7 +14,7 @@ insert into public.profiles (id, first_name, last_name) values
   ('00000000-0000-0000-0000-000000000002', 'Pio', 'Two'),
   ('00000000-0000-0000-0000-000000000003', 'Pip', 'Three');
 insert into public.profile_contacts (user_id, email, phone)
-  select p.id, u.email, '333' from public.profiles p join auth.users u using (id);
+  select p.id, u.email, '3331112222' from public.profiles p join auth.users u using (id);
 insert into public.user_roles values
   ('00000000-0000-0000-0000-0000000000b1', 'board'),
   ('00000000-0000-0000-0000-0000000000c1', 'coach');
@@ -67,7 +67,7 @@ select test.rows('an answered event is not counted', $$select * from public.unan
 select test.rows('events beyond the window are left out', $$select * from public.unanswered_people() where last_name = 'One' and missing = 2$$, 0);
 select test.rows('a wider window includes them', $$select * from public.unanswered_people(30) where last_name = 'One' and missing = 2$$, 1);
 select test.rows('finished events are never counted', $$select * from public.unanswered_people(30) where last_name = 'Three' and missing = 1$$, 1);
-select test.rows('contacts are included', $$select * from public.unanswered_people() where email like '%@example.test' and phone = '333'$$, 3);
+select test.rows('contacts are included', $$select * from public.unanswered_people() where email like '%@example.test' and phone = '3331112222'$$, 3);
 select test.rows('the most missing comes first', $$select * from (select row_number() over () n, last_name from public.unanswered_people()) x where n = 1 and last_name = 'Two'$$, 1);
 select test.logout();
 select test.login('00000000-0000-0000-0000-0000000000b1');

@@ -18,7 +18,7 @@ insert into public.profiles (id, first_name, last_name) values
   ('00000000-0000-0000-0000-000000000002', 'Pio', 'Two'),
   ('00000000-0000-0000-0000-000000000003', 'Pip', 'Three');
 insert into public.profile_contacts (user_id, email, phone)
-  select p.id, u.email, '000' from public.profiles p join auth.users u using (id);
+  select p.id, u.email, '3330000000' from public.profiles p join auth.users u using (id);
 insert into public.user_roles values
   ('00000000-0000-0000-0000-0000000000b1', 'board'),
   ('00000000-0000-0000-0000-0000000000c1', 'coach');
@@ -78,14 +78,14 @@ select test.logout();
 \echo == contacts
 select test.login('00000000-0000-0000-0000-000000000001');
 select test.rows('player sees only own contact', 'select * from public.profile_contacts', 1);
-select test.affected('player edits own phone', $$update public.profile_contacts set phone = '333' where user_id = '00000000-0000-0000-0000-000000000001'$$, 1);
-select test.affected('player cannot edit another phone', $$update public.profile_contacts set phone = '333' where user_id = '00000000-0000-0000-0000-000000000002'$$, 0);
+select test.affected('player edits own phone', $$update public.profile_contacts set phone = '3331112222' where user_id = '00000000-0000-0000-0000-000000000001'$$, 1);
+select test.affected('player cannot edit another phone', $$update public.profile_contacts set phone = '3331112222' where user_id = '00000000-0000-0000-0000-000000000002'$$, 0);
 select test.fails('player cannot edit own email', $$update public.profile_contacts set email = 'x@example.test' where user_id = '00000000-0000-0000-0000-000000000001'$$, 'permission denied');
 select test.fails('player cannot insert a contact', $$insert into public.profile_contacts (user_id, email) values ('00000000-0000-0000-0000-0000000000d1', 'x@example.test')$$, 'permission denied');
 select test.logout();
 select test.login('00000000-0000-0000-0000-0000000000c1');
 select test.rows('coach sees all contacts', 'select * from public.profile_contacts', 4);
-select test.affected('coach edits a phone', $$update public.profile_contacts set phone = '444' where user_id = '00000000-0000-0000-0000-000000000002'$$, 1);
+select test.affected('coach edits a phone', $$update public.profile_contacts set phone = '3334445555' where user_id = '00000000-0000-0000-0000-000000000002'$$, 1);
 select test.logout();
 select test.login('00000000-0000-0000-0000-0000000000d1');
 select test.rows('account without profile sees no contacts', 'select * from public.profile_contacts', 0);
