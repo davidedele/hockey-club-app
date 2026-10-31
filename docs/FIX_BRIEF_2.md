@@ -20,7 +20,8 @@ Nothing in this file has been fixed yet. Davide answered the open questions on 1
 4. Part 3: wording and look (notifications wording, Da gestire, group selector, Home style, club settings).
 5. Part 4: the Campionato items.
 6. Part 5: the features Davide approved, in this order: the venue address (P5) and the personal page (P6) because they are small, then push notifications (P1), deleting a member's data (P2), two factor sign in for the board (P3), and the production database (P4).
-7. Part 6: the ideas that are still open, for Davide to pick from.
+7. Part 6b: Davide's votes of 22 October, small ones first, after the approved features and before the final checks.
+8. Part 6: the other ideas that are still open, for Davide to pick from.
 
 ## Part 1. Player things in the staff view, and the unanswered window
 
@@ -287,6 +288,25 @@ Not yet asked about, for Davide to pick from if he wants:
 10. Monitoring: a warning to the board when the reminder job or a server function stops.
 
 Davide also said he would show a past conversation with more ideas. Add them here when he does.
+
+## Part 6b. Davide's votes on the idea board (decision 107)
+
+Davide voted for these ideas on 22 October. They come after Parts 1 to 5, small ones first. Each one is built in small steps with tests and the usual checks. Before building any of them, check the idea's text in the board (`Idee per l'app Sgularat`, the file Davide uploaded) and `docs/SPEC.md`.
+
+V1. Previous results against the opponent (small): on the game panel the results of the last meetings with the same team, from the club's own games and the league games already stored.
+V2. Free jersey numbers (small): when a person chooses a number, show the numbers already taken in their groups. A hint, not a lock. Members already see each other's numbers.
+V3. Club documents (small): a page with the statutes, the league rules, forms and the privacy notice, uploaded by the board as PDFs, read by members. The storage folder `club` of the `documents` bucket already exists for the privacy notice; extend the board's rights there with tests.
+V4. Match video (small): an optional https link on a game, shown on the event page, checked by a database rule (only https), editable by staff.
+V5. Club board (small): the board can pin announcements at the top. Read receipts for the board only if they can be done without a heavy design; today the app only keeps the last seen time per person.
+V6. Milestones (small to medium): automatic recognitions such as the first goal, the 100th training or ten trainings in a row, computed from the existing data and shown in "La mia stagione" (P6).
+V7. Match predictions (medium): before each club game every member guesses the result; more points the closer the guess; a season table. A guess is visible to others only after the game starts. New table with row level security and tests.
+V8. Hall of fame (medium): a page that grows each season: season MVP, top scorer, most present, final league positions, retired numbers, photos. Built from data that exists; add a season concept only if needed.
+V9. Fantahockey (medium): before each round a member picks three players of the club; points from goals, assists, MVP and ratings; a season table. Needs V7's pattern for hiding picks until the round starts.
+V10. Substitution timer (medium): during a game the coach taps the line that goes on; the app shows how long each line has been on the ice and the total time, and the phone vibrates after a chosen time. It can run on the phone only, with an optional save at the end.
+V11. Offline use (medium to large): the next events, line-ups and plans readable without signal, by extending the service worker (decision 48 keeps the app files only). Do last, and only with a clear rule for what is cached and when it is cleared (privacy: nothing is kept after sign out).
+V12. Season summary card (medium): the shareable end of season card from the board, built on P6 with a drawn image made on the phone. Do after P6.
+
+Not built without a fresh yes from Davide: fee status (it stores payment information, and payments are out of scope) and the coach's notes on players (personal data beyond the spec list, rule 6 of `AGENTS.md`). The welcome list for new members stays postponed (decision 99).
 
 ## Part 7. Test and proof list, after the fixes
 
