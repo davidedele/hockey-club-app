@@ -40,6 +40,7 @@ export default function Events() {
   const [records, setRecords] = useState<Map<string, string>>(new Map())
   const [memberCount, setMemberCount] = useState<number | null>(null)
   const [busy, setBusy] = useState('')
+  const [savedFor, setSavedFor] = useState('')
   const [error, setError] = useState('')
 
   const load = useCallback(async () => {
@@ -117,6 +118,9 @@ export default function Events() {
     else {
       setAnswers(new Map(answers).set(e.id, value))
       window.dispatchEvent(new Event('attendance-changed'))
+      // A short confirmation next to the event that was answered.
+      setSavedFor(e.id)
+      window.setTimeout(() => setSavedFor((current) => (current === e.id ? '' : current)), 4000)
     }
     await load()
     setBusy('')
@@ -153,7 +157,7 @@ export default function Events() {
           </div>
           <div>
             <div className="ti">{title}</div>
-            <div className="m">{e.cancelled_at && <span className="tag">{t('events.cancelled')} </span>}{meta || groupsOf(e)}</div>
+            <div className="m">{e.cancelled_at && <span className="tag">{t('events.cancelled')} </span>}{meta || groupsOf(e)}{savedFor === e.id && <span className="tag todo" role="status"> · {t('events.savedShort')}</span>}</div>
           </div>
         </Link>
         {!over && canAnswer(e) ? (

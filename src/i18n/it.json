@@ -211,6 +211,8 @@
   "events.nextTraining": "Prossimo allenamento",
   "events.until": "fino alle {time}",
   "events.saved": "Risposta salvata. Puoi cambiarla fino alla fine dell'evento.",
+  "events.savedShort": "Risposta salvata",
+  "game.sendHint": "Scegli l'MVP per poter inviare i voti.",
   "events.notYet": "Non hai ancora risposto.",
   "events.presentOne": "1 presente",
   "events.presentMany": "{n} presenti",

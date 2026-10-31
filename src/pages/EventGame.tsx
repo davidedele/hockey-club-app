@@ -154,8 +154,9 @@ export default function EventGame({ eventId, myId, isStaff, started, over, reloa
             ))}
           </ul>
           <div className="actions spaced">
-            <button disabled={busy || mvp === ''} onClick={() => void sendVote()}>{t('game.send')}</button>
+            <button disabled={busy || mvp === ''} aria-describedby={mvp === '' ? 'vote-hint' : undefined} onClick={() => void sendVote()}>{t('game.send')}</button>
           </div>
+          {mvp === '' && <p id="vote-hint" className="hint">{t('game.sendHint')}</p>}
         </section>
       )}
 

@@ -211,6 +211,8 @@
   "events.nextTraining": "Next training",
   "events.until": "until {time}",
   "events.saved": "Answer saved. You can change it until the event is over.",
+  "events.savedShort": "Answer saved",
+  "game.sendHint": "Choose the MVP to be able to send the votes.",
   "events.notYet": "You have not answered yet.",
   "events.presentOne": "1 coming",
   "events.presentMany": "{n} coming",
