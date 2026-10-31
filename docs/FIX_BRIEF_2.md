@@ -19,8 +19,8 @@ Nothing in this file has been fixed yet. Davide answered the open questions on 1
 3. Part 2: the bugs seen on the phone (bell, documents, absences, certificate rule).
 4. Part 3: wording and look (notifications wording, Da gestire, group selector, Home style, club settings).
 5. Part 4: the Campionato items.
-6. Part 5: the features Davide approved, in this order: push notifications, deleting a member's data, two factor sign in for the board, the production database.
-7. Part 6: ideas by role, for Davide to pick from.
+6. Part 5: the features Davide approved, in this order: the venue address (P5) and the personal page (P6) because they are small, then push notifications (P1), deleting a member's data (P2), two factor sign in for the board (P3), and the production database (P4).
+7. Part 6: the ideas that are still open, for Davide to pick from.
 
 ## Part 1. Player things in the staff view, and the unanswered window
 
@@ -92,10 +92,10 @@ Found:
 
 The rule: a certificate is valid when a file is uploaded, the date of issue was read from it by the reader, and it is valid until one year after the date of issue. The member cannot just type a date.
 
-Open points for Davide (my recommendation first):
-1. When the reader cannot find the date, or the file is a PDF: the member types the date of issue, and the status says "Da verificare" until staff open the file and confirm or correct the date. The banner stays on until then. Alternative: refuse PDFs and ask for a photo only.
-2. Staff may confirm or correct the date after looking at the file. Staff may not set a date when there is no file.
-3. The date of issue is the date of the medical visit written on the certificate; the certificate is valid until the same day one year later. Confirm.
+Points and Davide's answers of 1 November (decision 105):
+1. When the reader cannot find the date, or the file is a PDF: Claude's recommendation is that the member types the date of issue and the status says "Da verificare" until staff open the file and confirm or correct the date, and the banner stays on until then (alternative: refuse PDFs and ask for a photo only). Davide answered "it depends". What he explained: his certificate says only "validity 1 year" and gives no end date, so the date to find is the date of issue, and the reader must look for that. A sample certificate text is needed (personal data covered) to tune the keywords. Until the sample exists, build the "Da verificare" fallback.
+2. Staff may confirm or correct the date after looking at the file. Staff may not set a date when there is no file. Davide said ok.
+3. The date of issue is the date of the medical visit written on the certificate; the certificate is valid until the same day one year later. Confirmed by what Davide said about his own certificate.
 
 Change after the decision:
 1. A migration: add `issued_on`, `verified_at` and `verified_by` to `member_documents`, make `valid_until` follow `issued_on` plus one year, and add a check (not valid first, like migration 0035) that a certificate with a date has a file. Keep the existing test rows working. Test each rule.
@@ -161,7 +161,9 @@ Davide: "on the Campionato there is a game which is not of the Group A, it is Sg
 
 Found, not yet explained: `src/pages/Championship.tsx` picks the group from the group selector, takes that group's league team (`group.league_team`) and the championships linked to it, and in the chip "Tutte le partite" shows every game of that championship (lines 64 to 77: `ours` compares the team name exactly, and `inComp` is every game of the chosen championship). A game "Sgularat against Vikings" would appear if the club has two teams in that championship, or if the same league team name is used for two of the club's squads, or if the group is linked to the wrong championship. The code cannot tell these apart.
 
-To do: with the screenshot, check the test project data (read only): the `league_matches` rows of that championship, the `league_team` and `league_championships` of group A. Then decide: either the group's link names the competition and the exact team (so two squads with one name are told apart), or the game is another squad of the club in the same competition and the label says so. Do not change the code before this is understood.
+Status (decision 104): Davide does not want to send a screenshot, so this is parked. Do nothing on this item unless it shows again. If it does, the plan below applies.
+
+To do, if it shows again: with the screenshot, check the test project data (read only): the `league_matches` rows of that championship, the `league_team` and `league_championships` of group A. Then decide: either the group's link names the competition and the exact team (so two squads with one name are told apart), or the game is another squad of the club in the same competition and the label says so. Do not change the code before this is understood.
 
 ### N13. "Tutte le partite" is not all the games
 
@@ -190,7 +192,7 @@ Plan:
 4. Show tabs "Marcatori", "Assistenti", "Punti" and "Penalità" per championship, with the row limit and the "Mostra altre" button of N13. For the club's own players use the club's own data where it exists, so the numbers do not disagree with the club's statistics page.
 5. Report the effort and the risks to Davide before building. Check whether the privacy notice needs a line about public league data on players of other clubs.
 
-## Part 5. Features Davide approved on 1 November 2026
+## Part 5. Features Davide approved on 1 November 2026 (P1 to P4 first answered, P5 and P6 added the same day)
 
 ### P1. Push notifications
 
@@ -245,32 +247,46 @@ Plan:
 4. Backups: the daily backups of the plan, plus a monthly dump with the Supabase command line tool stored outside Supabase, and one restore tried into a scratch project.
 5. Before members join: the privacy notice final, the second board account, two factor sign in (P3), and the leaked password protection setting switched on.
 
-## Part 6. Ideas by role, for Davide to pick from
+### P5. The venue address with a button that opens the maps app
 
-Player:
-1. A page "La mia stagione": attendance percentage, games, goals, assists, penalties, average rating received and MVP votes, per season. The data already exists.
-2. "Arrivo in ritardo" and "Esco prima" as a note on an answer, with a reason, so the coach knows in advance.
-3. Lifts for away games: who drives and how many seats.
-4. The address of the venue with a button that opens it in the maps app, with notes for parking and the entrance.
-5. A button to add one event to the phone calendar.
+Davide: yes (decision 103).
 
-Coach:
-6. Warnings before an event: no goalie has answered present, or fewer than a minimum number of skaters (set per group) the day before. The positions already exist.
-7. Fast attendance at the rink: everyone answered present starts as present, and the coach taps the exceptions; it works with a weak signal, saved on the phone and sent later.
-8. Line-up helpers: copy the lines of the last training, suggest balanced lines from the positions, and flag a player whose certificate is expired (staff only).
-9. Guests and call-ups for one event: add a player of another group to a single event without moving them, and a temporary link for a trial player.
-10. Duplicate a training plan, tag and search drills, and the interactive drill board (step 10 of the spec). The drill diagram analysis Davide sent fits here: drills stored as structured data that can be animated.
-11. A push to the people who have not answered (the button exists for email today).
+Plan:
+1. A migration: add an address and a short note (parking, entrance) to the rinks table (`rinks`); the board edits them on the rink settings page (`src/pages/RinkSettings.tsx`). Tests for the rules (members read, only the board writes, as for the rinks today).
+2. Where an event shows its venue (event page, the next event on the Home page, the week calendar cards, the list rows), the venue name becomes a link with an icon "Apri in Mappe". On an iPhone it opens Apple Maps (`https://maps.apple.com/?q=` with the address), elsewhere Google Maps (`https://www.google.com/maps/search/?api=1&query=`). Choose by the device; both open the installed app. An event with a free text venue and no rink uses the text as the search.
+3. The calendar feed puts the address in the location of the event, so phone calendars can offer directions too (`supabase/functions/calendar-feed`), and the line is escaped as the rest.
+4. Touch targets are 44 pixels; the label is Italian in `it.json`; add a check to `scripts/ui-check.mjs`.
 
-Board and staff:
-12. A "fit to play" list before a game: the certificate state of everyone on the game roster on one screen.
-13. Season rollover and history: start a new season, archive the old one, move players between groups.
-14. Polls (a dinner after a game, choosing a date for a club event) and more event types than training and game (social event, tournament, meeting).
-15. An audit log of sensitive actions (roles, deletions, exports) for the board.
-16. A club information page: rink addresses, the rules, the privacy notice and contacts.
-17. Monitoring: a warning to the board when the reminder job or a server function stops.
+Proof: from the test project, an event at a rink with an address shows the button on the event page and the Home page, and the link opens in the right app on an iPhone and on Android (Davide tries it). Database tests for the rink rules.
 
-Claude's top picks: 6, 7, 12, 4, 9, 1 and 2.
+### P6. "La mia stagione", a personal page for the player
+
+Davide: yes (decision 103).
+
+Plan:
+1. A page under Profilo (and a tile on the Home page in the Giocatore view) with a season selector: attendance (percentage, on time, late, excused, absent), games played, goals, assists, penalties and penalty minutes, MVP votes, and the average rating received.
+2. The data already exists: the attendance summary function and the statistics of migration 0012. Use the same functions, so these numbers never disagree with the Presenze and Statistiche pages (rule 3.3).
+3. Privacy rules that already exist must hold: a player sees only their own numbers; the ratings follow decision 7 of 21 October (ratings are visible only after you have voted), so the average counts only the games the person has voted on, and the page says so. No one sees who gave which rating on this page. A staff view of the same page for a member is not part of this item.
+4. A season with no games shows an empty state with a short text, not zeros everywhere (rules for empty states in `docs/UI_RULES.md`).
+5. Tests: a database test that a player cannot read another person's season numbers through the new function; a check in `scripts/ui-check.mjs` at 375 and 1280.
+
+## Part 6. Ideas by role that are still open
+
+Not wanted by Davide on 1 November (decision 103): warnings about goalies and the number of skaters, fast attendance at the rink, the "fit to play" list, guests and call-ups for one event. Do not build these.
+
+Not yet asked about, for Davide to pick from if he wants:
+1. "Arrivo in ritardo" and "Esco prima" as a note on an answer, with a reason.
+2. Lifts for away games: who drives and how many seats.
+3. A button to add one event to the phone calendar.
+4. Line-up helpers: copy the lines of the last training, suggest balanced lines from the positions.
+5. Duplicate a training plan, tag and search drills, and the interactive drill board (step 10 of the spec; the drill diagram analysis Davide sent fits here: drills stored as structured data that can be animated).
+6. Season rollover and history: start a new season, archive the old one, move players between groups.
+7. Polls (a dinner after a game, choosing a date) and more event types than training and game (social event, tournament, meeting).
+8. An audit log of sensitive actions (roles, deletions, exports) for the board.
+9. A club information page: rink addresses, the rules, the privacy notice and contacts.
+10. Monitoring: a warning to the board when the reminder job or a server function stops.
+
+Davide also said he would show a past conversation with more ideas. Add them here when he does.
 
 ## Part 7. Test and proof list, after the fixes
 

@@ -18,7 +18,7 @@ Status words: Open, In progress, Done (PR number), Decided (waiting for Davide),
 10. N9 The group selector looks different from the other controls in the phone top bar. Status: Open, design first.
 11. N10 The hockey style of the event page is missing on the Home page: Davide means the red line with the centre circle of the Eventi page. Status: Decided (decision 101), a picture first.
 12. N11 Club settings: the groups should be folded so that not everything is shown at once. Item 12 of the review of 31 October was marked done with headings only. Status: Open (reopened).
-13. N12 The Campionato shows a game "Sgularat against Vikings" that is not of group A. Status: Open, still needs a screenshot of the Vikings game and a data check first.
+13. N12 The Campionato shows a game "Sgularat against Vikings" that is not of group A. Status: Parked (decision 104): Davide does not want to send a screenshot.
 14. N13 "Tutte le partite" is not all the games (the lists show 10). Status: Open, proposed labels in the brief.
 15. N14 Championship statistics (top scorers, assists and so on), computed by the app from the game data. Status: Decided, a feature after a first check of what the game details contain.
 
