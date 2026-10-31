@@ -8,7 +8,10 @@ create schema auth;
 create table auth.users (
   id uuid primary key,
   email text,
-  email_confirmed_at timestamptz
+  email_confirmed_at timestamptz,
+  encrypted_password text,
+  raw_user_meta_data jsonb not null default '{}'::jsonb,
+  banned_until timestamptz
 );
 create function auth.uid() returns uuid language sql stable as $$
   select nullif(current_setting('request.jwt.claim.sub', true), '')::uuid

@@ -78,7 +78,7 @@ export default function MemberEdit() {
   }
 
   // Deleting a member's data: the database function and the server function that removes the files and
-  // the sign in account run together in delete-member. The club's history stays on an anonymous profile.
+  // the disabling of the sign in account (never its deletion, which would erase the history) run together in delete-member. The club's history stays on an anonymous profile.
   async function remove() {
     setBusy(true)
     setError('')

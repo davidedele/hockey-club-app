@@ -16,6 +16,7 @@ const FILES = {
   '0039': ['push_notifications', `to_regclass('public.reminder_prefs') is not null and to_regprocedure('public.my_season(integer)') is not null`, `to_regclass('public.push_subscriptions') is not null`],
   '0040': ['delete_member_data', `to_regclass('public.push_subscriptions') is not null`, col('profiles', 'deleted_at')],
   '0041': ['board_two_step', col('profiles', 'deleted_at'), col('club_settings', 'mfa_required_from')],
+  '0042': ['keep_history_on_account_delete', col('club_settings', 'mfa_required_from'), `exists (select 1 from pg_constraint where conname = 'profiles_id_fkey' and conrelid = 'public.profiles'::regclass and confdeltype = 'r')`],
 }
 
 mkdirSync(join(root, 'supabase/apply'), { recursive: true })

@@ -1,8 +1,10 @@
 // Deletes a member's data (decision 96). Only the board can call it, signed in as themselves: the call
 // is passed to the database function delete_member_data with the caller's own login, so the database
 // decides who may do it. Then, with the service key that never leaves this server, the member's files
-// in storage and the sign in account are removed, so the person can no longer sign in and the email
-// address is free again.
+// in storage are removed and the sign in account is disabled, so the person can no longer sign in and the
+// email address is free again. The account is NOT deleted: the profile is tied to it, and the club history
+// (answers, attendance, game numbers, ratings, votes, line-ups, messages) is tied to the profile, so
+// deleting the account would erase that history (migration 0042 refuses such a delete).
 // Deploy with "Verify JWT" on. Secrets: SUPABASE_URL, SUPABASE_ANON_KEY and SUPABASE_SERVICE_ROLE_KEY are set by Supabase.
 import { createClient } from 'npm:@supabase/supabase-js@2.118.0'
 
@@ -44,7 +46,24 @@ Deno.serve(async (req: Request) => {
       if (removed.error) return json({ error: 'storage' }, 500)
     }
   }
-  const account = await admin.auth.admin.deleteUser(target)
+  // Disable the account: a random password nobody knows, an email that cannot receive anything (and frees
+  // the real address), no sign up data (the names typed at sign up live in user_metadata), no two step
+  // factors, and a ban for about a hundred years. Safe to run again after a half finished deletion.
+  const random = crypto.getRandomValues(new Uint8Array(32))
+  const password = Array.from(random, (b) => b.toString(16).padStart(2, '0')).join('')
+  const factors = await admin.auth.admin.mfa.listFactors({ userId: target })
+  if (factors.error && !/not found/i.test(factors.error.message)) return json({ error: 'account' }, 500)
+  for (const factor of factors.data?.factors ?? []) {
+    const removed = await admin.auth.admin.mfa.deleteFactor({ userId: target, id: factor.id })
+    if (removed.error) return json({ error: 'account' }, 500)
+  }
+  const account = await admin.auth.admin.updateUserById(target, {
+    email: `deleted-${target}@deleted.invalid`,
+    email_confirm: true,
+    password,
+    user_metadata: {},
+    ban_duration: '876000h',
+  })
   if (account.error && !/not found/i.test(account.error.message)) return json({ error: 'account' }, 500)
   return json({ ok: true })
 })
