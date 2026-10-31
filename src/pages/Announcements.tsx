@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
-import { Link } from 'react-router-dom'
+import PageHeader from '../components/PageHeader'
 import { errorText, t } from '../i18n'
 import { useSession } from '../lib/session'
 import { supabase } from '../lib/supabase'
@@ -82,9 +82,7 @@ export default function Announcements() {
 
   return (
     <div className="page narrow two-col">
-      <p><Link to="/events">{t('ann.back')}</Link></p>
-      <h1>{t('ann.title')}</h1>
-      <p className="hint">{t('ann.intro')}</p>
+      <PageHeader title={t('ann.title')} back={{ to: '/events', label: t('nav.events') }} description={t('ann.intro')} />
       {isStaff && (
         <form onSubmit={post} aria-label={t('ann.new')}>
           <h2>{t('ann.new')}</h2>

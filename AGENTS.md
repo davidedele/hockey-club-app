@@ -20,6 +20,11 @@ Interface language is Italian. English can be added later, so keep all text in t
 6. Do not enter, store or show more personal data than the spec lists.
 7. Test on a phone sized screen first.
 
+## Interface changes
+1. Before changing anything a member sees, read `docs/UI_RULES.md` and the open items in `docs/UI_BACKLOG.md`.
+2. Run the checklist at the end of `docs/UI_RULES.md` before handing the work over, including `node scripts/ui-check.mjs` and a look at the screenshots at 375 and 1280 pixels.
+3. Every new remark from Davide about the interface goes into `docs/UI_BACKLOG.md`, and every new general rule into `docs/UI_RULES.md`, in the same change.
+
 ## Writing rules
 1. No dashes (em dashes or hyphen style bullet markers) in any text written for Davide. Use numbered lists or plain sentences.
 2. Commit messages and public repo text only describe what changed. Never mention the writing process, the voice, or who wrote it.

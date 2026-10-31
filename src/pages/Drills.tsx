@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState, type ChangeEvent, type FormEvent } from 'react'
-import { Link, Navigate } from 'react-router-dom'
+import PageHeader from '../components/PageHeader'
+import { Navigate } from 'react-router-dom'
 import { errorText, t } from '../i18n'
 import { shrinkDocument } from '../lib/documents'
 import { useSession } from '../lib/session'
@@ -156,9 +157,7 @@ export default function Drills() {
 
   return (
     <div className="page narrow two-col">
-      <p><Link to="/events">{t('drills.back')}</Link></p>
-      <h1>{t('drills.title')}</h1>
-      <p className="hint">{t('drills.intro')}</p>
+      <PageHeader title={t('drills.title')} description={t('drills.intro')} />
       {error && <p className="error" role="alert">{error}</p>}
 
       <form onSubmit={add} aria-label={t('drills.new')}>
@@ -224,7 +223,7 @@ export default function Drills() {
               {d.notes && <p className="ann-body">{d.notes}</p>}
               <div className="actions">
                 {link && <a href={link} target="_blank" rel="noopener noreferrer">{t('drills.open')}</a>}
-                {d.video_url && <a href={d.video_url} target="_blank" rel="noopener noreferrer">{t('drills.watch')}</a>}
+                {d.video_url && <a className="inline-action" href={d.video_url} target="_blank" rel="noopener noreferrer">{t('drills.watch')}</a>}
               </div>
               <p className="hint">{count === 0 ? t('drills.usedNever') : t(count === 1 ? 'drills.usedOne' : 'drills.used', { n: String(count) })}</p>
               <div className="actions">

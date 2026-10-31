@@ -31,7 +31,7 @@ export default function DocumentsBanner() {
     return () => window.removeEventListener('documents-changed', load)
   }, [load])
 
-  if (!docs || location.pathname === '/documents' || location.pathname.startsWith('/settings')) return null
+  if (!docs || location.pathname === '/profile/documents' || location.pathname.startsWith('/settings')) return null
   const cert = docs.find((d) => d.kind === 'medical_certificate')
   const certNow = certificateState(cert)
   const consentNow = consentState(docs.find((d) => d.kind === 'privacy_consent'), club.privacyNoticePath)
@@ -43,7 +43,7 @@ export default function DocumentsBanner() {
   return (
     <div className="banner doc-banner" role="status">
       <span>{text}</span>
-      <Link to="/documents">{t('docs.open')}</Link>
+      <Link to="/profile/documents">{t('docs.open')}</Link>
     </div>
   )
 }

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import PageHeader from '../components/PageHeader'
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom'
 import { errorText, t } from '../i18n'
 import { useSession } from '../lib/session'
@@ -39,8 +40,8 @@ export default function MemberEdit() {
     void refresh()
   }, [refresh])
 
-  if (!isStaff) return <Navigate to="/" replace />
-  if (loaded && !person) return <Navigate to="/" replace />
+  if (!isStaff) return <Navigate to="/members" replace />
+  if (loaded && !person) return <Navigate to="/members" replace />
   if (!person) return <p className="center">{t('common.loading')}</p>
 
   const isMe = me?.id === person.id
@@ -93,8 +94,7 @@ export default function MemberEdit() {
 
   return (
     <div className="page">
-      <p><Link to="/">{t('nav.members')}</Link></p>
-      <h1>{name}</h1>
+      <PageHeader title={name} back={{ to: '/members', label: t('nav.members') }} />
       {error && <p className="error" role="alert">{error}</p>}
 
       <h2>{t('member.groups')}</h2>

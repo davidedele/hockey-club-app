@@ -1,5 +1,7 @@
 import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react'
-import { Link, Navigate } from 'react-router-dom'
+import ConfirmAction from '../components/ConfirmAction'
+import { Navigate } from 'react-router-dom'
+import PageHeader from '../components/PageHeader'
 import Crest from '../components/Crest'
 import { errorText, t } from '../i18n'
 import { useClub } from '../lib/club'
@@ -23,6 +25,7 @@ export default function ClubSettings() {
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
+  const [savedGroup, setSavedGroup] = useState<'identity' | 'colours' | 'docs' | null>(null)
 
   useEffect(() => {
     setName(club.name)
@@ -50,15 +53,20 @@ export default function ClubSettings() {
     return ''
   }
 
-  async function save(e: FormEvent) {
+  // Each group of fields is saved on its own, so changing the colours never touches the name.
+  async function save(e: FormEvent, group: 'identity' | 'colours') {
     e.preventDefault()
     setBusy(true)
     setMessage('')
-    const problem = await update({ name: name.trim(), game_dark: dark, game_light: light, jersey_light_name: jerseyLight.trim(), jersey_dark_name: jerseyDark.trim() })
+    const values: Record<string, string> = group === 'identity'
+      ? { name: name.trim() }
+      : { game_dark: dark, game_light: light, jersey_light_name: jerseyLight.trim(), jersey_dark_name: jerseyDark.trim() }
+    const problem = await update(values)
     if (problem) setError(problem)
     else {
       setError('')
       setMessage(t('common.saved'))
+      setSavedGroup(group)
       await club.reload()
     }
     setBusy(false)
@@ -82,6 +90,7 @@ export default function ClubSettings() {
     else {
       setError('')
       setMessage(t('common.saved'))
+      setSavedGroup('identity')
       await club.reload()
     }
     setBusy(false)
@@ -103,6 +112,7 @@ export default function ClubSettings() {
     else {
       setError('')
       setMessage(t('common.saved'))
+      setSavedGroup('docs')
       await club.reload()
     }
     setBusy(false)
@@ -121,70 +131,101 @@ export default function ClubSettings() {
     setBusy(false)
   }
 
+  const status = (group: 'identity' | 'colours' | 'docs') => (
+    <>
+      {error && savedGroup === group && <p className="error" role="alert">{error}</p>}
+      {message && savedGroup === group && <p className="hint" role="status">{message}</p>}
+    </>
+  )
+
   return (
-    <div className="page narrow">
-      <p><Link to="/settings">{t('settings.title')}</Link></p>
-      <h1>{t('club.title')}</h1>
-      <p className="hint">{t('club.intro')}</p>
+    <div className="section">
+      <PageHeader title={t('club.title')} back={{ to: '/settings', label: t('settings.title') }} description={t('club.intro')} crumb={t('settings.club')} />
+      {error && savedGroup === null && <p className="error" role="alert">{error}</p>}
 
-      <h2>{t('club.logo')}</h2>
-      <div className="logo-row">
-        <span className="logo-big"><Crest /></span>
-        <div>
-          {!club.logoPath && <p className="hint">{t('club.logoNone')}</p>}
-          <label className="button file">
-            {t('club.logoChoose')}
-            <input type="file" accept="image/png,image/jpeg,image/webp" disabled={busy} onChange={(e) => void upload(e)} />
-          </label>
-          {club.logoPath && <button className="link" disabled={busy} onClick={() => void removeLogo()}>{t('club.logoRemove')}</button>}
-          <p className="hint">{t('club.logoHint')}</p>
+      <section className="set-group" aria-labelledby="club-identity">
+        <div className="set-label">
+          <h2 id="club-identity">{t('club.groupIdentity')}</h2>
+          <p className="hint">{t('club.groupIdentityHint')}</p>
         </div>
-      </div>
+        <div className="set-body">
+          <div className="logo-row">
+            <span className="logo-big"><Crest /></span>
+            <div>
+              {!club.logoPath && <p className="hint">{t('club.logoNone')}</p>}
+              <div className="actions">
+                <label className="button file secondary">
+                  {t('club.logoChoose')}
+                  <input type="file" accept="image/png,image/jpeg,image/webp" disabled={busy} onChange={(e) => { setSavedGroup('identity'); void upload(e) }} />
+                </label>
+                {club.logoPath && <ConfirmAction label={t('club.logoRemove')} title={t('club.logoRemoveTitle')} body={t('club.logoRemoveBody')} confirm={t('club.logoRemove')} disabled={busy} onConfirm={() => { setSavedGroup('identity'); void removeLogo() }} />}
+              </div>
+              <p className="hint">{t('club.logoHint')}</p>
+            </div>
+          </div>
+          <form onSubmit={(e) => void save(e, 'identity')}>
+            <label>{t('club.name')}
+              <input required maxLength={60} value={name} onChange={(e) => setName(e.target.value)} />
+            </label>
+            {status('identity')}
+            <button type="submit" disabled={busy}>{t('common.save')}</button>
+          </form>
+        </div>
+      </section>
 
-      <form onSubmit={save}>
-        <label>{t('club.name')}
-          <input required maxLength={60} value={name} onChange={(e) => setName(e.target.value)} />
-        </label>
-        <h2>{t('club.colours')}</h2>
-        <p className="hint">{t('club.coloursHint')}</p>
-        <div className="colours">
-          <label>{t('club.dark')}
-            <input type="color" value={dark} onChange={(e) => setDark(e.target.value)} />
-          </label>
-          <label>{t('club.light')}
-            <input type="color" value={light} onChange={(e) => setLight(e.target.value)} />
-          </label>
+      <section className="set-group" aria-labelledby="club-colours">
+        <div className="set-label">
+          <h2 id="club-colours">{t('club.groupColours')}</h2>
+          <p className="hint">{t('club.coloursHint')}</p>
         </div>
-        <div className="swatch" style={{ background: dark, color: light }} aria-label={t('club.preview')}>
-          <span>{t('club.preview')}</span>
-          <strong>20:45</strong>
-        </div>
-        <h2>{t('club.jerseys')}</h2>
-        <p className="hint">{t('club.jerseysHint')}</p>
-        <div className="colours">
-          <label>{t('club.jerseyLight')}
-            <input required maxLength={20} value={jerseyLight} onChange={(e) => setJerseyLight(e.target.value)} />
-          </label>
-          <label>{t('club.jerseyDark')}
-            <input required maxLength={20} value={jerseyDark} onChange={(e) => setJerseyDark(e.target.value)} />
-          </label>
-        </div>
-        {error && <p className="error" role="alert">{error}</p>}
-        {message && <p className="hint" role="status">{message}</p>}
-        <button type="submit" disabled={busy}>{t('common.save')}</button>
-      </form>
+        <form className="set-body" onSubmit={(e) => void save(e, 'colours')}>
+          <h3>{t('club.colours')}</h3>
+          <div className="colours">
+            <label>{t('club.dark')}
+              <input type="color" value={dark} onChange={(e) => setDark(e.target.value)} />
+            </label>
+            <label>{t('club.light')}
+              <input type="color" value={light} onChange={(e) => setLight(e.target.value)} />
+            </label>
+          </div>
+          <div className="swatch" style={{ background: dark, color: light }} aria-label={t('club.preview')}>
+            <span>{t('club.preview')}</span>
+            <strong>20:45</strong>
+          </div>
+          <h3>{t('club.jerseys')}</h3>
+          <p className="hint">{t('club.jerseysHint')}</p>
+          <div className="colours">
+            <label>{t('club.jerseyLight')}
+              <input required maxLength={20} value={jerseyLight} onChange={(e) => setJerseyLight(e.target.value)} />
+            </label>
+            <label>{t('club.jerseyDark')}
+              <input required maxLength={20} value={jerseyDark} onChange={(e) => setJerseyDark(e.target.value)} />
+            </label>
+          </div>
+          {status('colours')}
+          <button type="submit" disabled={busy}>{t('common.save')}</button>
+        </form>
+      </section>
 
-      <h2>{t('club.notice')}</h2>
-      <p className="hint">{t('club.noticeHint')}</p>
-      {club.privacyNoticePath ? (
-        noticeLink && <p><a href={noticeLink} target="_blank" rel="noopener noreferrer">{t('club.noticeOpen')}</a></p>
-      ) : (
-        <p className="hint">{t('club.noticeNone')}</p>
-      )}
-      <label className="button file">
-        {t(club.privacyNoticePath ? 'club.noticeReplace' : 'club.noticeUpload')}
-        <input type="file" accept="application/pdf" disabled={busy} onChange={(e) => void uploadNotice(e)} />
-      </label>
+      <section className="set-group" aria-labelledby="club-docs">
+        <div className="set-label">
+          <h2 id="club-docs">{t('club.groupDocs')}</h2>
+          <p className="hint">{t('club.noticeHint')}</p>
+        </div>
+        <div className="set-body">
+          <h3>{t('club.notice')}</h3>
+          {club.privacyNoticePath ? (
+            noticeLink && <p><a href={noticeLink} target="_blank" rel="noopener noreferrer">{t('club.noticeOpen')}</a></p>
+          ) : (
+            <p className="hint">{t('club.noticeNone')}</p>
+          )}
+          {status('docs')}
+          <label className="button file secondary">
+            {t(club.privacyNoticePath ? 'club.noticeReplace' : 'club.noticeUpload')}
+            <input type="file" accept="application/pdf" disabled={busy} onChange={(e) => void uploadNotice(e)} />
+          </label>
+        </div>
+      </section>
     </div>
   )
 }

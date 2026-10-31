@@ -5,7 +5,7 @@ insert into auth.users (id, email, email_confirmed_at)
   select ('00000000-0000-0000-0000-00000000000' || n)::uuid, 'p' || n || '@example.test', now() from generate_series(1, 2) n;
 insert into auth.users (id, email, email_confirmed_at) values ('00000000-0000-0000-0000-0000000000c1', 'coach1@example.test', now());
 insert into public.profiles (id, first_name, last_name)
-  select ('00000000-0000-0000-0000-00000000000' || n)::uuid, 'Nome' || n, 'Cognome' || n from generate_series(1, 2) n;
+  select ('00000000-0000-0000-0000-00000000000' || n)::uuid, 'Nome' || chr(64 + n), 'Cognome' || chr(64 + n) from generate_series(1, 2) n;
 insert into public.profiles (id, first_name, last_name) values ('00000000-0000-0000-0000-0000000000c1', 'Cora', 'Coach');
 insert into public.user_roles values ('00000000-0000-0000-0000-0000000000c1', 'coach');
 insert into public.profile_contacts (user_id, email)

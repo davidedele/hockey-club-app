@@ -21,7 +21,7 @@ export default function ResetPassword() {
       <Brand />
       <h1>{t('reset.newTitle')}</h1>
       {done ? (
-        <p>{t('reset.done')} <Link to="/">{t('nav.members')}</Link></p>
+        <p>{t('reset.done')} <Link to="/">{t('nav.home')}</Link></p>
       ) : (
         <form onSubmit={submit}>
           <label>

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { errorText, t } from '../i18n'
+import { nameHasDigits, tidyName } from '../lib/names'
 import { clearPendingInvite, savePendingInvite } from '../lib/invite'
 import { useSession } from '../lib/session'
 import { supabase } from '../lib/supabase'
@@ -75,6 +76,7 @@ export default function Join() {
 
   async function submit(e: FormEvent) {
     e.preventDefault()
+    if (nameHasDigits(firstName) || nameHasDigits(lastName)) return setError(t('error.name_digits'))
     setBusy(true)
     setError('')
     const { error } = await supabase.auth.signUp({
@@ -82,7 +84,7 @@ export default function Join() {
       password,
       options: {
         emailRedirectTo: `${window.location.origin}/join/${token}`,
-        data: { first_name: firstName.trim(), last_name: lastName.trim() },
+        data: { first_name: tidyName(firstName), last_name: tidyName(lastName) },
       },
     })
     if (error) setError(errorText(error))
@@ -104,7 +106,7 @@ export default function Join() {
         {!loading && profile && !busy && !error && <button onClick={redeem}>{t('join.useInvite')}</button>}
         {!loading && error && <p className="error">{error}</p>}
         {!loading && !error && (!profile || busy) && <p>{t('join.working')}</p>}
-        {error && <p><Link to="/">{t('nav.members')}</Link></p>}
+        {error && <p><Link to="/">{t('nav.home')}</Link></p>}
       </div>
     )
   }
@@ -137,11 +139,11 @@ export default function Join() {
       <form onSubmit={submit}>
         <label>
           {t('common.firstName')}
-          <input required autoComplete="given-name" value={firstName} onChange={(e) => setFirstName(e.target.value)} />
+          <input required autoComplete="given-name" autoCapitalize="words" value={firstName} onChange={(e) => setFirstName(e.target.value)} onBlur={() => { setFirstName(tidyName(firstName)); if (nameHasDigits(firstName)) setError(t('error.name_digits')) }} />
         </label>
         <label>
           {t('common.lastName')}
-          <input required autoComplete="family-name" value={lastName} onChange={(e) => setLastName(e.target.value)} />
+          <input required autoComplete="family-name" autoCapitalize="words" value={lastName} onChange={(e) => setLastName(e.target.value)} onBlur={() => { setLastName(tidyName(lastName)); if (nameHasDigits(lastName)) setError(t('error.name_digits')) }} />
         </label>
         <label>
           {t('common.email')}

@@ -4,14 +4,33 @@ import { clearPendingInvite } from './invite'
 import { supabase } from './supabase'
 import type { Profile, Role } from './types'
 
+// What the app is shown as. A board member can look at it as a coach or as a player, a coach as a
+// player. It only hides things: the database rules follow the real roles whatever is chosen.
+export type View = 'board' | 'coach' | 'player'
+const VIEW_KEY = 'view-as'
+
 interface SessionState {
   loading: boolean
   session: Session | null
   profile: Profile | null
+  // The roles as the app is being shown (see View), and the roles the person really has.
   roles: Role[]
+  realRoles: Role[]
   isStaff: boolean
   isBoard: boolean
+  view: View
+  views: View[]
+  setView: (view: View) => void
   reload: () => Promise<void>
+}
+
+function readView(): View | null {
+  try {
+    const v = localStorage.getItem(VIEW_KEY)
+    return v === 'board' || v === 'coach' || v === 'player' ? v : null
+  } catch {
+    return null
+  }
 }
 
 const Ctx = createContext<SessionState | null>(null)
@@ -21,6 +40,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null)
   const [profile, setProfile] = useState<Profile | null>(null)
   const [roles, setRoles] = useState<Role[]>([])
+  const [chosen, setChosen] = useState<View | null>(readView)
 
   const load = useCallback(async (s: Session | null) => {
     if (!s) {
@@ -50,13 +70,33 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     return () => data.subscription.unsubscribe()
   }, [load])
 
+  const views: View[] = [
+    ...(roles.includes('board') ? (['board'] as const) : []),
+    ...(roles.includes('coach') || roles.includes('board') ? (['coach'] as const) : []),
+    'player',
+  ]
+  const view: View = chosen && views.includes(chosen) ? chosen : views[0]
+  const shown: Role[] = view === 'board' ? roles : view === 'coach' ? ['coach'] : []
+  const setView = (v: View) => {
+    setChosen(v)
+    try {
+      localStorage.setItem(VIEW_KEY, v)
+    } catch {
+      // Private windows may refuse storage; the choice then lasts until the page is reloaded.
+    }
+  }
+
   const value: SessionState = {
     loading,
     session,
     profile,
-    roles,
-    isStaff: roles.includes('coach') || roles.includes('board'),
-    isBoard: roles.includes('board'),
+    roles: shown,
+    realRoles: roles,
+    isStaff: shown.includes('coach') || shown.includes('board'),
+    isBoard: shown.includes('board'),
+    view,
+    views,
+    setView,
     reload: () => load(session),
   }
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>

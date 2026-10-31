@@ -1,0 +1,67 @@
+# UI rules
+
+Every change to what a member sees follows these rules. They come from Davide's reviews (see `docs/UI_BACKLOG.md` for each point and its status) and from the conventions most apps and websites share, with SportEasy as the reference for this club (`docs/sporteasy/README.md`).
+
+Read this file, and the open items of `docs/UI_BACKLOG.md`, before touching a page. Run the checklist at the end before handing the work over. When Davide gives a new rule about the interface, add it here and add the point to the backlog in the same change.
+
+## 1. Page frame
+
+1. Every signed in page sits in the same frame: `.page`, at most 80rem wide (the wide viewport token, 1280 pixels), centred in the space beside the sidebar. The left edge of the content is therefore the same on every page at a given window width. No page is pushed to the left while another is centred.
+2. Forms and reading text inside a page are limited to a readable column (`.form-col`, 40rem) that starts at the left edge of the frame. Tables, calendars and boards use the full frame.
+3. A page starts with its page header (`PageHeader`): the title, an optional one line description, and the page actions on the right. The header always sits at the same distance from the top bar. No empty band above it.
+4. A sub page shows how to go back. On phones the page header carries a back button (a chevron and the name of the parent page) at the top left. On computers the section list of the shell (rule 5) or the breadcrumb in the top bar does this job, so no underlined "back" link is shown in the content.
+5. A section with sub pages is a shell: a card with the section list on the left and the content on the right, as in SportEasy's team settings. Settings and the profile both use it. The list stays on screen on every sub page of the section, including Documenti in the profile. On phones the list is the section's first page and every sub page has the back button of rule 4.
+6. A picture or a piece of information appears once per screen. For example the profile photo is in the shell card, not repeated in the content.
+7. No row of loose links at the bottom of a page. An action belongs to the page or panel it concerns, or to the navigation.
+8. A wait longer than a second shows a skeleton of what is coming, not a line of text or a spinner; a loading number shows an en dash.
+
+## 2. Controls
+
+1. Text fields, selects, buttons and chips are 44 pixels tall. A select looks like a text field (same border, radius, padding and font), never like the small native control.
+2. Labels sit above the field, in sentence case, without a colon. A label inline with a toolbar field (for example "Cerca") also has no colon.
+3. A choice among more than four options, or among options that change over time (the groups), is a button that opens a list. Chips are for two to four fixed filters.
+4. A search field and the actions of the same list share one toolbar row: search on the left, actions on the right. They wrap only when the window is too narrow.
+5. Destructive actions ask for confirmation naming the thing. Print and export open a window first.
+6. A menu (for example the event actions) closes as soon as one of its actions is chosen.
+7. Removing something (an invite, a logo, a file, a photo, a consent) goes through `ConfirmAction`: the window names the thing, the action is red and Annulla has the focus.
+8. On phones the tab bar has at most five places. Pages that do not fit (the drill library) are in the computer sidebar and reachable from where they are used.
+
+## 3. Text
+
+1. Every visible text is in `src/i18n/it.json` and `src/i18n/en.json`, with the same keys.
+2. The tone is professional and courteous, like a well made app, not a chat. Avoid colloquial turns such as "Si cambia con il menu in alto"; write "Puoi cambiare gruppo dal selettore in alto." Prefer precise terms: "il mese precedente", "30 giorni prima della scadenza", not "un mese prima" when a date is meant.
+3. A heading with a number says exactly what is counted, and the same quantity shows the same number everywhere (banner, bell, panels). If a list shows only part of a set, the heading says so ("Prossimi 5 senza risposta") or shows the full count with a link to the rest.
+4. Singular and plural are both written out ("1 membro", "2 membri").
+5. People's names are shown with capital initials and never contain digits. The database tidies names on save and refuses digits; the forms say so before saving.
+6. Filter and toggle labels use standard words ("Tutte le partite", "Solo Sgularat"), not invented ones.
+
+## 4. Tables and data
+
+1. A table sits in a white card with a 1 pixel border and hairline row dividers.
+2. Header text has at least 4.5:1 contrast on its background. Coloured column groups use a pale tint for the header and a paler one for the body, never a tint that lowers the contrast of the numbers below 4.5:1. Group headers are separated from the column headers by a line, and totals are bold.
+3. Numbers are right aligned with tabular figures; an empty or zero value is an en dash.
+4. A loading number shows an en dash, never a 0 that changes later.
+
+## 5. Selection of the group and the role
+
+1. One group selector for the whole app, at the top of the sidebar (in the phone header on phones). Every page that can be narrowed to a group follows it; no page has its own separate group chips.
+2. People with more than one role (Direttivo, Allenatore, Giocatore) can choose the view in the top bar. The view only hides; it never grants anything, and the database rules stay the same whatever is chosen.
+
+## 6. How to check
+
+1. Run `node scripts/ui-check.mjs`. It builds its own copy of the app against a fake backend with invented sample data (no account, no network), opens every page at 375 and 1280 pixels, saves screenshots to `ui-check/`, and fails on: sideways scrolling, controls under 44 pixels, a select with the native look, a page frame whose left edge differs from the others, a sub page without a way back, a translation key shown as text, a label ending with a colon, a script error. It also tries the group menu and the view menu by keyboard, the name rule on leaving the field, and a confirmation window (Annulla focused, Escape removes nothing). A new page goes into its route list; a new kind of data goes into `scripts/ui-check/fixtures.mjs`.
+2. Look at every screenshot of a page you changed, top to bottom, at both widths. A passing script is not a passing page.
+3. Run the UX skills that apply (`vectorlab-ux-skills:ux-audit`, `ui-consistency:verifying`, `ux-ui-audit:ux-ui-audit` on the live site when it is published) and write what could not be proven.
+
+## 7. Checklist before handing over
+
+1. The page uses `.page` and `PageHeader`; the content starts at the same left edge as the other pages.
+2. Sub pages have a way back; shells keep their section list.
+3. Controls are 44 pixels and selects look like fields; labels have no colons.
+4. Toolbars put search and actions on one row.
+5. Every number in a heading is the full count of what it names.
+6. Texts are in both translation files, in a professional tone, singular and plural handled.
+7. Tables follow section 4.
+8. Nothing appears twice on the same screen; no row of loose links.
+9. `npx tsc -b`, `npm test`, `npm run test:db` (when the database changed), `npm run build` and `node scripts/ui-check.mjs` pass.
+10. Screenshots at 375 and 1280 looked at, and the backlog updated with what was done and what is still open.

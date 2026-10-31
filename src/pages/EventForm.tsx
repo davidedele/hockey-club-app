@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react'
-import { Link, Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import PageHeader from '../components/PageHeader'
+import { Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { errorText, t } from '../i18n'
 import { jerseyName, useClub } from '../lib/club'
 import { useGroupFilter } from '../lib/groupfilter'
@@ -188,8 +189,7 @@ export default function EventForm() {
 
   return (
     <div className="page narrow">
-      <p><Link to={editing ? `/events/${id}` : '/events'}>{t('event.back')}</Link></p>
-      <h1>{editing ? t('form.editTitle') : t('form.newTitle')}</h1>
+      <PageHeader title={editing ? t('form.editTitle') : t('form.newTitle')} back={editing ? { to: `/events/${id}`, label: t('event.backToEvent') } : { to: '/events', label: t('nav.events') }} />
       <form onSubmit={submit}>
         {!editing && (
           <div className="field">

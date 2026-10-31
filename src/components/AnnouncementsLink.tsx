@@ -35,7 +35,7 @@ export default function AnnouncementsLink() {
     <Link className="ann-link" to="/announcements">
       <strong>{t('ann.link')}</strong>
       {latest && <span className="ann-latest">{latest}</span>}
-      {count > 0 && <span className="tag todo">{t('ann.linkCount', { n: String(count) })}</span>}
+      {count > 0 && <span className="tag todo">{t(count === 1 ? 'ann.linkCountOne' : 'ann.linkCount', { n: String(count) })}</span>}
     </Link>
   )
 }

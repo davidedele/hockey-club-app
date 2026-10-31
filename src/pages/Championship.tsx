@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import PageHeader from '../components/PageHeader'
 import { Link } from 'react-router-dom'
 import { t } from '../i18n'
-import GroupBadge from '../components/GroupBadge'
 import SeasonTabs from '../components/SeasonTabs'
 import { leagueSync, prettyName, refreshLeague } from '../lib/league'
+import { useGroupFilter } from '../lib/groupfilter'
 import { useSession } from '../lib/session'
 import { supabase } from '../lib/supabase'
 import { formatShortDay, formatTime } from '../lib/time'
@@ -22,7 +23,7 @@ export default function Championship() {
   const [standings, setStandings] = useState<LeagueStanding[]>([])
   const [eventOf, setEventOf] = useState<Map<number, string>>(new Map())
   const [sync, setSync] = useState<LeagueSync | null>(null)
-  const [groupId, setGroupId] = useState<number | null>(null)
+  const { groupId } = useGroupFilter()
   const [compId, setCompId] = useState<number | null>(null)
   const [onlyOurs, setOnlyOurs] = useState(false)
   const [refreshing, setRefreshing] = useState(false)
@@ -50,6 +51,8 @@ export default function Championship() {
   }, [profile])
 
   // Show what is stored at once, then ask for a fresh reading when it is old.
+  useEffect(() => { setCompId(null) }, [groupId])
+
   useEffect(() => {
     void load().then(async () => {
       setRefreshing(true)
@@ -59,7 +62,11 @@ export default function Championship() {
   }, [load])
 
   const linked = useMemo(() => groups.filter((g) => g.league_team && (g.league_championships ?? []).length), [groups])
-  const group = linked.find((g) => g.id === groupId) ?? linked.find((g) => mine.includes(g.id)) ?? linked[0]
+  // The group comes from the selector of the whole app. With all groups chosen, or a group with no
+  // league team, the person's own linked group is shown, and the page says which one.
+  const chosen = linked.find((g) => g.id === groupId)
+  const group = chosen ?? linked.find((g) => mine.includes(g.id)) ?? linked[0]
+  const chosenNotLinked = groupId !== null && !chosen
   const comps = champs.filter((c) => (group?.league_championships ?? []).includes(c.id))
   const comp = comps.find((c) => c.id === compId) ?? comps[0]
   const team = group?.league_team ?? ''
@@ -77,8 +84,11 @@ export default function Championship() {
     setRefreshing(false)
   }
 
+  // A result opens the game's details from the league; a coming game of ours opens its event.
   function row(m: LeagueMatch) {
     const eventId = ours(m) ? eventOf.get(m.id) : undefined
+    const played = m.home_score !== null
+    const to = played ? `/campionato/partita/${m.id}${eventId ? `?event=${eventId}` : ''}` : eventId ? `/events/${eventId}` : null
     const score = m.home_score !== null ? `${m.home_score} : ${m.away_score}` : ''
     const body = (
       <>
@@ -93,7 +103,7 @@ export default function Championship() {
     )
     return (
       <li key={m.id} className={ours(m) ? 'lmatch ours' : 'lmatch'}>
-        {eventId ? <Link to={`/events/${eventId}`}>{body}</Link> : <div>{body}</div>}
+        {to ? <Link to={to}>{body}</Link> : <div>{body}</div>}
       </li>
     )
   }
@@ -106,7 +116,7 @@ export default function Championship() {
 
   return (
     <div className="page wide">
-      <h1>{t('champ.title')}</h1>
+      <PageHeader title={t('champ.title')} />
       <SeasonTabs />
 
       {loaded && linked.length === 0 && (
@@ -123,13 +133,9 @@ export default function Championship() {
 
       {linked.length > 0 && (
         <>
-          <div className="chips" role="group" aria-label={t('common.group')}>
-            {linked.map((g) => (
-              <button key={g.id} className={g.id === group?.id ? 'chip on' : 'chip'} aria-pressed={g.id === group?.id} onClick={() => { setGroupId(g.id); setCompId(null) }}>
-                <GroupBadge group={g} size="small" />{g.name}
-              </button>
-            ))}
-          </div>
+          <p className="hint tab-intro">
+            {chosenNotLinked ? t('champ.groupNotLinked', { group: group?.name ?? '' }) : t('champ.groupNote', { group: group?.name ?? '' })}
+          </p>
           {comps.length > 1 && (
             <div className="chips" role="group" aria-label={t('champ.competition')}>
               {comps.map((c) => (
@@ -178,11 +184,12 @@ export default function Championship() {
                 <h2 id="games-title">{t('champ.next')}</h2>
                 <div className="chips">
                   <button className={!onlyOurs ? 'chip on' : 'chip'} aria-pressed={!onlyOurs} onClick={() => setOnlyOurs(false)}>{t('champ.allGames')}</button>
-                  <button className={onlyOurs ? 'chip on' : 'chip'} aria-pressed={onlyOurs} onClick={() => setOnlyOurs(true)}>{t('champ.onlyOurs')}</button>
+                  <button className={onlyOurs ? 'chip on' : 'chip'} aria-pressed={onlyOurs} onClick={() => setOnlyOurs(true)}>{t('champ.onlyTeam', { team: prettyName(team) })}</button>
                 </div>
               </div>
               {upcoming.length === 0 ? <p className="hint">{t('champ.noNext')}</p> : <ul className="list lmatches">{upcoming.map(row)}</ul>}
               <h2>{t('champ.results')}</h2>
+              {results.length > 0 && <p className="hint">{t('champ.resultsHint')}</p>}
               {results.length === 0 ? <p className="hint">{t('champ.noResults')}</p> : <ul className="list lmatches">{results.map(row)}</ul>}
             </section>
           </div>

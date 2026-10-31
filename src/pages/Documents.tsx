@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useRef, useState, type ChangeEvent, type FormEvent } from 'react'
-import { Link, Navigate, useParams } from 'react-router-dom'
+import ConfirmAction from '../components/ConfirmAction'
+import { Navigate, useParams } from 'react-router-dom'
+import PageHeader from '../components/PageHeader'
 import { errorText, t } from '../i18n'
 import { useClub } from '../lib/club'
 import { certificateState, consentState, shrinkDocument, today, type Level } from '../lib/documents'
@@ -60,8 +62,8 @@ export default function Documents() {
   }, [load])
 
   if (!profile) return null
-  if (!own && !isStaff) return <Navigate to="/documents" replace />
-  if (loaded && !person) return <Navigate to="/" replace />
+  if (!own && !isStaff) return <Navigate to="/profile/documents" replace />
+  if (loaded && !person) return <Navigate to="/members" replace />
 
   const cert = docs.find((x) => x.kind === 'medical_certificate')
   const consent = docs.find((x) => x.kind === 'privacy_consent')
@@ -180,12 +182,16 @@ export default function Documents() {
   const noticeLink = club.privacyNoticePath ? links.get(club.privacyNoticePath) : undefined
 
   return (
-    <div className="page narrow two-col">
-      <p><Link to={own ? '/profile' : `/members/${userId}`}>{own ? t('profile.title') : name}</Link></p>
-      <h1>{own ? t('docs.title') : t('docs.titleOf', { name })}</h1>
-      <p className="hint">{own ? t('docs.intro') : t('docs.introStaff', { name: person?.first_name ?? '' })}</p>
+    <div className={own && !id ? 'section doc-page' : 'page doc-page'}>
+      <PageHeader
+        title={own ? t('docs.title') : t('docs.titleOf', { name })}
+        back={own && !id ? { to: '/profile', label: t('profile.back') } : { to: `/members/${userId}`, label: name }}
+        description={own ? t('docs.intro') : t('docs.introStaff', { name: person?.first_name ?? '' })}
+        crumb={own ? t('docs.title') : name}
+      />
       {error && <p className="error" role="alert">{error}</p>}
       {message && <p className="hint" role="status">{message}</p>}
+      <div className="doc-cards">
 
       <section className="doc-card" aria-labelledby="cert-title">
         <h2 id="cert-title">{t('docs.cert')}</h2>
@@ -211,7 +217,7 @@ export default function Documents() {
               {t(cert?.file_path ? 'docs.certReplace' : 'docs.certUpload')}
               <input type="file" accept="image/*,application/pdf" disabled={busy} onChange={(e) => void upload(e)} />
             </label>
-            {cert?.file_path && <button className="link" disabled={busy} onClick={() => void removeFile()}>{t('docs.certRemoveFile')}</button>}
+            {cert?.file_path && <ConfirmAction label={t('docs.certRemoveFile')} title={t('docs.certRemoveTitle')} body={t('docs.certRemoveBody')} confirm={t('docs.certRemoveFile')} disabled={busy} onConfirm={() => void removeFile()} />}
           </div>
         </div>
       </section>
@@ -223,11 +229,12 @@ export default function Documents() {
         {own && club.privacyNoticePath && (
           <div className="actions">
             {consentNow.level !== 'ok' && <button disabled={busy} onClick={() => void accept()}>{t('docs.consentAccept')}</button>}
-            {consent && <button className="link" disabled={busy} onClick={() => void withdraw()}>{t('docs.consentWithdraw')}</button>}
+            {consent && <ConfirmAction label={t('docs.consentWithdraw')} title={t('docs.consentWithdrawTitle')} body={t('docs.consentWithdrawBody')} confirm={t('docs.consentWithdraw')} disabled={busy} onConfirm={() => void withdraw()} />}
           </div>
         )}
         {!own && <p className="hint">{t('docs.consentOnlyMember')}</p>}
       </section>
+      </div>
     </div>
   )
 }

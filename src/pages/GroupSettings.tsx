@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState, type ChangeEvent, type FormEvent } from 'react'
-import { Link, Navigate } from 'react-router-dom'
+import PageHeader from '../components/PageHeader'
+import { Navigate } from 'react-router-dom'
 import { errorText, t } from '../i18n'
 import GroupBadge from '../components/GroupBadge'
 import { useClub } from '../lib/club'
@@ -57,10 +58,8 @@ export default function GroupSettings() {
   }
 
   return (
-    <div className="page narrow">
-      <p><Link to="/settings">{t('settings.title')}</Link></p>
-      <h1>{t('settings.groups')}</h1>
-      <p className="hint">{t('groups.intro')}</p>
+    <div className="section">
+      <PageHeader title={t('settings.groups')} back={{ to: '/settings', label: t('settings.title') }} description={t('groups.intro')} />
       {error && <p className="error" role="alert">{error}</p>}
       <ul className="list groups">
         {groups.map((g) => (

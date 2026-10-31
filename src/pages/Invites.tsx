@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Link, Navigate } from 'react-router-dom'
+import ConfirmAction from '../components/ConfirmAction'
+import PageHeader from '../components/PageHeader'
+import { Navigate } from 'react-router-dom'
 import { errorText, locale, t } from '../i18n'
 import { useSession } from '../lib/session'
 import { supabase } from '../lib/supabase'
@@ -91,33 +93,61 @@ export default function Invites() {
 
   const groupName = (id: number) => groups.find((g) => g.id === id)?.name ?? ''
 
+  // Active invites can still be used; the others are kept below, folded, for reference.
+  const usable = (i: Invite) => !i.used_at && !i.revoked_at && new Date(i.expires_at) > new Date() && i.use_count < i.max_uses
+  const active = invites.filter(usable)
+  const past = invites.filter((i) => !usable(i))
+  const row = (i: Invite) => (
+    <li key={i.id}>
+      <div className="row">
+        <strong>{groupName(i.group_id)}</strong>
+        <span className="hint">{i.used_by && names.get(i.used_by) ? t('invites.usedBy', { name: names.get(i.used_by)! }) : status(i)}</span>
+      </div>
+      {usable(i) && <ConfirmAction label={t('invites.revoke')} title={t('invites.revokeTitle', { group: groupName(i.group_id) })} body={t('invites.revokeBody')} confirm={t('invites.revokeGo')} onConfirm={() => revoke(i.id)} />}
+    </li>
+  )
+
   return (
-    <div className="page narrow">
-      {isBoard && <p><Link to="/settings">{t('settings.title')}</Link></p>}
-      <h1>{t('invites.title')}</h1>
-      <p className="hint">{t('invites.intro')}</p>
- <label htmlFor="invite-group">{t('common.group')}</label>
-        <select id="invite-group" className="full" value={groupId} onChange={(e) => setGroupId(Number(e.target.value))}>
-          {groups.map((g) => <option key={g.id} value={g.id}>{g.name}</option>)}
-        </select>
-      
-      <button onClick={() => void create(false)}>{t('invites.create')}</button>
+    <div className="section">
+      <PageHeader title={t('invites.title')} back={{ to: '/settings', label: t('settings.title') }} description={t('invites.intro')} />
+
+      <section className="set-group" aria-labelledby="inv-one">
+        <div className="set-label">
+          <h2 id="inv-one">{t('invites.oneTitle')}</h2>
+          <p className="hint">{t('invites.oneHint')}</p>
+        </div>
+        <div className="set-body">
+          <label htmlFor="invite-group">{t('common.group')}</label>
+          <select id="invite-group" className="full" value={groupId} onChange={(e) => setGroupId(Number(e.target.value))}>
+            {groups.map((g) => <option key={g.id} value={g.id}>{g.name}</option>)}
+          </select>
+          <button onClick={() => void create(false)}>{t('invites.create')}</button>
+        </div>
+      </section>
+
       {isBoard && (
-        <>
-          <h2>{t('invites.team.title')}</h2>
-          <p className="hint">{t('invites.team.intro')}</p>
-          <label>{t('invites.team.days')}
-            <input type="number" inputMode="numeric" min={1} max={90} value={teamDays} onChange={(e) => setTeamDays(e.target.value)} />
-          </label>
-          <label>{t('invites.team.max')}
-            <input type="number" inputMode="numeric" min={2} max={200} value={teamMax} onChange={(e) => setTeamMax(e.target.value)} />
-          </label>
-          <button className="secondary" onClick={() => void create(true)}>{t('invites.team.create')}</button>
-        </>
+        <section className="set-group" aria-labelledby="inv-team">
+          <div className="set-label">
+            <h2 id="inv-team">{t('invites.team.title')}</h2>
+            <p className="hint">{t('invites.team.intro')}</p>
+          </div>
+          <div className="set-body">
+            <div className="colours">
+              <label>{t('invites.team.days')}
+                <input type="number" inputMode="numeric" min={1} max={90} value={teamDays} onChange={(e) => setTeamDays(e.target.value)} />
+              </label>
+              <label>{t('invites.team.max')}
+                <input type="number" inputMode="numeric" min={2} max={200} value={teamMax} onChange={(e) => setTeamMax(e.target.value)} />
+              </label>
+            </div>
+            <button className="secondary" onClick={() => void create(true)}>{t('invites.team.create')}</button>
+          </div>
+        </section>
       )}
-      {error && <p className="error">{error}</p>}
+
+      {error && <p className="error" role="alert">{error}</p>}
       {link && (
-        <div className="box">
+        <div className="box" role="status">
           <strong>{t('invites.link')}</strong>
           <code>{link}</code>
           <p className="hint">{t(linkIsTeam ? 'invites.team.once' : 'invites.once')}</p>
@@ -127,21 +157,15 @@ export default function Invites() {
           </div>
         </div>
       )}
-      <h2>{t('invites.list')}</h2>
-      {invites.length === 0 && <p className="hint">{t('invites.none')}</p>}
-      <ul className="list">
-        {invites.map((i) => (
-          <li key={i.id}>
-            <div className="row">
-              <strong>{groupName(i.group_id)}</strong>
-              <span className="hint">{i.used_by && names.get(i.used_by) ? t('invites.usedBy', { name: names.get(i.used_by)! }) : status(i)}</span>
-            </div>
-            {!i.used_at && !i.revoked_at && new Date(i.expires_at) > new Date() && (
-              <button className="link" onClick={() => revoke(i.id)}>{t('invites.revoke')}</button>
-            )}
-          </li>
-        ))}
-      </ul>
+
+      <h2>{t('invites.active')}</h2>
+      {active.length === 0 ? <p className="hint">{t('invites.noneActive')}</p> : <ul className="list">{active.map(row)}</ul>}
+      {past.length > 0 && (
+        <details className="fold">
+          <summary>{t('invites.past', { n: String(past.length) })}</summary>
+          <ul className="list">{past.map(row)}</ul>
+        </details>
+      )}
     </div>
   )
 }
