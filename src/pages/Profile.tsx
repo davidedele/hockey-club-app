@@ -205,7 +205,7 @@ export default function ProfilePage() {
               <input type="tel" autoComplete="tel" maxLength={30} placeholder="333 123 4567" value={phone} onChange={(e) => setPhone(e.target.value)} onBlur={() => setPhone(formatPhone(phone))} />
             </label>
             <button type="submit">{t('common.save')}</button>
-            {message && <p className="hint">{message}</p>}
+            {message && <p className={message === t('common.saved') ? 'hint' : 'error'} role={message === t('common.saved') ? 'status' : 'alert'}>{message}</p>}
           </form>
         </>
         )}

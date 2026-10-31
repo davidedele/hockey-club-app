@@ -22,7 +22,7 @@ const percent = (r: Row): number | null => {
 }
 
 const COLUMNS: Column[] = [
-  { key: 'events_total', label: 'summary.events_total', group: 'calls', get: (r) => Number(r.events_total) },
+  { key: 'events_total', label: 'summary.events_total', group: 'calls', get: (r) => Number(r.events_total) - Number(r.not_called_up) },
   { key: 'answered_present', label: 'summary.answered_present', group: 'answers', get: (r) => Number(r.answered_present) },
   { key: 'answered_absent', label: 'summary.answered_absent', group: 'answers', get: (r) => Number(r.answered_absent) },
   { key: 'no_answer', label: 'summary.no_answer', group: 'answers', get: (r) => Number(r.no_answer) },
@@ -154,7 +154,7 @@ export default function AttendanceSummary() {
                 {visible.map((r) => (
                   <tr key={r.user_id}>
                     <th scope="row" className="att-name">{r.last_name} {r.first_name}</th>
-                    <td className="g-calls">{Number(r.events_total)}</td>
+                    <td className="g-calls">{Number(r.events_total) - Number(r.not_called_up)}</td>
                     {COLUMNS.filter((c) => c.group !== 'calls' && c.group !== 'percent').map((c) => {
                       const v = c.get(r)
                       return <td key={c.key + c.group} className={`g-${c.group}${v === 0 ? ' zero' : ''}`}>{v === 0 ? '-' : v}</td>

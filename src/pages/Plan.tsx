@@ -22,6 +22,7 @@ export default function Plan({ embedded = false }: { embedded?: boolean }) {
   const [adding, setAdding] = useState(false)
   const [loaded, setLoaded] = useState(false)
   const [busy, setBusy] = useState(false)
+  const [reset, setReset] = useState(0)
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState('')
 
@@ -107,7 +108,12 @@ export default function Plan({ embedded = false }: { embedded?: boolean }) {
 
   async function setMinutes(rowId: string, value: string) {
     const minutes = value === '' ? null : Number(value)
-    if (minutes !== null && (!Number.isInteger(minutes) || minutes < 1 || minutes > 180)) return
+    if (minutes !== null && (!Number.isInteger(minutes) || minutes < 1 || minutes > 180)) {
+      // Say so and put the saved number back, instead of leaving a number that was not kept.
+      setError(t('plan.minutesInvalid'))
+      setReset((n) => n + 1)
+      return
+    }
     setBusy(true)
     setError('')
     const { error } = await supabase.from('event_plan_drills').update({ minutes }).eq('id', rowId).select()
@@ -180,6 +186,7 @@ export default function Plan({ embedded = false }: { embedded?: boolean }) {
                       inputMode="numeric"
                       min={1}
                       max={180}
+                      key={`${r.id}-${reset}`}
                       defaultValue={r.minutes ?? ''}
                       disabled={busy}
                       onBlur={(e) => void setMinutes(r.id, e.target.value)}

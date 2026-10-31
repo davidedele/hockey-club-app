@@ -169,4 +169,4 @@ Recorded on 21 October 2026. Read together with `SPEC.md` and `SPORTEASY_NOTES.m
 68. Print and export ask first (Davide, 31 October): print and CSV export open a window that says what will happen and, for CSV, how many rows and that it holds personal data. Nothing is printed or downloaded until the person confirms.
 69. Calendar list (Davide, 31 October): the list view starts on upcoming events, with chips for past events and the whole season.
 70. Group selector (Davide, 31 October): chips in the sidebar on computers, a compact list in the phone header. Still open: the Campionato page has its own group chips without Tutti, separate from this selector.
-
+71. Not called up and cancelled games (31 October, found in a code review): a person not called up for an event is not counted or named as present, is not offered for the line-up, and has no missing answer in the attendance summary, while the record itself and the person's own answer stay stored so that putting them back restores everything. A cancelled game is never a season game. Migration 0033.

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { errorText, t, type MessageKey } from '../i18n'
 import EventGame from './EventGame'
@@ -36,6 +36,9 @@ export default function EventDetail() {
   const [scoreUs, setScoreUs] = useState('')
   const [scoreThem, setScoreThem] = useState('')
   const [confirming, setConfirming] = useState(false)
+  // The actions menu closes when one of its actions is chosen.
+  const menu = useRef<HTMLDetailsElement>(null)
+  const closeMenu = () => menu.current?.removeAttribute('open')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const [near, setNear] = useState<NearEvent[]>([])
@@ -51,9 +54,9 @@ export default function EventDetail() {
       supabase.from('group_members').select('group_id').eq('user_id', profile.id),
       supabase.from('attendance_answers').select('answer').eq('event_id', id).eq('user_id', profile.id).maybeSingle(),
       supabase.from('rinks').select('id, name'),
-      supabase.from('events').select('id, type, title, starts_at, opponent, score_for, score_against, cancelled_at').order('starts_at').limit(500),
+      supabase.from('events').select('id, type, title, starts_at, opponent, score_for, score_against, cancelled_at').order('starts_at', { ascending: false }).limit(1000),
     ])
-    setNear((nb.data ?? []) as NearEvent[])
+    setNear(((nb.data ?? []) as NearEvent[]).slice().reverse())
     const row = (e.data as EventRow | null) ?? null
     setEvent(row)
     setGroups((g.data ?? []) as Group[])
@@ -306,14 +309,14 @@ export default function EventDetail() {
           <p className="ev-day">{dayLabel}</p>
           <p className="ev-sub">{[typeLabel, groupNames].filter(Boolean).join(' · ')}</p>
           {isStaff && (
-            <details className="ev-menu">
+            <details className="ev-menu" ref={menu}>
               <summary aria-label={t('event.menu')}>
                 <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.8" /><circle cx="12" cy="12" r="1.8" /><circle cx="19" cy="12" r="1.8" /></svg>
               </summary>
               <div className="ev-menu-list">
                 <Link to={`/events/${id}/edit`}>{t('event.edit')}</Link>
-                <button disabled={busy} onClick={() => void setCancelled(!cancelled)}>{cancelled ? t('event.restore') : t('event.cancel')}</button>
-                <button className="danger-text" disabled={busy} onClick={() => setConfirming(true)}>{t('event.deleteStart')}</button>
+                <button disabled={busy} onClick={() => { closeMenu(); void setCancelled(!cancelled) }}>{cancelled ? t('event.restore') : t('event.cancel')}</button>
+                <button className="danger-text" disabled={busy} onClick={() => { closeMenu(); setConfirming(true) }}>{t('event.deleteStart')}</button>
               </div>
             </details>
           )}

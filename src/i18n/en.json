@@ -669,6 +669,7 @@
   "plan.drills": "Drills",
   "plan.minutes": "{n} minutes",
   "plan.howLong": "Minutes",
+  "plan.minutesInvalid": "Minutes must be a whole number from 1 to 180. The previous value was kept.",
   "plan.up": "Up",
   "plan.down": "Down",
   "plan.remove": "Take out",

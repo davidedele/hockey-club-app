@@ -9,7 +9,7 @@ import { refreshLeague } from '../lib/league'
 import { useGroupFilter } from '../lib/groupfilter'
 import { useSession } from '../lib/session'
 import { supabase } from '../lib/supabase'
-import { dayKey, formatDay, formatMonth, formatShortDay, formatTime, rangeParts, weekOf } from '../lib/time'
+import { dayKey, formatDay, formatMonth, formatShortDay, formatTime, italyToIso, rangeParts, seasonOf, weekOf } from '../lib/time'
 import type { Answer, EventRow, Group } from '../lib/types'
 
 const Tick = () => (
@@ -43,7 +43,7 @@ export default function Events() {
   const load = useCallback(async () => {
     if (!profile) return
     const [e, g, m, a, r, n] = await Promise.all([
-      supabase.from('events').select('*, event_groups(group_id)').order('starts_at').limit(500),
+      supabase.from('events').select('*, event_groups(group_id)').order('starts_at', { ascending: false }).limit(1000),
       supabase.from('groups').select('*').order('id'),
       supabase.from('group_members').select('group_id').eq('user_id', profile.id),
       supabase.from('attendance_answers').select('event_id, answer').eq('user_id', profile.id),
@@ -52,7 +52,8 @@ export default function Events() {
     ])
     setRecords(new Map(((r.data ?? []) as { event_id: string; status: string }[]).map((x) => [x.event_id, x.status])))
     setMemberCount(n.count ?? null)
-    const rows = (e.data ?? []) as EventRow[]
+    // The newest events are fetched, so the future is never cut off, and put back in date order.
+    const rows = ((e.data ?? []) as EventRow[]).slice().reverse()
     setEvents(rows)
     setGroups((g.data ?? []) as Group[])
     setMyGroups(((m.data ?? []) as { group_id: number }[]).map((x) => x.group_id))
@@ -88,9 +89,9 @@ export default function Events() {
 
   // Own attendance this season (from 1 September): recorded as on time or late, or else answered present.
   const season = useMemo(() => {
-    const d = new Date()
-    const start = new Date(Date.UTC(d.getMonth() >= 8 ? d.getFullYear() : d.getFullYear() - 1, 8, 1)).toISOString()
-    const mine = events.filter((e) => e.starts_at >= start && !e.cancelled_at && new Date(e.ends_at).getTime() < Date.now() && e.event_groups.some((x) => myGroups.includes(x.group_id)))
+    const start = italyToIso(`${seasonOf(new Date().toISOString())}-09-01`, '00:00')
+    // An event the person was not called up for does not count against them.
+    const mine = events.filter((e) => e.starts_at >= start && !e.cancelled_at && new Date(e.ends_at).getTime() < Date.now() && records.get(e.id) !== 'not_called_up' && e.event_groups.some((x) => myGroups.includes(x.group_id)))
     const came = mine.filter((e) => {
       const r = records.get(e.id)
       return r ? r === 'on_time' || r === 'late' : answers.get(e.id) === 'present'
@@ -317,7 +318,7 @@ export default function Events() {
       )}
 
       <div className="more">
-        <button className="link" onClick={() => setView(view === 'upcoming' ? 'past' : 'upcoming')}>
+        <button className="link phone-only" onClick={() => setView(view === 'upcoming' ? 'past' : 'upcoming')}>
           {t(view === 'upcoming' ? 'events.showPast' : 'events.showUpcoming')}
         </button>
         {isStaff && <Link to="/events/unanswered">{t('events.unanswered')}</Link>}

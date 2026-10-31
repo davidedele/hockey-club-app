@@ -63,7 +63,11 @@ export function cost(hours: Record<string, number>, prices: Map<number, number>)
 }
 
 const decimal = (n: number) => String(n).replace('.', ',')
-const field = (v: string) => (/[";\n]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v)
+// A value that starts like a formula is kept as text, and quotes, semicolons and line breaks are escaped.
+const field = (v: string) => {
+  const safe = /^[=+@\t\r-]/.test(v) && Number.isNaN(Number(v)) ? `'${v}` : v
+  return /[";\n\r]/.test(safe) ? `"${safe.replace(/"/g, '""')}"` : safe
+}
 
 // A spreadsheet file for Italian Excel: semicolons between columns, decimal commas, and a mark that says UTF-8.
 export function iceCsv(events: IceEvent[], rinks: Rink[], prices: Map<number, number>, labels: { header: string[]; cancelled: string; took: string; noRink: string; training: string; game: string }): string {
