@@ -26,6 +26,16 @@ describe('calendar feed text', () => {
     expect(escapeText('A, B; C\\D\nE')).toBe('A\\, B\\; C\\\\D\\nE')
   })
 
+  it('turns a lone carriage return, a line feed and a pair into the same written break', () => {
+    expect(escapeText('a\rb')).toBe('a\\nb')
+    expect(escapeText('a\nb')).toBe('a\\nb')
+    expect(escapeText('a\r\nb')).toBe('a\\nb')
+  })
+
+  it('leaves no raw carriage return that a calendar app could read as a new line', () => {
+    expect(escapeText('Titolo\rX-INJECT:1\nAltro')).not.toMatch(/[\r\n]/)
+  })
+
   it('folds long lines at 75 bytes without cutting a character', () => {
     const line = 'SUMMARY:' + 'è'.repeat(80)
     const folded = fold(line).split('\r\n')
