@@ -14,3 +14,11 @@ Checks that run without Supabase:
 2. `npm test` runs the text file tests, and `npm run typecheck` checks the code.
 
 Email setup (custom sender and email confirmation) is in `docs/SETUP_EMAIL.md`.
+
+## Interface checker on the iPhone engine and other settings
+
+`node scripts/ui-check.mjs` opens every page at 320, 375, 390, 430, 768 and 1280 pixels. Settings are environment variables:
+
+1. `UI_CHECK_WEBKIT=1 node scripts/ui-check.mjs` runs it on WebKit, the engine of iPhone Safari. WebKit could not run in the cloud container used for the build, so run it once on the Mac: `npx playwright install webkit`, then the command above. Screenshots go to `ui-check/<width>-webkit`.
+2. `UI_CHECK_DARK=1` runs the dark colour scheme, `UI_CHECK_LARGE=1` a larger text size. They can be combined with the first one. Screenshots go to `ui-check/<width>-dark`, `-large` and so on.
+3. `UI_CHECK_WIDTHS=375,1280` limits the widths for a quick run.

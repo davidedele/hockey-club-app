@@ -6,6 +6,12 @@
 // Run: node scripts/ui-check.mjs            (all pages)
 //      node scripts/ui-check.mjs settings   (only routes whose name contains "settings")
 // Needs Playwright with Chromium: npm i --no-save playwright && npx playwright install chromium
+//
+// Options, as environment variables:
+//   UI_CHECK_WEBKIT=1   use WebKit (the iPhone engine) instead of Chromium. Needs: npx playwright install webkit
+//   UI_CHECK_DARK=1     dark colour scheme
+//   UI_CHECK_LARGE=1    larger text size (the root font size is raised by a third)
+//   UI_CHECK_WIDTHS=375,1280   other window widths (default 320, 375, 390, 430, 768, 1280)
 
 import { execSync } from 'node:child_process'
 import { createReadStream, existsSync, mkdirSync, rmSync, statSync, writeFileSync } from 'node:fs'
@@ -16,10 +22,17 @@ import { fileURLToPath } from 'node:url'
 import { fixtures, ME } from './ui-check/fixtures.mjs'
 
 const require = createRequire(import.meta.url)
-const { chromium } = require('playwright')
+const playwright = require('playwright')
+const engine = process.env.UI_CHECK_WEBKIT ? playwright.webkit : playwright.chromium
+const DARK = Boolean(process.env.UI_CHECK_DARK)
+const LARGE = Boolean(process.env.UI_CHECK_LARGE)
+const WIDTHS = (process.env.UI_CHECK_WIDTHS ?? '320,375,390,430,768,1280').split(',').map(Number)
+const contextOptions = { serviceWorkers: 'block', locale: 'it-IT', timezoneId: 'Europe/Rome', colorScheme: DARK ? 'dark' : 'light' }
+const largeText = (large) => { if (large) document.addEventListener('DOMContentLoaded', () => { document.documentElement.style.fontSize = '133%' }) }
 
 const root = resolve(fileURLToPath(import.meta.url), '../..')
 const out = join(root, 'ui-check')
+const tag = `${process.env.UI_CHECK_WEBKIT ? '-webkit' : ''}${DARK ? '-dark' : ''}${LARGE ? '-large' : ''}`
 const dist = join(out, 'dist')
 const API = 'http://mock.supabase.test'
 const only = process.argv[2] ?? ''
@@ -219,12 +232,13 @@ function measure() {
 }
 
 // 6. Visit everything at both widths.
-const browser = await chromium.launch()
+const browser = await engine.launch()
 const report = []
-for (const width of [375, 1280]) {
-  mkdirSync(join(out, String(width)), { recursive: true })
-  const context = await browser.newContext({ viewport: { width, height: width === 375 ? 812 : 800 }, serviceWorkers: 'block', locale: 'it-IT', timezoneId: 'Europe/Rome' })
+for (const width of WIDTHS) {
+  mkdirSync(join(out, `${width}${tag}`), { recursive: true })
+  const context = await browser.newContext({ viewport: { width, height: width < 700 ? 812 : 800 }, ...contextOptions })
   await context.route(`${API}/**`, answer)
+  await context.addInitScript(largeText, LARGE)
   await context.addInitScript(([me, email]) => {
     if (location.pathname === '/login') return
     const session = { access_token: 'sample', refresh_token: 'sample', token_type: 'bearer', expires_in: 3600, expires_at: Math.floor(Date.now() / 1000) + 36000, user: { id: me, email, aud: 'authenticated', role: 'authenticated', app_metadata: {}, user_metadata: {} } }
@@ -232,8 +246,9 @@ for (const width of [375, 1280]) {
   }, [ME, fixtures.me.email])
   // The login page is opened in a fresh context with no saved session. In the shared one the sign in
   // stored by the other pages would send it straight to the home page.
-  const fresh = await browser.newContext({ viewport: { width, height: width === 375 ? 812 : 800 }, serviceWorkers: 'block', locale: 'it-IT', timezoneId: 'Europe/Rome' })
+  const fresh = await browser.newContext({ viewport: { width, height: width < 700 ? 812 : 800 }, ...contextOptions })
   await fresh.route(`${API}/**`, answer)
+  await fresh.addInitScript(largeText, LARGE)
   for (const [name, path, kind] of ROUTES) {
     const page = await (kind === 'auth' ? fresh : context).newPage()
     const errors = []
@@ -251,7 +266,7 @@ for (const width of [375, 1280]) {
     // bottom of the window (the phone tab bar) stays at the bottom instead of cutting across the middle.
     const height = await page.evaluate(() => document.documentElement.scrollHeight)
     await page.setViewportSize({ width, height: Math.min(Math.max(height, 800), 6000) })
-    await page.screenshot({ path: join(out, String(width), `${name}.png`) })
+    await page.screenshot({ path: join(out, `${width}${tag}`, `${name}.png`) })
     report.push({ width, name, path, kind: kind ?? 'page', ...m, errors })
     await page.close()
   }
@@ -260,8 +275,9 @@ for (const width of [375, 1280]) {
 }
 // 6b. Interactions that a screenshot cannot prove, at computer width.
 {
-  const context = await browser.newContext({ viewport: { width: 1280, height: 800 }, serviceWorkers: 'block', locale: 'it-IT', timezoneId: 'Europe/Rome' })
+  const context = await browser.newContext({ viewport: { width: 1280, height: 800 }, ...contextOptions })
   await context.route(`${API}/**`, answer)
+  await context.addInitScript(largeText, LARGE)
   await context.addInitScript(([me, email]) => {
     const session = { access_token: 'sample', refresh_token: 'sample', token_type: 'bearer', expires_in: 3600, expires_at: Math.floor(Date.now() / 1000) + 36000, user: { id: me, email, aud: 'authenticated', role: 'authenticated', app_metadata: {}, user_metadata: {} } }
     localStorage.setItem('sb-mock-auth-token', JSON.stringify(session))
@@ -336,7 +352,7 @@ server.close()
 
 // 7. Rules across pages: the frame starts at the same place, sub pages offer a way back.
 const failures = []
-for (const width of [375, 1280]) {
+for (const width of WIDTHS) {
   const rows = report.filter((r) => r.width === width && r.kind !== 'auth' && r.frameLeft !== null)
   const counts = new Map()
   for (const r of rows) counts.set(r.frameLeft, (counts.get(r.frameLeft) ?? 0) + 1)
@@ -345,13 +361,13 @@ for (const width of [375, 1280]) {
 }
 for (const r of report) {
   if (r.kind !== 'auth' && r.frameLeft === null) r.problems.push('no .page frame found')
-  if (r.kind === 'sub' && r.width === 375 && !r.hasBack) r.problems.push('sub page without a back button on phones')
-  if (r.kind === 'sub' && r.width === 1280 && !r.hasBack && !r.hasShellNav && !r.hasCrumbs) r.problems.push('sub page without a way back on computers')
+  if (r.kind === 'sub' && r.width < 700 && !r.hasBack) r.problems.push('sub page without a back button on phones')
+  if (r.kind === 'sub' && r.width >= 1024 && !r.hasBack && !r.hasShellNav && !r.hasCrumbs) r.problems.push('sub page without a way back on computers')
   for (const e of r.errors) r.problems.push(`script error: ${e.slice(0, 160)}`)
   if (r.problems.length) failures.push(r)
 }
 
-const lines = ['# Interface check', '', `${report.length} page views, ${failures.length} with problems. Screenshots in ui-check/375 and ui-check/1280.`, '']
+const lines = ['# Interface check', '', `${report.length} page views, ${failures.length} with problems. Screenshots in ui-check/<width>${tag}.`, '']
 for (const r of failures) {
   lines.push(`## ${r.name} at ${r.width}px (${r.path})`)
   const seen = new Map()
