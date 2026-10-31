@@ -847,6 +847,7 @@
   "invites.noneActive": "No active invites.",
   "invites.past": "Past invites ({n})",
   "error.name_digits": "First and last name cannot contain digits.",
+  "error.phone_invalid": "The phone number is not valid. Write digits only, with a + in front if needed.",
   "att.tabMissing": "No answer",
   "unanswered.window": "Period",
   "nav.drills": "Drills",

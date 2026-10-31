@@ -847,6 +847,7 @@
   "invites.noneActive": "Nessun invito attivo.",
   "invites.past": "Inviti passati ({n})",
   "error.name_digits": "Nome e cognome non possono contenere numeri.",
+  "error.phone_invalid": "Il numero di telefono non è valido. Scrivi solo cifre, con il + davanti se serve.",
   "att.tabMissing": "Senza risposta",
   "unanswered.window": "Periodo",
   "nav.drills": "Esercizi",

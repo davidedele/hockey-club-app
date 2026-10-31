@@ -15,3 +15,11 @@ export function formatPhone(raw: string | null | undefined): string {
 
 // The number for a tel: link, without spaces or other separators, and 0039 written as +39.
 export const phoneLink = (raw: string) => `tel:${raw.replace(separators, '').replace(/^00/, '+')}`
+
+// A number the database accepts: digits with an optional + in front and spaces, dots, dashes, slashes
+// or brackets between them, 6 to 17 digits. Empty is allowed. Keep in step with migration 0035.
+export function isPhoneValid(raw: string | null | undefined): boolean {
+  const text = (raw ?? '').trim()
+  if (text === '') return true
+  return /^[+]?[0-9][0-9 ()./-]*$/.test(text) && text.replace(/[^0-9]/g, '').length >= 6 && text.replace(/[^0-9]/g, '').length <= 17
+}
