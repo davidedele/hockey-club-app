@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import { errorText, t, type MessageKey } from '../i18n'
+import { checked } from '../lib/formcheck'
 import { supabase } from '../lib/supabase'
 import { dayKey, daysBetween, formatDate, rangeParts } from '../lib/time'
 import type { AbsencePeriod, AbsenceReason } from '../lib/types'
@@ -74,7 +75,7 @@ export default function AbsencePeriods({ userId, name, heading = true }: { userI
           ))}
         </ul>
       )}
-      <form className="absence-form" onSubmit={add}>
+      <form className="absence-form" {...checked(add)}>
         <div className="absence-dates">
           <label>
             {t('absence.from')}

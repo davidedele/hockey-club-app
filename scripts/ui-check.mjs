@@ -343,6 +343,60 @@ for (const width of WIDTHS) {
   await page.keyboard.press('Escape')
   check(!(await page.isVisible('dialog[open]')), 'confirm: Escape does not close the delete window')
 
+  // Forms: pressing the button with a required field empty shows an Italian message under the field,
+  // marks it aria-invalid, moves the focus to it and does not rely on the browser's own check.
+  const emptyForm = async (target, label, path, prep) => {
+    await target.goto(origin + path)
+    await target.waitForLoadState('networkidle').catch(() => {})
+    await target.waitForTimeout(300)
+    if (prep) await prep(target)
+    // The first visible form that has a required field with nothing in it.
+    await target.evaluate(() => {
+      for (const f of document.querySelectorAll('form')) {
+        const r = f.getBoundingClientRect()
+        const empty = [...f.querySelectorAll('[required]')].some((el) => !String(el.value ?? '').trim())
+        if (empty && r.width > 0 && r.height > 0) { f.setAttribute('data-ui-empty', ''); break }
+      }
+    })
+    const form = target.locator('form[data-ui-empty]').first()
+    if (!(await form.count())) { problems.push(`forms: ${label}: no form with a required field found`); return }
+    check(await form.evaluate((f) => f.noValidate), `forms: ${label}: the browser check is not turned off (noValidate)`)
+    const submitButton = form.locator('button[type=submit]:visible').first()
+    if (await submitButton.isDisabled()) { problems.push(`forms: ${label}: the submit button is disabled while a required field is empty, so no message can show`); return }
+    await submitButton.click()
+    await target.waitForTimeout(200)
+    mkdirSync(join(out, 'forms'), { recursive: true })
+    await target.screenshot({ path: join(out, 'forms', `${label.replace(/ /g, '-')}.png`) })
+    const shown = await target.evaluate(() => {
+      const bad = document.querySelector('[aria-invalid=true]')
+      const message = bad ? document.getElementById((bad.getAttribute('aria-describedby') || '').split(' ').find((x) => x.startsWith('fe-')) || '') : null
+      return { bad: Boolean(bad), text: message?.textContent?.trim() ?? '', focused: Boolean(bad) && document.activeElement === bad }
+    })
+    check(shown.bad, `forms: ${label}: no field is marked aria-invalid after an empty submit`)
+    check(/\S/.test(shown.text) && !/^check\./.test(shown.text), `forms: ${label}: no message under the field`)
+    check(shown.focused, `forms: ${label}: the focus did not move to the first field with a problem`)
+  }
+  await emptyForm(page, 'event form', '/events/new')
+  await emptyForm(page, 'rink form', '/settings/rinks')
+  await emptyForm(page, 'announcement form', '/announcements', async (pg) => { const b = pg.locator('main button:has-text("Nuovo avviso")'); if (await b.count()) await b.first().click() })
+  await emptyForm(page, 'drill form', '/drills', async (pg) => { const b = pg.locator('main button:has-text("Nuovo esercizio")'); if (await b.count()) await b.first().click() })
+  await emptyForm(page, 'profile form', '/profile/info', async (pg) => { await pg.locator('form input[autocomplete="given-name"]').fill('') })
+  await emptyForm(page, 'absence form', '/profile/absences', async (pg) => { await pg.locator('main input[type=date]').first().fill('') })
+  await emptyForm(page, 'group settings', '/settings/groups', async (pg) => { const b = pg.locator('main button:has-text("Aggiungi gruppo")'); if (await b.count()) await b.first().click() })
+  await emptyForm(page, 'club settings', '/settings/club', async (pg) => { await pg.locator('form input[required]').first().fill('') })
+  const anon = await browser.newContext({ viewport: { width: 375, height: 812 }, ...contextOptions })
+  await anon.route(`${API}/**`, answer)
+  const guest = await anon.newPage()
+  await emptyForm(guest, 'login form', '/login')
+  await emptyForm(guest, 'forgot password form', '/forgot-password')
+  await emptyForm(guest, 'join form', '/join/sample-invite')
+  await guest.goto(origin + '/login')
+  await guest.fill('input[type=email]', 'persona@example.org')
+  await guest.fill('input[type=password]', 'corta')
+  // Login does not check the length, so the sign up form is the one with the 8 character rule.
+  await emptyForm(guest, 'reset password form', '/reset-password')
+  await anon.close()
+
   report.push({ width: 1280, name: 'interactions', path: '-', kind: 'auth', problems, errors: [] })
   await context.close()
 }

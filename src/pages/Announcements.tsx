@@ -4,6 +4,7 @@ import ConfirmAction from '../components/ConfirmAction'
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import PageHeader from '../components/PageHeader'
 import { errorText, t } from '../i18n'
+import { checked } from '../lib/formcheck'
 import { useSession } from '../lib/session'
 import { supabase } from '../lib/supabase'
 import { formatDay, formatTime } from '../lib/time'
@@ -87,7 +88,7 @@ export default function Announcements() {
     <div className="page narrow two-col">
       <PageHeader title={t('ann.title')} back={{ to: '/events', label: t('nav.events') }} description={t('ann.intro')} />
       {isStaff && (
-        <form onSubmit={post} aria-label={t('ann.new')}>
+        <form {...checked(post)} aria-label={t('ann.new')}>
           <h2>{t('ann.new')}</h2>
           <label>
             {t('ann.fieldTitle')}

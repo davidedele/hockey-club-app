@@ -918,5 +918,19 @@
   "docs.consentWithdrawTitle": "Withdraw your consent to the privacy notice?",
   "docs.consentWithdrawBody": "You can give your consent again at any time from this page.",
   "profile.photoRemoveTitle": "Remove your profile photo?",
-  "profile.photoRemoveBody": "The photo is deleted. You can add another one at any time."
+  "profile.photoRemoveBody": "The photo is deleted. You can add another one at any time.",
+  "check.required": "Fill in this field.",
+  "check.requiredDate": "Enter the date.",
+  "check.requiredTime": "Enter the time.",
+  "check.requiredEmail": "Enter the email address.",
+  "check.requiredPassword": "Enter the password.",
+  "check.requiredNumber": "Enter a number.",
+  "check.requiredChoice": "Choose a value.",
+  "check.requiredFile": "Choose a file.",
+  "check.requiredCheck": "To continue, tick this box.",
+  "check.badEmail": "Check the email address: it looks incomplete.",
+  "check.passwordShort": "The password must have at least {n} characters.",
+  "check.tooShort": "Write at least {n} characters.",
+  "check.tooLong": "Write at most {n} characters.",
+  "check.outOfRange": "This value is not allowed."
 }

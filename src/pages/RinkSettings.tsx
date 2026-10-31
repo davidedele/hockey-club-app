@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import PageHeader from '../components/PageHeader'
 import { Navigate } from 'react-router-dom'
 import { errorText, t } from '../i18n'
+import { checked } from '../lib/formcheck'
 import { centsToEuro, euroToCents } from '../lib/ice'
 import { useSession } from '../lib/session'
 import { supabase } from '../lib/supabase'
@@ -52,7 +53,7 @@ export default function RinkSettings() {
         </ul>
       )}
       <h2>{t('rinks.add')}</h2>
-      <form onSubmit={add}>
+      <form {...checked(add)}>
         <label>{t('rinks.name')}
           <input required maxLength={40} value={newName} onChange={(e) => setNewName(e.target.value)} />
         </label>
@@ -106,7 +107,7 @@ function RinkRow({ rink, price, onChange }: { rink: Rink; price: number | null; 
 
   return (
     <li>
-      <form onSubmit={save}>
+      <form {...checked(save)}>
         <label>{t('rinks.name')}
           <input required maxLength={40} value={name} onChange={(e) => setName(e.target.value)} />
         </label>

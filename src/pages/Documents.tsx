@@ -4,6 +4,7 @@ import ConfirmAction from '../components/ConfirmAction'
 import { Navigate, useParams } from 'react-router-dom'
 import PageHeader from '../components/PageHeader'
 import { errorText, t } from '../i18n'
+import { checked } from '../lib/formcheck'
 import { useClub } from '../lib/club'
 import { certificateState, consentState, shrinkDocument, today, type Level } from '../lib/documents'
 import { findExpiry } from '../lib/expiry'
@@ -197,7 +198,7 @@ export default function Documents() {
       <section className="doc-card" aria-labelledby="cert-title">
         <h2 id="cert-title">{t('docs.cert')}</h2>
         {loaded && <Status level={certNow.level} text={certNow.text} />}
-        <form onSubmit={saveDate}>
+        <form {...checked(saveDate)}>
           <label>
             {t('docs.certDate')}
             <input type="date" required value={date} onChange={(e) => { typed.current = true; setDate(e.target.value) }} />

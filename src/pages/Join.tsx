@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { errorText, t } from '../i18n'
+import { checked } from '../lib/formcheck'
 import { nameHasDigits, tidyName } from '../lib/names'
 import { clearPendingInvite, savePendingInvite } from '../lib/invite'
 import { useSession } from '../lib/session'
@@ -136,7 +137,7 @@ export default function Join() {
       <Brand />
       <h1>{t('join.title')}</h1>
       <p>{t('join.intro')}</p>
-      <form onSubmit={submit}>
+      <form {...checked(submit)}>
         <label>
           {t('common.firstName')}
           <input required autoComplete="given-name" autoCapitalize="words" value={firstName} onChange={(e) => setFirstName(e.target.value)} onBlur={() => { setFirstName(tidyName(firstName)); if (nameHasDigits(firstName)) setError(t('error.name_digits')) }} />

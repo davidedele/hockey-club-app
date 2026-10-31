@@ -3,6 +3,7 @@ import { useEffect, useState, type FormEvent } from 'react'
 import PageHeader from '../components/PageHeader'
 import { Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { errorText, t } from '../i18n'
+import { checked } from '../lib/formcheck'
 import { jerseyName, useClub } from '../lib/club'
 import { useGroupFilter } from '../lib/groupfilter'
 import { useSession } from '../lib/session'
@@ -194,7 +195,7 @@ export default function EventForm() {
   return (
     <div className="page narrow">
       <PageHeader title={editing ? t('form.editTitle') : t('form.newTitle')} back={editing ? { to: `/events/${id}`, label: t('event.backToEvent') } : { to: '/events', label: t('nav.events') }} />
-      <form onSubmit={submit}>
+      <form {...checked(submit)}>
         {!editing && (
           <div className="field">
             <span className="label">{t('form.type')}</span>

@@ -918,5 +918,19 @@
   "docs.consentWithdrawTitle": "Ritirare il consenso all’informativa privacy?",
   "docs.consentWithdrawBody": "Potrai dare di nuovo il consenso in qualsiasi momento da questa pagina.",
   "profile.photoRemoveTitle": "Togliere la foto del profilo?",
-  "profile.photoRemoveBody": "La foto viene cancellata. Potrai aggiungerne un’altra in qualsiasi momento."
+  "profile.photoRemoveBody": "La foto viene cancellata. Potrai aggiungerne un’altra in qualsiasi momento.",
+  "check.required": "Compila questo campo.",
+  "check.requiredDate": "Inserisci la data.",
+  "check.requiredTime": "Inserisci l'ora.",
+  "check.requiredEmail": "Inserisci l'indirizzo email.",
+  "check.requiredPassword": "Inserisci la password.",
+  "check.requiredNumber": "Inserisci un numero.",
+  "check.requiredChoice": "Scegli un valore.",
+  "check.requiredFile": "Scegli un file.",
+  "check.requiredCheck": "Per continuare devi selezionare questa casella.",
+  "check.badEmail": "Controlla l'indirizzo email: sembra incompleto.",
+  "check.passwordShort": "La password deve avere almeno {n} caratteri.",
+  "check.tooShort": "Scrivi almeno {n} caratteri.",
+  "check.tooLong": "Scrivi al massimo {n} caratteri.",
+  "check.outOfRange": "Il valore non è consentito."
 }

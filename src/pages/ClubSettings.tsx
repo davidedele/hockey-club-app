@@ -4,6 +4,7 @@ import { Navigate } from 'react-router-dom'
 import PageHeader from '../components/PageHeader'
 import Crest from '../components/Crest'
 import { errorText, t } from '../i18n'
+import { checked } from '../lib/formcheck'
 import { useClub } from '../lib/club'
 import { useSession } from '../lib/session'
 import { supabase } from '../lib/supabase'
@@ -163,7 +164,7 @@ export default function ClubSettings() {
               <p className="hint">{t('club.logoHint')}</p>
             </div>
           </div>
-          <form onSubmit={(e) => void save(e, 'identity')}>
+          <form {...checked((e) => void save(e, 'identity'))}>
             <label>{t('club.name')}
               <input required maxLength={60} value={name} onChange={(e) => setName(e.target.value)} />
             </label>
@@ -178,7 +179,7 @@ export default function ClubSettings() {
           <h2 id="club-colours">{t('club.groupColours')}</h2>
           <p className="hint">{t('club.coloursHint')}</p>
         </div>
-        <form className="set-body" onSubmit={(e) => void save(e, 'colours')}>
+        <form className="set-body" {...checked((e) => void save(e, 'colours'))}>
           <h3>{t('club.colours')}</h3>
           <div className="colours">
             <label>{t('club.dark')}

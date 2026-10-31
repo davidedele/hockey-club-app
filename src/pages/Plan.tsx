@@ -2,6 +2,7 @@ import { PageSkeleton } from '../components/Skeleton'
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import { Link, Navigate, useParams } from 'react-router-dom'
 import { errorText, t } from '../i18n'
+import { checked } from '../lib/formcheck'
 import { useSession } from '../lib/session'
 import { supabase } from '../lib/supabase'
 import { formatDay, formatTime } from '../lib/time'
@@ -136,7 +137,7 @@ export default function Plan({ embedded = false }: { embedded?: boolean }) {
 
       {isStaff ? (
         <>
-          <form onSubmit={saveNotes}>
+          <form {...checked(saveNotes)}>
             <label>
               {t('plan.notes')}
               <textarea value={notes} maxLength={2000} rows={4} onChange={(e) => { setNotes(e.target.value); setSaved(false) }} />

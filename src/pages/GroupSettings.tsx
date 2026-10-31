@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState, type ChangeEvent, type FormEvent } fr
 import PageHeader from '../components/PageHeader'
 import { Navigate } from 'react-router-dom'
 import { errorText, t } from '../i18n'
+import { checked } from '../lib/formcheck'
 import GroupBadge from '../components/GroupBadge'
 import { useClub } from '../lib/club'
 import { useSession } from '../lib/session'
@@ -77,7 +78,7 @@ export default function GroupSettings() {
 
       {!adding && <p><button className="secondary" onClick={() => setAdding(true)}>{t('groups.add')}</button></p>}
       {adding && <h2>{t('groups.addTitle')}</h2>}
-      {adding && <form onSubmit={add} className="add-group">
+      {adding && <form {...checked(add)} className="add-group">
         <label>{t('groups.name')}
           <input required maxLength={40} value={newName} onChange={(e) => setNewName(e.target.value)} />
         </label>
@@ -186,7 +187,7 @@ function GroupEditor({ group, count, league, onDone, onChange }: { group: Group;
 
   return (
     <div className="group-edit">
-      <form onSubmit={save}>
+      <form {...checked(save)}>
         <label>{t('groups.name')}
           <input required maxLength={40} value={name} onChange={(e) => setName(e.target.value)} />
         </label>

@@ -24,7 +24,8 @@ Read this file, and the open items of `docs/UI_BACKLOG.md`, before touching a pa
 5. Destructive actions, and actions that tell other people (cancelling an event), ask for confirmation naming the thing, in the same window (`ConfirmDialog` in `src/components/ConfirmAction.tsx`): Annulla has the focus, Escape closes it and does nothing, no choice is inline in the page. Print and export open a window first.
 6. A menu (for example the event actions) closes as soon as one of its actions is chosen.
 7. Removing something (an invite, a logo, a file, a photo, a consent) goes through `ConfirmAction`: the window names the thing, the action is red and Annulla has the focus.
-8. On phones the tab bar has at most five places. Pages that do not fit (the drill library) are in the computer sidebar and reachable from where they are used.
+8. Form errors are written by the app, not by the browser. Every form is built with `checked(handler)` from `src/lib/formcheck.ts`: the browser check is turned off (`noValidate`), the app checks required fields and the `minLength`, `maxLength`, email and number range rules when the button is pressed, writes an Italian message under each field with a problem, sets `aria-invalid` and `aria-describedby` on it and moves the focus to the first one. The message disappears as soon as the field is edited. A submit button is never disabled just because a field is empty, because then no message can show. The browser's own bubbles are not used, because iPhone Safari blocks the submit without showing them. `scripts/ui-check.mjs` submits every form empty and expects the message.
+9. On phones the tab bar has at most five places. Pages that do not fit (the drill library) are in the computer sidebar and reachable from where they are used.
 
 ## 3. Text
 

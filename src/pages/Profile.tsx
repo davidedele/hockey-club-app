@@ -1,6 +1,7 @@
 import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react'
 import ConfirmAction from '../components/ConfirmAction'
 import { errorText, t, type MessageKey } from '../i18n'
+import { checked } from '../lib/formcheck'
 import Avatar from '../components/Avatar'
 import PageHeader from '../components/PageHeader'
 import SectionShell from '../components/SectionShell'
@@ -194,7 +195,7 @@ export function ProfileInfo() {
           {photoError && <p className="error" role="alert">{photoError}</p>}
         </div>
       </div>
-      <form className="form-col" onSubmit={save}>
+      <form className="form-col" {...checked(save)}>
         <div className="colours">
           <label>{t('common.firstName')}
             <input required autoComplete="given-name" autoCapitalize="words" value={firstName} aria-invalid={Boolean(nameError)} onChange={(e) => { setFirstName(e.target.value); setNameError('') }} onBlur={() => { setFirstName(tidyName(firstName)); checkNames() }} />
