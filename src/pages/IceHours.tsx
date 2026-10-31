@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import PageHeader from '../components/PageHeader'
 import { Link, Navigate } from 'react-router-dom'
 import { errorText, locale, t } from '../i18n'
 import { NO_RINK, cost, iceCsv, iceMonths, sumOf, totals, type IceEvent } from '../lib/ice'
@@ -119,10 +120,8 @@ export default function IceHours() {
   }
 
   return (
-    <div className="page wide">
-      <p><Link to="/settings">{t('settings.title')}</Link></p>
-      <h1>{t('ice.title')}</h1>
-      <p className="hint">{t('ice.intro')}</p>
+    <div className="section">
+      <PageHeader title={t('ice.title')} back={{ to: '/settings', label: t('settings.title') }} description={t('ice.intro')} crumb={t('settings.ice')} />
       <div className="stats-filters">
         <div className="chips" role="group" aria-label={t('ice.season')}>
           {seasons.map((s) => (

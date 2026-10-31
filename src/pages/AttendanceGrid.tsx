@@ -41,7 +41,7 @@ function shiftMonth(month: string, by: number) {
 export default function AttendanceGrid({ embedded = false }: { embedded?: boolean }) {
   const { isStaff } = useSession()
   const [groups, setGroups] = useState<Group[]>([])
-  const { groupId: chosen, setGroupId } = useGroupFilter()
+  const { groupId: chosen } = useGroupFilter()
   // The grid is for one group: the one chosen in the switcher, or the first.
   const groupId = chosen ?? groups[0]?.id ?? null
   const [month, setMonth] = useState(() => monthOf(new Date().toISOString()))
@@ -103,12 +103,7 @@ export default function AttendanceGrid({ embedded = false }: { embedded?: boolea
 
   return (
     <div className={embedded ? undefined : 'page wide'}>
-      <p className="hint">{t('grid.intro')}</p>
-      <div className="chips">
-        {groups.map((g) => (
-          <button key={g.id} className={groupId === g.id ? 'chip on' : 'chip'} aria-pressed={groupId === g.id} onClick={() => setGroupId(g.id)}>{g.name}</button>
-        ))}
-      </div>
+      <p className="hint tab-intro">{t('grid.intro')} {t('att.groupNote', { group: groups.find((g) => g.id === groupId)?.name ?? '' })}</p>
       <div className="monthbar">
         <button className="chip" onClick={() => setMonth(shiftMonth(month, -1))}>{t('grid.prev')}</button>
         <strong aria-live="polite">{formatMonth(monthStart)}</strong>

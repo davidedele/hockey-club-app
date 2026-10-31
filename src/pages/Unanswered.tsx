@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link, Navigate } from 'react-router-dom'
+import { Navigate } from 'react-router-dom'
 import { errorText, t } from '../i18n'
 import { useSession } from '../lib/session'
 import { supabase } from '../lib/supabase'
@@ -8,7 +8,7 @@ import type { UnansweredRow } from '../lib/types'
 
 const WINDOWS = [3, 7, 14]
 
-// A quick list for coaches: who still has to answer, with the contacts to reach them.
+// A tab of the attendance page for coaches: who still has to answer, with the contacts to reach them.
 export default function Unanswered() {
   const { isStaff } = useSession()
   const [days, setDays] = useState(7)
@@ -30,11 +30,9 @@ export default function Unanswered() {
   if (!isStaff) return <Navigate to="/events" replace />
 
   return (
-    <div className="page">
-      <p><Link to="/events">{t('event.back')}</Link></p>
-      <h1>{t('unanswered.title')}</h1>
-      <p className="hint">{t('unanswered.intro')}</p>
-      <div className="chips">
+    <>
+      <p className="hint tab-intro">{t('unanswered.intro')}</p>
+      <div className="chips" role="group" aria-label={t('unanswered.window')}>
         {WINDOWS.map((n) => (
           <button key={n} className={days === n ? 'chip on' : 'chip'} aria-pressed={days === n} onClick={() => setDays(n)}>
             {t('unanswered.days', { n: String(n) })}
@@ -57,6 +55,6 @@ export default function Unanswered() {
           </li>
         ))}
       </ul>
-    </div>
+    </>
   )
 }

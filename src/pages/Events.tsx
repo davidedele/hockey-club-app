@@ -34,6 +34,7 @@ export default function Events() {
   const [weekShift, setWeekShift] = useState(0)
   const [picked, setPicked] = useState<string | null>(null)
   const [extra, setExtra] = useState(0)
+  const [todoExtra, setTodoExtra] = useState(0)
   const [loaded, setLoaded] = useState(false)
   const [records, setRecords] = useState<Map<string, string>>(new Map())
   const [memberCount, setMemberCount] = useState<number | null>(null)
@@ -124,7 +125,10 @@ export default function Events() {
   // The phone home shows one week at a time: this week by default, other weeks with the arrows.
   const inWeek = (e: EventRow) => { const k = dayKey(e.starts_at); return k >= week[0].date && k <= week[6].date }
   const next = view === 'upcoming' && weekShift === 0 ? live[0] : undefined
-  const todo = live.slice(1).filter((e) => e.event_groups.some((x) => myGroups.includes(x.group_id)) && !answers.has(e.id) && records.get(e.id) !== 'not_called_up').slice(0, 5)
+  // Every coming event still waiting for the person's answer. The panel shows five at a time, and its
+  // heading counts all of them, so answering one makes the number go down.
+  const pending = live.slice(1).filter((e) => e.event_groups.some((x) => myGroups.includes(x.group_id)) && !answers.has(e.id) && records.get(e.id) !== 'not_called_up')
+  const todo = pending.slice(0, 5 + todoExtra)
   const weekRest = upcoming.filter((e) => e !== next && inWeek(e))
   // This week in full; when it has fewer than 5 events, the next ones fill it up to 5. "Show more" adds 5 at a time.
   const PHONE_MIN = 5
@@ -270,8 +274,9 @@ export default function Events() {
         {next && <NextPanel club={club.name || t('app.name')} colours={teamColours(next)} event={next} groups={groupsOf(next)} mine={answers.get(next.id) ?? null} count={counts.get(next.id)} canAnswer={canAnswer(next)} busy={busy === next.id} onAnswer={(v) => void answer(next, v)} />}
         {view === 'upcoming' && (
           <section className="todo desk-only" aria-label={t('dash.todo')}>
-            <h2>{t('dash.todo')}{todo.length > 0 ? ` (${todo.length})` : ''}</h2>
-            {todo.length === 0 ? <p className="hint">{t('dash.allDone')}</p> : <ul className="evrows">{todo.map(row)}</ul>}
+            <h2>{t('dash.todo')}{pending.length > 0 && <span className="count">{pending.length}</span>}</h2>
+            {pending.length === 0 ? <p className="hint">{t('dash.allDone')}</p> : <ul className="evrows">{todo.map(row)}</ul>}
+            {pending.length > todo.length && <button className="link" onClick={() => setTodoExtra(todoExtra + 5)}>{t('dash.todoMore', { n: String(Math.min(5, pending.length - todo.length)) })}</button>}
           </section>
         )}
         {loaded && view === 'upcoming' && upcoming.length > 0 && !next && rest.length === 0 && (
@@ -317,12 +322,10 @@ export default function Events() {
         />
       )}
 
-      <div className="more">
+      <div className="more phone-only">
         <button className="link phone-only" onClick={() => setView(view === 'upcoming' ? 'past' : 'upcoming')}>
           {t(view === 'upcoming' ? 'events.showPast' : 'events.showUpcoming')}
         </button>
-        {isStaff && <Link to="/events/unanswered">{t('events.unanswered')}</Link>}
-        {isStaff && <Link to="/drills">{t('drills.title')}</Link>}
       </div>
       </>)}
     </div>

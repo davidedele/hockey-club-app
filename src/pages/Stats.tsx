@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, type CSSProperties } from 'react'
+import PageHeader from '../components/PageHeader'
 import { Link, useSearchParams } from 'react-router-dom'
 import { errorText, locale, t } from '../i18n'
 import Avatar from '../components/Avatar'
@@ -87,7 +88,7 @@ export default function Stats() {
 
   return (
     <div className="page wide">
-      <h1>{t('stats.title')}</h1>
+      <PageHeader title={t('stats.title')} />
       <SeasonTabs />
       <p className="hint">{t('stats.intro')}</p>
       <div className="stats-filters">

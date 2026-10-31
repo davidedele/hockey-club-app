@@ -12,7 +12,7 @@ insert into auth.users (id, email, email_confirmed_at)
   select ('00000000-0000-0000-0000-' || lpad(n::text, 12, '0'))::uuid, 'p' || n || '@example.test', now()
   from generate_series(1, 8) n;
 insert into public.profiles (id, first_name, last_name)
-  select ('00000000-0000-0000-0000-' || lpad(n::text, 12, '0'))::uuid, 'Pia' || n, 'Rossi'
+  select ('00000000-0000-0000-0000-' || lpad(n::text, 12, '0'))::uuid, 'Pia' || chr(64 + n), 'Rossi'
   from generate_series(1, 8) n;
 insert into public.profile_contacts (user_id, email)
   select ('00000000-0000-0000-0000-' || lpad(n::text, 12, '0'))::uuid, 'p' || n || '@example.test'

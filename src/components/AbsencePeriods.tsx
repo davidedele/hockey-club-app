@@ -11,7 +11,7 @@ export const absenceRange = (p: { starts_on: string; ends_on: string }) =>
 
 // Planned absences of one person, with a form to add one. Used on the own profile and by staff on a member's page.
 // name is given when staff look at someone else.
-export default function AbsencePeriods({ userId, name }: { userId: string; name?: string }) {
+export default function AbsencePeriods({ userId, name, heading = true }: { userId: string; name?: string; heading?: boolean }) {
   const today = dayKey(new Date().toISOString())
   const [periods, setPeriods] = useState<AbsencePeriod[]>([])
   const [from, setFrom] = useState(today)
@@ -54,8 +54,8 @@ export default function AbsencePeriods({ userId, name }: { userId: string; name?
   }
 
   return (
-    <section aria-labelledby="absences-title">
-      <h2 id="absences-title">{t('absence.title')}</h2>
+    <section aria-labelledby={heading ? 'absences-title' : undefined} aria-label={heading ? undefined : t('absence.title')}>
+      {heading && <h2 id="absences-title">{t('absence.title')}</h2>}
       <p className="hint">{name ? t('absence.introStaff', { name }) : t('absence.intro')}</p>
       {periods.length === 0 ? (
         <p className="hint">{t('absence.none')}</p>

@@ -5,7 +5,7 @@ import { supabase } from '../lib/supabase'
 const base = `${(import.meta.env.VITE_SUPABASE_URL as string | undefined) ?? ''}/functions/v1/calendar-feed`
 
 // The person's private calendar link. The link is made on first use and shown only on request.
-export default function CalendarFeed() {
+export default function CalendarFeed({ heading = true }: { heading?: boolean }) {
   const [token, setToken] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
@@ -36,8 +36,8 @@ export default function CalendarFeed() {
   }
 
   return (
-    <section aria-labelledby="calendar-title">
-      <h2 id="calendar-title">{t('calendar.title')}</h2>
+    <section aria-labelledby={heading ? 'calendar-title' : undefined} aria-label={heading ? undefined : t('calendar.title')}>
+      {heading && <h2 id="calendar-title">{t('calendar.title')}</h2>}
       <p className="hint">{t('calendar.intro')}</p>
       {!token && <button type="button" className="secondary small" disabled={busy} onClick={() => void load(false)}>{t('calendar.show')}</button>}
       {token && (

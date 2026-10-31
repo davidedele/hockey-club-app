@@ -94,10 +94,17 @@ export default function AttendanceSummary() {
   }
 
   const groupCount = (g: Group) => COLUMNS.filter((c) => c.group === g).length
+  const middle = COLUMNS.filter((c) => c.group !== 'calls' && c.group !== 'percent')
+  // Each colour group starts with a dividing line, and its total is bold, so the eye finds the blocks.
+  const cellClass = (c: Column, i: number) => [
+    `g-${c.group}`,
+    i === 0 || middle[i - 1].group !== c.group ? 'g-start' : '',
+    c.key.endsWith('_total') ? 'g-total' : '',
+  ].filter(Boolean).join(' ')
 
   return (
     <>
-      <p className="hint">{t('summary.intro')} {t('att.groupNote', { group: groupName })}</p>
+      <p className="hint tab-intro">{t('summary.intro')} {t('att.groupNote', { group: groupName })}</p>
       <div className="att-filters">
         <label className="cal-field"><span>{t('att.period')}</span>
           <select value={period === 'last30' ? 'last30' : String(season)} onChange={(e) => { if (e.target.value === 'last30') setPeriod('last30'); else { setPeriod('season'); setSeason(Number(e.target.value)) } }}>
@@ -141,12 +148,12 @@ export default function AttendanceSummary() {
                     <button className="sort" onClick={() => { sort.toggle('name'); setPage(1) }} aria-label={`${t('table.sortBy')} ${t('summary.player')}`}>{t('summary.player')}{sort.key === 'name' ? (sort.dir === 'asc' ? ' ▲' : ' ▼') : ''}</button>
                   </th>
                   <SortHeader label={t('att.calls')} rowSpan={2} className="g-calls" active={sort.key === 'events_total'} dir={sort.dir} onSort={() => { sort.toggle('events_total'); setPage(1) }} />
-                  {GROUPS.map((g) => <th key={g.key} scope="colgroup" colSpan={groupCount(g.key)} className={`g-${g.key}`}>{t(g.label)}</th>)}
+                  {GROUPS.map((g) => <th key={g.key} scope="colgroup" colSpan={groupCount(g.key)} className={`g-${g.key} g-start g-head`}>{t(g.label)}</th>)}
                   <SortHeader label={t('att.percent')} rowSpan={2} className="g-percent" active={sort.key === 'percent'} dir={sort.dir} onSort={() => { sort.toggle('percent'); setPage(1) }} />
                 </tr>
                 <tr>
-                  {COLUMNS.filter((c) => c.group !== 'calls' && c.group !== 'percent').map((c, i) => (
-                    <SortHeader key={`${c.key}${i}`} label={t(c.label)} active={sort.key === c.key} dir={sort.dir} onSort={() => { sort.toggle(c.key); setPage(1) }} className={`g-${c.group}`} />
+                  {middle.map((c, i) => (
+                    <SortHeader key={`${c.key}${i}`} label={t(c.label)} active={sort.key === c.key} dir={sort.dir} onSort={() => { sort.toggle(c.key); setPage(1) }} className={cellClass(c, i)} />
                   ))}
                 </tr>
               </thead>
@@ -155,11 +162,11 @@ export default function AttendanceSummary() {
                   <tr key={r.user_id}>
                     <th scope="row" className="att-name">{r.last_name} {r.first_name}</th>
                     <td className="g-calls">{Number(r.events_total) - Number(r.not_called_up)}</td>
-                    {COLUMNS.filter((c) => c.group !== 'calls' && c.group !== 'percent').map((c) => {
+                    {middle.map((c, i) => {
                       const v = c.get(r)
-                      return <td key={c.key + c.group} className={`g-${c.group}${v === 0 ? ' zero' : ''}`}>{v === 0 ? '-' : v}</td>
+                      return <td key={c.key + c.group} className={`${cellClass(c, i)}${v === 0 ? ' zero' : ''}`}>{v === 0 ? '\u2013' : v}</td>
                     })}
-                    <td className="g-percent">{percent(r) === null ? '' : `${percent(r)}%`}</td>
+                    <td className="g-percent g-start">{percent(r) === null ? '\u2013' : `${percent(r)}%`}</td>
                   </tr>
                 ))}
                 {shown.length === 0 && <tr><td colSpan={COLUMNS.length + 1} className="hint">{t('cal.none')}</td></tr>}

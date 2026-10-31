@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import PageHeader from '../components/PageHeader'
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom'
 import { errorText, t } from '../i18n'
 import { useSession } from '../lib/session'
@@ -93,8 +94,7 @@ export default function MemberEdit() {
 
   return (
     <div className="page">
-      <p><Link to="/">{t('nav.members')}</Link></p>
-      <h1>{name}</h1>
+      <PageHeader title={name} back={{ to: '/', label: t('nav.members') }} />
       {error && <p className="error" role="alert">{error}</p>}
 
       <h2>{t('member.groups')}</h2>

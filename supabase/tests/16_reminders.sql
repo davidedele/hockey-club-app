@@ -4,7 +4,7 @@ begin;
 insert into auth.users (id, email, email_confirmed_at)
   select ('00000000-0000-0000-0000-00000000000' || n)::uuid, 'p' || n || '@example.test', now() from generate_series(1, 6) n;
 insert into public.profiles (id, first_name, last_name)
-  select ('00000000-0000-0000-0000-00000000000' || n)::uuid, 'Nome' || n, 'Cognome' || n from generate_series(1, 5) n;
+  select ('00000000-0000-0000-0000-00000000000' || n)::uuid, 'Nome' || chr(64 + n), 'Cognome' || chr(64 + n) from generate_series(1, 5) n;
 insert into public.profile_contacts (user_id, email)
   select ('00000000-0000-0000-0000-00000000000' || n)::uuid, 'p' || n || '@example.test' from generate_series(1, 5) n;
 insert into public.group_members (group_id, user_id)
@@ -47,7 +47,7 @@ select test.rows('six reminders are due at noon', $$select 1 from public.reminde
 select test.rows('p1 waits for two events', $$select 1 from public.reminders_due((select t from base)) where user_id = pg_temp.u('1')$$, 2);
 select test.rows('an event less than a day away is a last reminder', $$select 1 from public.reminders_due((select t from base)) where user_id = pg_temp.u('1') and title = 'e2' and kind = 'last'$$, 1);
 select test.rows('an event two days away is a first reminder', $$select 1 from public.reminders_due((select t from base)) where user_id = pg_temp.u('1') and title = 'e1' and kind = 'first'$$, 1);
-select test.rows('the email is returned for sending', $$select 1 from public.reminders_due((select t from base)) where user_id = pg_temp.u('1') and email = 'p1@example.test' and first_name = 'Nome1'$$, 2);
+select test.rows('the email is returned for sending', $$select 1 from public.reminders_due((select t from base)) where user_id = pg_temp.u('1') and email = 'p1@example.test' and first_name = 'NomeA'$$, 2);
 select test.rows('a person of B gets only the event of B', $$select 1 from public.reminders_due((select t from base)) where user_id = pg_temp.u('3') and title = 'e3'$$, 1);
 select test.rows('nobody gets an event of another group', $$select 1 from public.reminders_due((select t from base)) where user_id = pg_temp.u('3') and title <> 'e3'$$, 0);
 select test.rows('someone who answered is not asked again for that event', $$select 1 from public.reminders_due((select t from base)) where user_id = pg_temp.u('4') and title = 'e1'$$, 0);

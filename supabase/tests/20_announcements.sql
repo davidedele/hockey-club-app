@@ -8,7 +8,7 @@ insert into auth.users (id, email, email_confirmed_at) values
   ('00000000-0000-0000-0000-0000000000c1', 'coach1@example.test', now()),
   ('00000000-0000-0000-0000-0000000000c2', 'coach2@example.test', now());
 insert into public.profiles (id, first_name, last_name)
-  select ('00000000-0000-0000-0000-00000000000' || n)::uuid, 'Nome' || n, 'Cognome' || n from generate_series(1, 5) n;
+  select ('00000000-0000-0000-0000-00000000000' || n)::uuid, 'Nome' || chr(64 + n), 'Cognome' || chr(64 + n) from generate_series(1, 5) n;
 insert into public.profiles (id, first_name, last_name) values
   ('00000000-0000-0000-0000-0000000000b1', 'Bea', 'Board'),
   ('00000000-0000-0000-0000-0000000000c1', 'Cora', 'Coach'),
@@ -125,7 +125,7 @@ select test.rows('but gets the board one', $$select 1 from public.announcements_
 select test.rows('someone who switched emails off gets nothing', $$select 1 from public.announcements_due((select t from base)) where user_id = pg_temp.u('4')$$, 0);
 select test.rows('a member of B gets only the one for B', $$select 1 from public.announcements_due((select t from base)) where user_id = pg_temp.u('3')$$, 1);
 select test.rows('a coach outside the groups gets nothing', $$select 1 from public.announcements_due((select t from base)) where user_id = pg_temp.u('c2')$$, 0);
-select test.rows('the email and names are returned for sending', $$select 1 from public.announcements_due((select t from base)) where user_id = pg_temp.u('1') and email like '%@example.test' and first_name = 'Nome1' and author_name = 'Cora Coach' and group_names is not null and title = 'Cambio orario'$$, 1);
+select test.rows('the email and names are returned for sending', $$select 1 from public.announcements_due((select t from base)) where user_id = pg_temp.u('1') and email like '%@example.test' and first_name = 'NomeA' and author_name = 'Cora Coach' and group_names is not null and title = 'Cambio orario'$$, 1);
 select test.rows('nothing at 03:00', $$select 1 from public.announcements_due((select t from base) - interval '9 hours')$$, 0);
 select test.rows('nothing at 22:00', $$select 1 from public.announcements_due((select t from base) + interval '10 hours')$$, 0);
 select test.works('the server marks one as sent', $$select public.announcements_mark_sent(pg_temp.u('1'), array[(select id from ids where name = 'a1')])$$);

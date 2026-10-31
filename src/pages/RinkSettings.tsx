@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
-import { Link, Navigate } from 'react-router-dom'
+import PageHeader from '../components/PageHeader'
+import { Navigate } from 'react-router-dom'
 import { errorText, t } from '../i18n'
 import { centsToEuro, euroToCents } from '../lib/ice'
 import { useSession } from '../lib/session'
@@ -41,10 +42,8 @@ export default function RinkSettings() {
   }
 
   return (
-    <div className="page narrow">
-      <p><Link to="/settings">{t('settings.title')}</Link></p>
-      <h1>{t('settings.rinks')}</h1>
-      <p className="hint">{t('rinks.intro')}</p>
+    <div className="section">
+      <PageHeader title={t('settings.rinks')} back={{ to: '/settings', label: t('settings.title') }} description={t('rinks.intro')} />
       {error && <p className="error" role="alert">{error}</p>}
       {loaded && rinks.length === 0 && <p className="hint">{t('rinks.empty')}</p>}
       {rinks.length > 0 && (

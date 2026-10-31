@@ -174,7 +174,7 @@ export default function Plan({ embedded = false }: { embedded?: boolean }) {
               {drill?.notes && <p className="ann-body">{drill.notes}</p>}
               <div className="actions">
                 {link && <a href={link} target="_blank" rel="noopener noreferrer">{t('drills.open')}</a>}
-                {drill?.video_url && <a href={drill.video_url} target="_blank" rel="noopener noreferrer">{t('drills.watch')}</a>}
+                {drill?.video_url && <a className="inline-action" href={drill.video_url} target="_blank" rel="noopener noreferrer">{t('drills.watch')}</a>}
                 {!isStaff && r.minutes !== null && <span className="hint">{t('plan.minutes', { n: String(r.minutes) })}</span>}
               </div>
               {isStaff && (

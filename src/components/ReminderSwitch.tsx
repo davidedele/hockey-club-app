@@ -4,7 +4,7 @@ import { useSession } from '../lib/session'
 import { supabase } from '../lib/supabase'
 
 // The person's own choice about reminder emails. On unless they switched it off.
-export default function ReminderSwitch() {
+export default function ReminderSwitch({ heading = true }: { heading?: boolean }) {
   const { profile } = useSession()
   const [enabled, setEnabled] = useState<boolean | null>(null)
   const [error, setError] = useState('')
@@ -31,8 +31,8 @@ export default function ReminderSwitch() {
 
   if (enabled === null) return null
   return (
-    <section aria-labelledby="reminders-title">
-      <h2 id="reminders-title">{t('reminders.title')}</h2>
+    <section aria-labelledby={heading ? 'reminders-title' : undefined} aria-label={heading ? undefined : t('reminders.title')}>
+      {heading && <h2 id="reminders-title">{t('reminders.title')}</h2>}
       <label className="check">
         <input type="checkbox" checked={enabled} disabled={busy} onChange={(e) => void change(e.target.checked)} />
         {t('reminders.label')}

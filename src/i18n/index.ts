@@ -90,6 +90,7 @@ export function errorText(error: { message?: string; code?: string } | null | un
   for (const code of CODES) {
     if (text.includes(code)) return t(`error.${code}` as MessageKey)
   }
+  if (/profiles_names_no_digits/.test(text)) return t('error.name_digits')
   if (/game_stats.*check|check.*game_stats/.test(text)) return t('error.stats_check')
   if (/23514|violates check constraint/.test(text)) return t('error.check_violation')
   const raw = import.meta.env?.DEV && text.trim() ? ` (${text.trim()})` : ''

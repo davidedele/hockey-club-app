@@ -4,6 +4,7 @@ import { isConfigured } from './lib/supabase'
 import Avatar from './components/Avatar'
 import Bell from './components/Bell'
 import GroupSwitch from './components/GroupSwitch'
+import ViewSwitch from './components/ViewSwitch'
 import Crest from './components/Crest'
 import { useAvatarUrls } from './lib/avatars'
 import { useClub } from './lib/club'
@@ -31,13 +32,13 @@ import ForgotPassword from './pages/ForgotPassword'
 import Invites from './pages/Invites'
 import Drills from './pages/Drills'
 import Join from './pages/Join'
+import LeagueMatch from './pages/LeagueMatch'
 import Lineup from './pages/Lineup'
 import Plan from './pages/Plan'
 import Login from './pages/Login'
 import MemberEdit from './pages/MemberEdit'
 import Members from './pages/Members'
-import Unanswered from './pages/Unanswered'
-import ProfilePage from './pages/Profile'
+import ProfileLayout, { ProfileAbsences, ProfileApp, ProfileCalendar, ProfileInfo, ProfileNotifications } from './pages/Profile'
 import ResetPassword from './pages/ResetPassword'
 
 const ICONS = {
@@ -57,6 +58,7 @@ const ICONS = {
   invites: <path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3A4 4 0 0 0 11 18.7l1-1" />,
   attendance: <path d="M5 20V11M12 20V5M19 20v-6" />,
   stats: <path d="M8 4h8v5a4 4 0 0 1-8 0V4zM8 6H5v1a3 3 0 0 0 3 3M16 6h3v1a3 3 0 0 1-3 3M12 13v4M8 20h8M10 17h4v3h-4z" />,
+  drills: <path d="M5 4h11l3 3v13H5zM9 9h6M9 13h6M9 17h3" />,
   settings: (
     <>
       <circle cx="12" cy="12" r="3" />
@@ -73,7 +75,8 @@ function TabIcon({ name }: { name: keyof typeof ICONS }) {
   )
 }
 
-// A banner on every screen while an event in the next two weeks has no answer yet.
+// A banner on every screen while an event in the next two weeks has no answer yet. The text names the
+// two weeks, so its number never contradicts the longer list on the events page.
 function PendingBanner({ count }: { count: number }) {
   const location = useLocation()
   if (count === 0 || location.pathname === '/events' || location.pathname.startsWith('/settings') || location.pathname.startsWith('/profile')) return null
@@ -97,6 +100,7 @@ const SECTION: Record<string, MessageKey> = {
   announcements: 'ann.title',
   documents: 'docs.title',
   drills: 'drills.title',
+  attendance_missing: 'att.tabMissing',
 }
 
 // Where the person is: the club, the section, and the page when it names itself.
@@ -109,7 +113,7 @@ function Crumbs() {
   return (
     <nav className="crumbs" aria-label={t('crumb.label')}>
       <ol>
-        <li>{club.name || t('app.name')}</li>
+        <li><Link to="/events">{club.name || t('app.name')}</Link></li>
         {key && <li>{leaf ? <Link to={first ? `/${first}` : '/'}>{t(key)}</Link> : <span aria-current="page">{t(key)}</span>}</li>}
         {key && leaf && <li><span aria-current="page">{leaf}</span></li>}
       </ol>
@@ -139,6 +143,7 @@ function Protected() {
       <NavLink to="/" end><TabIcon name="members" />{t('nav.members')}</NavLink>
       <NavLink to="/campionato" className={({ isActive }) => (isActive || pathname === '/stats' ? 'active' : undefined)}><TabIcon name="stats" />{t('nav.championship')}</NavLink>
       {isStaff && <NavLink to="/attendance"><TabIcon name="attendance" />{t('nav.attendance')}</NavLink>}
+      {isStaff && <NavLink to="/drills"><TabIcon name="drills" />{t('nav.drills')}</NavLink>}
     </>
   )
   return (
@@ -146,7 +151,7 @@ function Protected() {
       <a className="skip" href="#main">{t('nav.skip')}</a>
       <aside className="side">
         <Link className="club" to="/events"><Crest /><span className="club-name">{club.name || t('app.name')}</span></Link>
-        <GroupSwitch className="side-switch" chips />
+        <GroupSwitch className="side-switch" />
         <nav aria-label={t('nav.main')}>{main}</nav>
         <nav className="side-foot" aria-label={t('nav.account')}>
           {isBoard && <NavLink to="/settings"><TabIcon name="settings" />{t('settings.title')}</NavLink>}
@@ -157,12 +162,16 @@ function Protected() {
       <div className="body">
         <div className="crumbbar desk-only">
           <Crumbs />
-          <Bell note={note} />
+          <span className="crumb-actions">
+            <ViewSwitch />
+            <Bell note={note} />
+          </span>
         </div>
         <header className="top">
           <Link className="club" to="/events" aria-label={club.name || t('app.name')}><Crest />{groups.length < 2 && <span className="club-name">{club.name || t('app.name')}</span>}</Link>
           <GroupSwitch className="top-switch" short />
           <span className="top-actions">
+          <ViewSwitch compact />
           <Bell note={note} />
           {isStaff && <NavLink className="gear" to={isBoard ? '/settings' : '/settings/invites'} aria-label={t(isBoard ? 'settings.title' : 'nav.invites')}><TabIcon name={isBoard ? 'settings' : 'invites'} /></NavLink>}
           <NavLink className="me" to="/profile" aria-label={t('nav.profileOf', { name: fullName })}><Avatar first={profile.first_name} last={profile.last_name} url={photo} /></NavLink>
@@ -196,12 +205,13 @@ export default function App() {
         <Route path="/" element={<Members />} />
         <Route path="/events" element={<Events />} />
         <Route path="/events/new" element={<EventForm />} />
-        <Route path="/events/unanswered" element={<Unanswered />} />
+        <Route path="/events/unanswered" element={<Navigate to="/attendance?tab=missing" replace />} />
         <Route path="/announcements" element={<Announcements />} />
         <Route path="/attendance" element={<Attendance />} />
         <Route path="/attendance/grid" element={<Navigate to="/attendance?tab=events" replace />} />
         <Route path="/stats" element={<Stats />} />
         <Route path="/campionato" element={<Championship />} />
+        <Route path="/campionato/partita/:matchId" element={<LeagueMatch />} />
         <Route path="/events/:id" element={<EventDetail />} />
         <Route path="/events/:id/edit" element={<EventForm />} />
         <Route path="/events/:id/lineup" element={<Lineup />} />
@@ -209,15 +219,23 @@ export default function App() {
         <Route path="/drills" element={<Drills />} />
         <Route path="/members/:id" element={<MemberEdit />} />
         <Route path="/members/:id/documents" element={<Documents />} />
-        <Route path="/documents" element={<Documents />} />
-        <Route path="/profile" element={<ProfilePage />} />
-        <Route path="/profile/:section" element={<ProfilePage />} />
-        <Route path="/settings" element={<Settings />} />
-        <Route path="/settings/club" element={<ClubSettings />} />
-        <Route path="/settings/groups" element={<GroupSettings />} />
-        <Route path="/settings/rinks" element={<RinkSettings />} />
-        <Route path="/settings/ice" element={<IceHours />} />
-        <Route path="/settings/invites" element={<Invites />} />
+        <Route path="/documents" element={<Navigate to="/profile/documents" replace />} />
+        <Route path="/profile" element={<ProfileLayout />}>
+          <Route path="info" element={<ProfileInfo />} />
+          <Route path="documents" element={<Documents />} />
+          <Route path="absences" element={<ProfileAbsences />} />
+          <Route path="notifications" element={<ProfileNotifications />} />
+          <Route path="calendar" element={<ProfileCalendar />} />
+          <Route path="app" element={<ProfileApp />} />
+          <Route path="*" element={<Navigate to="/profile" replace />} />
+        </Route>
+        <Route path="/settings" element={<Settings />}>
+          <Route path="club" element={<ClubSettings />} />
+          <Route path="groups" element={<GroupSettings />} />
+          <Route path="rinks" element={<RinkSettings />} />
+          <Route path="ice" element={<IceHours />} />
+          <Route path="invites" element={<Invites />} />
+        </Route>
         <Route path="/invites" element={<Navigate to="/settings/invites" replace />} />
         <Route path="/club" element={<Navigate to="/settings/club" replace />} />
       </Route>

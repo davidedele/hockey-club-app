@@ -5,7 +5,7 @@ insert into auth.users (id, email, email_confirmed_at)
   select ('00000000-0000-0000-0000-00000000000' || n)::uuid, 'p' || n || '@example.test', now() from generate_series(1, 5) n;
 insert into auth.users (id, email, email_confirmed_at) values ('00000000-0000-0000-0000-0000000000c1', 'coach1@example.test', now());
 insert into public.profiles (id, first_name, last_name)
-  select ('00000000-0000-0000-0000-00000000000' || n)::uuid, 'Nome' || n, 'Cognome' || n from generate_series(1, 5) n;
+  select ('00000000-0000-0000-0000-00000000000' || n)::uuid, 'Nome' || chr(64 + n), 'Cognome' || chr(64 + n) from generate_series(1, 5) n;
 insert into public.profiles (id, first_name, last_name) values ('00000000-0000-0000-0000-0000000000c1', 'Cora', 'Coach');
 insert into public.profile_contacts (user_id, email) select id, id::text || '@example.test' from public.profiles;
 insert into public.user_roles values ('00000000-0000-0000-0000-0000000000c1', 'coach');
@@ -59,7 +59,7 @@ select test.rows('someone who switched emails off gets nothing', $$select 1 from
 select test.rows('a cancelled event is not new', $$select 1 from public.event_notices_due((select t from base)) where title = 'e3'$$, 0);
 select test.rows('a past event is not new', $$select 1 from public.event_notices_due((select t from base)) where title = 'e4'$$, 0);
 select test.rows('an event whose group was added long ago is not new', $$select 1 from public.event_notices_due((select t from base)) where title = 'e6'$$, 0);
-select test.rows('the details are returned for the email', $$select 1 from public.event_notices_due((select t from base)) where user_id = pg_temp.u('1') and title = 'e1' and email like '%@example.test' and first_name = 'Nome1' and type = 'training' and starts_at is not null and ends_at is not null and not cancelled and change_id is null$$, 1);
+select test.rows('the details are returned for the email', $$select 1 from public.event_notices_due((select t from base)) where user_id = pg_temp.u('1') and title = 'e1' and email like '%@example.test' and first_name = 'NomeA' and type = 'training' and starts_at is not null and ends_at is not null and not cancelled and change_id is null$$, 1);
 select test.rows('nothing at 03:00', $$select 1 from public.event_notices_due((select t from base) - interval '9 hours')$$, 0);
 select test.rows('nothing at 22:00', $$select 1 from public.event_notices_due((select t from base) + interval '10 hours')$$, 0);
 select test.rows('nothing after three days', $$select 1 from public.event_notices_due((select t from base) + interval '4 days')$$, 0);

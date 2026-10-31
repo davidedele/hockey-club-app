@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import PageHeader from '../components/PageHeader'
 import { Link } from 'react-router-dom'
 import { t, type MessageKey } from '../i18n'
 import Avatar from '../components/Avatar'
@@ -95,16 +96,16 @@ export default function Members() {
 
   return (
     <div className="page wide">
-      <h1>{t('members.title')}</h1>
-      <label className="search">
-        <span>{t('members.search')}</span>
-        <input type="search" placeholder={t('members.searchHint')} value={query} onChange={(e) => { setQuery(e.target.value); resetPage() }} />
-      </label>
-      <div className="members-bar">
-      <div className="att-actions desk-only">
-        <OutputAction kind="print" label={t('table.print')} onRun={() => window.print()} />
-        {isStaff && <OutputAction kind="csv" label={t('table.export')} rows={sorted.length} personal disabled={sorted.length === 0} onRun={exportCsv} />}
-      </div>
+      <PageHeader title={t('members.title')} />
+      <div className="toolbar">
+        <label className="search">
+          <span>{t('members.search')}</span>
+          <input type="search" placeholder={t('members.searchHint')} value={query} onChange={(e) => { setQuery(e.target.value); resetPage() }} />
+        </label>
+        <div className="tools desk-only">
+          <OutputAction kind="print" label={t('table.print')} onRun={() => window.print()} />
+          {isStaff && <OutputAction kind="csv" label={t('table.export')} rows={sorted.length} personal disabled={sorted.length === 0} onRun={exportCsv} />}
+        </div>
       </div>
       <div className="scroll desk-only">
         <table className="members-table">
@@ -133,7 +134,7 @@ export default function Members() {
                   <td>{p.jersey_number ?? ''}</td>
                   <td>{p.position ? t(`position.${p.position}` as MessageKey) : ''}</td>
                   <td>{groupsOf(p.id)}</td>
-                  {isStaff && <td>{contact?.email ? <a href={`mailto:${contact.email}`}>{contact.email}</a> : ''}</td>}
+                  {isStaff && <td className="email-cell">{contact?.email ? <a href={`mailto:${contact.email}`} title={contact.email}>{contact.email}</a> : ''}</td>}
                   {isStaff && <td>{contact?.phone ? <a href={phoneLink(contact.phone)}>{formatPhone(contact.phone)}</a> : ''}</td>}
                   {isStaff && <td>{docCell(p.id)}</td>}
                 </tr>

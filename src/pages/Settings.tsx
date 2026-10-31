@@ -1,35 +1,34 @@
-import { Link, Navigate } from 'react-router-dom'
+import { Navigate } from 'react-router-dom'
+import Crest from '../components/Crest'
+import SectionShell from '../components/SectionShell'
 import { t, type MessageKey } from '../i18n'
+import { useClub } from '../lib/club'
 import { useSession } from '../lib/session'
+import ClubSettings from './ClubSettings'
+import Invites from './Invites'
 
-// The board's settings: club, groups and invites. Coaches only have invites, so they go straight there.
+// The settings: club, groups, rinks, ice hours and invites for the board; invites only for coaches.
 export default function Settings() {
   const { isStaff, isBoard, loading } = useSession()
+  const club = useClub()
   if (!loading && !isStaff) return <Navigate to="/events" replace />
-  if (!loading && !isBoard) return <Navigate to="/settings/invites" replace />
-  const items: { to: string; key: string; show: boolean }[] = [
-    { to: '/settings/club', key: 'club', show: isBoard },
-    { to: '/settings/groups', key: 'groups', show: isBoard },
-    { to: '/settings/rinks', key: 'rinks', show: isBoard },
-    { to: '/settings/ice', key: 'ice', show: isBoard },
-    { to: '/settings/invites', key: 'invites', show: true },
-  ]
+  const keys = isBoard ? ['club', 'groups', 'rinks', 'ice', 'invites'] : ['invites']
   return (
-    <div className="page narrow settings-page">
-      <h1>{t('settings.title')}</h1>
-      <ul className="list settings">
-        {items.filter((i) => i.show).map((i) => (
-          <li key={i.to}>
-            <Link to={i.to}>
-              <span className="settings-text">
-                <span className="settings-name">{t(`settings.${i.key}` as MessageKey)}</span>
-                <span className="hint">{t(`settings.${i.key}Hint` as MessageKey)}</span>
-              </span>
-              <svg className="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6" /></svg>
-            </Link>
-          </li>
-        ))}
-      </ul>
-    </div>
+    <SectionShell
+      base="/settings"
+      label={t('settings.title')}
+      card={
+        <div className="shell-card">
+          <span className="shell-crest"><Crest /></span>
+          <div>
+            <p className="shell-title">{t('settings.title')}</p>
+            <p className="hint">{club.name || t('app.name')}</p>
+          </div>
+        </div>
+      }
+      items={keys.map((k) => ({ to: `/settings/${k}`, label: t(`settings.${k}` as MessageKey) }))}
+      indexTo={`/settings/${keys[0]}`}
+      index={isBoard ? <ClubSettings /> : <Invites />}
+    />
   )
 }
