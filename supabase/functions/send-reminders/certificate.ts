@@ -19,7 +19,7 @@ export const words = {
   bookIt: 'Se non hai ancora la visita, prenotala per tempo: senza certificato valido non puoi scendere in pista.',
   bringIt: 'Appena hai il nuovo certificato, caricalo nell\'app insieme alla nuova scadenza.',
   open: 'Apri i documenti',
-  off: 'Non vuoi più ricevere le email del club? Puoi spegnerle dal tuo profilo:',
+  off: 'Non vuoi più ricevere le notifiche per email? Puoi cambiare le preferenze di notifica dal tuo profilo:',
 }
 
 // "12 marzo 2027" in Italian. The date arrives as a plain day, with no time of its own.

@@ -40,6 +40,8 @@ Read this file, and the open items of `docs/UI_BACKLOG.md`, before touching a pa
 7. A person's name is written surname first, "Rossi Marco", in lists, headings, messages and the sidebar, through `personName` in `src/lib/names.ts`. A greeting uses the first name only. The same person never reads two ways on one screen.
 8. Scores: where both team names are shown, the home side comes first, in the names and in the score. Where only our result is shown, our score comes first and the text says so ("Noi 4, avversari 2", "In ogni partita il nostro punteggio è scritto per primo.").
 
+9. Words for what the app sends (decision 100). "Notifiche" is the general word, for what reaches a person by push or by email. The bell panel is "Notifiche". The profile page where the person chooses what they receive is "Preferenze di notifica". "Avvisi" is only the announcements that staff write. "Email" appears only where the channel is the point ("Ricevi le notifiche per email", the confirmation email at sign up). "Promemoria" is only the reminder about an event that has no answer. "Novità" is not used. The same words are used in the server function texts (`supabase/functions/send-reminders`). The card on Home for staff is "Da gestire".
+
 ## 4. Tables and data
 
 1. A table sits in a white card with a 1 pixel border and hairline row dividers.

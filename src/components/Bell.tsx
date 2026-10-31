@@ -39,7 +39,7 @@ export default function Bell({ note }: { note: Notifications }) {
         <h2>{t('bell.title')}</h2>
         {total === 0 && <p className="hint">{t('bell.none')}</p>}
         {note.pending > 0 && <Link to="/events">{note.pending === 1 ? t('banner.one') : t('banner.many', { n: String(note.pending) })}</Link>}
-        {note.announcements > 0 && <Link to="/announcements">{t('ann.linkCount', { n: String(note.announcements) })}</Link>}
+        {note.announcements > 0 && <Link to="/announcements">{t(note.announcements === 1 ? 'bell.announcementsOne' : 'bell.announcements', { n: String(note.announcements) })}</Link>}
         {note.threads.map((x) => (
           <Link key={x.event_id} to={`/events/${x.event_id}?tab=discussion`}>{t(x.unread === 1 ? 'bell.threadOne' : 'bell.thread', { title: x.title, day: x.day, n: String(x.unread) })}</Link>
         ))}

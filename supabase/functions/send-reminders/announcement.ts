@@ -6,7 +6,7 @@ export const announcementWords = {
   from: 'Messaggio di',
   to: 'per',
   open: 'Aprilo nell\'app',
-  off: 'Non vuoi più ricevere le email del club? Puoi disattivarle dal tuo profilo:',
+  off: 'Non vuoi più ricevere le notifiche per email? Puoi cambiare le preferenze di notifica dal tuo profilo:',
 }
 
 export function buildAnnouncement(
