@@ -9,6 +9,7 @@ import { certificateState } from '../lib/documents'
 import { useGroupFilter } from '../lib/groupfilter'
 import { prettyName } from '../lib/league'
 import { useSession } from '../lib/session'
+import { unanswered } from '../lib/unanswered'
 import { supabase } from '../lib/supabase'
 import { formatDay, formatShortDay, formatTime } from '../lib/time'
 import type { Answer, EventRow, Group, LeagueMatch, LeagueStanding, MemberDocument } from '../lib/types'
@@ -27,6 +28,8 @@ function greeting(name: string): string {
 // The next event can be answered here, as on the events page.
 export default function Home() {
   const { profile, isStaff } = useSession()
+  // Being present at an event is a player thing: the answer buttons and the list of events to answer are in the Giocatore view only (decision 93).
+  const asPlayer = !isStaff
   const club = useClub()
   const { groupId } = useGroupFilter()
   const [events, setEvents] = useState<EventRow[]>([])
@@ -87,7 +90,8 @@ export default function Home() {
   const mineOnly = (e: EventRow) => e.event_groups.some((x) => myGroups.includes(x.group_id))
   const inView = (e: EventRow) => groupId === null || e.event_groups.some((x) => x.group_id === groupId)
   const next = live.find((e) => mineOnly(e) && inView(e)) ?? live.find(inView)
-  const pending = live.filter((e) => e !== next && mineOnly(e) && !answers.has(e.id) && !notCalled.has(e.id))
+  // The same events as the banner, the bell and the Eventi heading: this week, until Monday 00:00 (decision 92).
+  const pending: EventRow[] = asPlayer ? unanswered({ events, answers, notCalledUp: notCalled, myGroups }).inWindow : []
 
   useEffect(() => {
     if (!next) return
@@ -134,12 +138,12 @@ export default function Home() {
       <div className="home-grid">
         <div className="home-main">
           {next ? (
-            <NextPanel club={club.name || t('app.name')} colours={colours(next)} event={next} groups={groupName(next)} mine={answers.get(next.id) ?? null} count={count} canAnswer={mineOnly(next)} busy={busy} onAnswer={(v) => void answer(next, v)} />
+            <NextPanel club={club.name || t('app.name')} colours={colours(next)} event={next} groups={groupName(next)} mine={answers.get(next.id) ?? null} count={count} canAnswer={asPlayer && mineOnly(next)} busy={busy} onAnswer={(v) => void answer(next, v)} />
           ) : (
             loaded && <section className="card"><h2>{t('home.next')}</h2><p className="hint">{t('events.empty')}</p></section>
           )}
 
-          <section className="card" aria-labelledby="home-pending">
+          {asPlayer && <section className="card" aria-labelledby="home-pending">
             <div className="card-head">
               <h2 id="home-pending">{t('dash.todo')}{loaded && pending.length > 0 && <span className="count">{pending.length}</span>}</h2>
               <Link to="/events">{t('home.toEvents')}</Link>
@@ -157,7 +161,7 @@ export default function Home() {
               </ul>
             )}
             {pending.length > SHOWN && <p className="hint">{t('home.pendingMore', { n: String(pending.length - SHOWN) })}</p>}
-          </section>
+          </section>}
         </div>
 
         <div className="home-side">

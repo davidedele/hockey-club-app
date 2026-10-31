@@ -7,8 +7,8 @@ Status words: Open, In progress, Done (PR number), Decided (waiting for Davide),
 ## Phone test of 1 November 2026 (Davide, iPhone with Safari). Details and proposed fixes in `docs/FIX_BRIEF_2.md`
 
 1. B13 No message appears in forms with a required field left empty, including sign up and login (iPhone Safari does not show the browser's own message). Status: Done (branch `claude/beautiful-johnson-vsdump`): one helper, `src/lib/formcheck.ts`, used by every form. The iPhone itself still has to be tried by Davide.
-2. N1 Player things (the unanswered events banner, the count in the bell, answer buttons, the person's own certificate banner) must not appear in the staff views. The banner showed on Membri only because it is hidden on a few pages. Status: Decided (decision 93); the default for the rest waits for one line from Davide.
-3. N2 The unanswered window should be this week, not 14 days; the same number everywhere. Status: Decided (decision 92: the calendar week).
+2. N1 Player things (the unanswered events banner, the count in the bell, answer buttons, the person's own certificate banner) must not appear in the staff views. The banner showed on Membri only because it is hidden on a few pages. Status: Done (branch `claude/beautiful-johnson-vsdump`), including the certificate line (decision 106).
+3. N2 The unanswered window should be this week, not 14 days; the same number everywhere. Status: Done (branch `claude/beautiful-johnson-vsdump`): one helper, `src/lib/unanswered.ts`, tested around Sunday midnight and both clock changes.
 4. N3 The notification panel runs off the left side of the screen on phones and must close when tapping outside it. Status: Open.
 5. N4 In Documenti the date box is wider than the page on iPhone. Status: Open.
 6. N5 In Profilo, Assenze, the start and end dates are too close together; check every form for the same problem. Status: Open.

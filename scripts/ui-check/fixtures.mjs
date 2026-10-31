@@ -55,6 +55,8 @@ const events = [
   ev(9, { type: 'game', title: 'Partita', opponent: 'HC Lupi', home_away: 'away', starts_at: at(15, 21), ends_at: at(15, 22, 30), rink_id: null }),
   ev(10, { starts_at: at(22, 20), ends_at: at(22, 21, 30), series_id: week }),
   ev(11, { starts_at: at(2, 19), ends_at: at(2, 20), title: 'Allenamento B' }),
+  // Starts in ten minutes, so there is always one event without an answer inside the week (the window ends at Monday 00:00).
+  ev(12, { title: 'Allenamento di prova', starts_at: new Date(Date.now() + 10 * 60000).toISOString(), ends_at: new Date(Date.now() + 100 * 60000).toISOString(), rink_id: null }),
 ]
 const ids = { training: eid(5), game: eid(2), member, futureGame: eid(6) }
 

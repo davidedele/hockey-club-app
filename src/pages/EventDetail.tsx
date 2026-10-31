@@ -403,7 +403,7 @@ export default function EventDetail() {
       {tab === 'info' && (
         <div className="ev-cols">
           <div className="ev-aside">
-            {inMyGroups && !cancelled && (
+            {!isStaff && inMyGroups && !cancelled && (
               <section className="card">
                 <h2>{t('event.myAnswer')}</h2>
                 {over ? (

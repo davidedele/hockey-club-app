@@ -343,6 +343,38 @@ for (const width of WIDTHS) {
   await page.keyboard.press('Escape')
   check(!(await page.isVisible('dialog[open]')), 'confirm: Escape does not close the delete window')
 
+  // Player things stay out of the staff views (decision 93, 106): no unanswered events banner, no certificate line
+  // and no pending count in the bell. In the Giocatore view they show, and the same number is everywhere (decision 92).
+  const asView = async (view, path) => { await page.goto(origin + '/'); await page.evaluate((v) => localStorage.setItem('view-as', v), view); await settle(path) }
+  for (const view of ['board', 'coach']) {
+    await asView(view, '/members')
+    check(!(await page.locator('.banners .banner:visible').count()), `views: the ${view} view shows a banner about the person's own events or certificate`)
+    await page.click('.crumb-actions .bell summary')
+    check(!/senza risposta/.test(await page.locator('.crumb-actions .bell-list').innerText()), `views: the bell of the ${view} view counts events without an answer`)
+    await settle('/events/' + training)
+    check(!(await page.locator('main h2:has-text("La tua risposta")').count()), `views: the ${view} view shows the box "La tua risposta"`)
+    await settle('/events')
+    check(!(await page.locator('main .answers button, main .quick button').count()), `views: the ${view} view shows answer buttons on the events page`)
+    await settle('/')
+    check(!(await page.locator('#home-pending').count()), `views: the ${view} view shows the list of events to answer on the home page`)
+  }
+  await asView('player', '/members')
+  const bannerText = await page.locator('.banners .banner[role=status] > span').first().innerText().catch(() => '')
+  const bannerN = Number((bannerText.match(/Hai (\d+) event/) ?? [, bannerText.includes('Hai 1 evento') ? '1' : ''])[1])
+  check(/questa settimana/.test(bannerText) && bannerN >= 1, `views: the player view shows no banner with the window ("questa settimana"): "${bannerText}"`)
+  check(await page.locator('.doc-banner').count() >= 1, 'views: the player view does not show the certificate line')
+  await page.click('.crumb-actions .bell summary')
+  const bellText = await page.locator('.crumb-actions .bell-list').innerText()
+  check(bellText.includes(bannerText), `views: the bell and the banner do not say the same: "${bellText.replace(/\s+/g, ' ')}" against "${bannerText}"`)
+  await settle('/')
+  const homeN = Number(await page.locator('#home-pending .count').innerText().catch(() => 'x'))
+  check(homeN === bannerN, `views: the Home tile counts ${homeN}, the banner ${bannerN}`)
+  await settle('/events')
+  const eventsN = Number(await page.locator('.todo .count').innerText().catch(() => 'x'))
+  check(eventsN === bannerN, `views: the Eventi heading counts ${eventsN}, the banner ${bannerN}`)
+  await page.goto(origin + '/')
+  await page.evaluate(() => localStorage.removeItem('view-as'))
+
   // Forms: pressing the button with a required field empty shows an Italian message under the field,
   // marks it aria-invalid, moves the focus to it and does not rely on the browser's own check.
   const emptyForm = async (target, label, path, prep) => {

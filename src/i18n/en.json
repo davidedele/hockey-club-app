@@ -123,8 +123,8 @@
   "status.injured": "Injured",
   "status.not_called_up": "Not called up",
   "status.none": "Not recorded",
-  "banner.one": "You have 1 event without an answer in the next 14 days.",
-  "banner.many": "You have {n} events without an answer in the next 14 days.",
+  "banner.one": "You have 1 event without an answer this week.",
+  "banner.many": "You have {n} events without an answer this week.",
   "banner.action": "Answer",
   "event.back": "Events",
   "event.until": "until {end}",
@@ -285,8 +285,8 @@
   "dash.thisWeek": "Events this week",
   "dash.myAttendance": "My attendance",
   "dash.ofTotal": "{n} of {total}",
-  "dash.todo": "Other upcoming events without an answer",
-  "dash.allDone": "You have answered every coming event.",
+  "dash.todo": "To answer this week",
+  "dash.allDone": "You have answered every event of this week.",
   "invites.share": "Share",
   "invites.shareTitle": "Club invite",
   "invites.shareText": "Here is your invite to the club app:",
@@ -932,5 +932,7 @@
   "check.passwordShort": "The password must have at least {n} characters.",
   "check.tooShort": "Write at least {n} characters.",
   "check.tooLong": "Write at most {n} characters.",
-  "check.outOfRange": "This value is not allowed."
+  "check.outOfRange": "This value is not allowed.",
+  "dash.later": "Later ({n})",
+  "dash.laterHide": "Hide the later events ({n})"
 }

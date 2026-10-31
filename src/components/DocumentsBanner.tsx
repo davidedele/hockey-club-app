@@ -11,7 +11,7 @@ import type { MemberDocument } from '../lib/types'
 // A line on every screen while the person's own certificate is missing, expired or close to expiry,
 // or while the club's privacy notice still waits for their consent.
 export default function DocumentsBanner() {
-  const { profile } = useSession()
+  const { profile, isStaff } = useSession()
   const club = useClub()
   const location = useLocation()
   const [docs, setDocs] = useState<MemberDocument[] | null>(null)
@@ -31,7 +31,8 @@ export default function DocumentsBanner() {
     return () => window.removeEventListener('documents-changed', load)
   }, [load])
 
-  if (!docs || location.pathname === '/profile/documents' || location.pathname.startsWith('/settings')) return null
+  // The person's own certificate and privacy line is a player thing: shown in the Giocatore view only (decision 106).
+  if (isStaff || !docs || location.pathname === '/profile/documents' || location.pathname.startsWith('/settings')) return null
   const cert = docs.find((d) => d.kind === 'medical_certificate')
   const certNow = certificateState(cert)
   const consentNow = consentState(docs.find((d) => d.kind === 'privacy_consent'), club.privacyNoticePath)

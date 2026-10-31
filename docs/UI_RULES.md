@@ -50,6 +50,8 @@ Read this file, and the open items of `docs/UI_BACKLOG.md`, before touching a pa
 
 1. One group selector for the whole app, at the top of the sidebar (in the phone header on phones). Every page that can be narrowed to a group follows it; no page has its own separate group chips.
 2. People with more than one role (Direttivo, Allenatore, Giocatore) can choose the view in the top bar. The view only hides; it never grants anything, and the database rules stay the same whatever is chosen.
+3. Player things belong to the Giocatore view only (decisions 93 and 106): the unanswered events banner, the answer buttons and the "La tua risposta" box, the list of events to answer on Home and Eventi, the pending count in the bell, and the person's own certificate and privacy line. The Direttivo and Allenatore views never show them. The bell keeps announcements and discussion messages in every view. A person who is also a player switches to the Giocatore view to get the reminders. `scripts/ui-check.mjs` checks it.
+4. "Events without an answer" always means the calendar week in Italian time, from now until the next Monday 00:00 (decision 92), computed by `weekEnd` and `unanswered` in `src/lib/unanswered.ts`. The banner, the bell, the Home tile and the Eventi heading use that one function, say "questa settimana", and show the same number. Later events wait under a collapsed "Più avanti".
 
 ## 6. How to check
 
