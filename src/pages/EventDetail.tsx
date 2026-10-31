@@ -207,7 +207,7 @@ export default function EventDetail() {
         onDragEnd={() => { setDragging(null); setHoverState(null) }}
       >
         <div className="row">
-          <span>{r.last_name} {r.first_name}</span>
+          <span data-person-name>{r.last_name} {r.first_name}</span>
           <span className="person-actions">
             <select aria-label={t('event.move', { name: full })} value={stateOf(r)} disabled={busy} onChange={(e) => void moveTo(r.user_id, e.target.value as State)}>
               <option value="present">{t('answer.present')}</option>

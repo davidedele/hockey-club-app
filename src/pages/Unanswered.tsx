@@ -45,7 +45,7 @@ export default function Unanswered() {
         {rows.map((r) => (
           <li key={r.user_id}>
             <div className="row">
-              <strong>{r.last_name} {r.first_name}</strong>
+              <strong data-person-name>{r.last_name} {r.first_name}</strong>
               <span className="tag todo">{r.missing === 1 ? t('unanswered.one') : t('unanswered.many', { n: String(r.missing) })}</span>
             </div>
             <div className="contacts">

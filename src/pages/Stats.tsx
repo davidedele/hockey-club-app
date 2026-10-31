@@ -80,7 +80,7 @@ export default function Stats() {
       <th scope="row">
         <span className="who">
           <Avatar first={r.first_name} last={r.last_name} url={path ? photos.get(path) : null} size="small" />
-          <span>{r.last_name} {r.first_name}</span>
+          <span data-person-name>{r.last_name} {r.first_name}</span>
         </span>
       </th>
     )

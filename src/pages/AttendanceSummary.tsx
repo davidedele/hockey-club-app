@@ -161,7 +161,7 @@ export default function AttendanceSummary() {
               <tbody>
                 {visible.map((r) => (
                   <tr key={r.user_id}>
-                    <th scope="row" className="att-name">{r.last_name} {r.first_name}</th>
+                    <th scope="row" className="att-name" data-person-name>{r.last_name} {r.first_name}</th>
                     <td className="g-calls">{Number(r.events_total) - Number(r.not_called_up)}</td>
                     {middle.map((c, i) => {
                       const v = c.get(r)
