@@ -312,6 +312,21 @@ for (const width of [375, 1280]) {
   a = await active()
   check(!(await page.isVisible('dialog[open]')) && a.text === 'Revoca', 'confirm: Escape does not close the window and return to the button')
 
+  // The other windows that ask first: cancelling an event, and deleting an announcement. Same rules: it asks, Annulla has the focus, Escape closes it.
+  await settle(`/events/${training}`)
+  await page.click('main .ev-menu summary')
+  await page.click('.ev-menu-list button:has-text("Annulla evento")')
+  check(await page.isVisible('dialog[open]'), 'confirm: cancelling an event does not ask first')
+  check((await active()).text === 'Annulla', 'confirm: the cancel window does not give Annulla the focus')
+  await page.keyboard.press('Escape')
+  check(!(await page.isVisible('dialog[open]')), 'confirm: Escape does not close the cancel window')
+  await settle('/announcements')
+  await page.locator('main button.link:has-text("Elimina")').first().click()
+  check(await page.isVisible('dialog[open]'), 'confirm: deleting an announcement does not ask first')
+  check((await active()).text === 'Annulla', 'confirm: the delete window does not give Annulla the focus')
+  await page.keyboard.press('Escape')
+  check(!(await page.isVisible('dialog[open]')), 'confirm: Escape does not close the delete window')
+
   report.push({ width: 1280, name: 'interactions', path: '-', kind: 'auth', problems, errors: [] })
   await context.close()
 }
