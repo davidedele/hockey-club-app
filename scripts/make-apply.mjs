@@ -11,6 +11,7 @@ const root = resolve(fileURLToPath(import.meta.url), '../..')
 const col = (table, column) => `exists (select 1 from information_schema.columns where table_schema = 'public' and table_name = '${table}' and column_name = '${column}')`
 const FILES = {
   '0036': ['certificate_issue_date', `to_regclass('public.profiles') is not null and to_regclass('public.member_documents') is not null and to_regprocedure('public.certificates_due(timestamptz)') is not null`, col('member_documents', 'issued_on')],
+  '0037': ['rink_address', `to_regclass('public.rinks') is not null and to_regprocedure('public.calendar_events(text)') is not null and ${col('member_documents', 'issued_on')}`, col('rinks', 'address')],
 }
 
 mkdirSync(join(root, 'supabase/apply'), { recursive: true })

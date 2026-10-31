@@ -173,7 +173,7 @@ export const fixtures = {
     event_messages: [{ id: '60000000-0000-4000-8000-000000000001', event_id: eid(5), user_id: uid(2), body: 'Porto io i pettorali.', created_at: at(-1, 15) }],
     event_message_seen: [{ event_id: eid(5), user_id: ME, seen_at: at(-1, 9) }],
     member_documents: docs, absence_periods: [],
-    rinks: [{ id: 1, name: 'Grande' }, { id: 2, name: 'Piccola' }],
+    rinks: [{ id: 1, name: 'Grande', address: 'Via Esempio 1, Milano', note: 'Parcheggio sul retro' }, { id: 2, name: 'Piccola', address: null, note: null }],
     rink_prices: [{ rink_id: 1, price_cents: 15000 }, { rink_id: 2, price_cents: 9000 }],
     invites: [
       { id: '70000000-0000-4000-8000-000000000001', group_id: 1, token_hash: null, created_by: ME, created_at: at(-1, 9), expires_at: at(6, 9), used_by: null, used_at: null, revoked_at: null, max_uses: 1, use_count: 0 },

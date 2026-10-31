@@ -2,6 +2,8 @@ import type { CSSProperties } from 'react'
 import { Link } from 'react-router-dom'
 import { t } from '../i18n'
 import { jerseyName, useClub } from '../lib/club'
+import { useRinks } from '../lib/rinks'
+import MapsButton from './MapsButton'
 import { formatDay, formatTime } from '../lib/time'
 import type { Answer, EventRow } from '../lib/types'
 
@@ -10,6 +12,7 @@ import type { Answer, EventRow } from '../lib/types'
 export default function NextPanel(props: { club: string; colours: CSSProperties | undefined; event: EventRow; groups: string; mine: Answer | null; count: number | undefined; canAnswer: boolean; busy: boolean; onAnswer: (v: Answer) => void }) {
   const { event: e, mine } = props
   const club = useClub()
+  const rink = useRinks().find((r) => r.id === e.rink_id) ?? null
   const game = e.type === 'game'
   const started = new Date(e.starts_at).getTime() <= Date.now()
   const label = started ? t('events.now') : t(game ? 'events.nextGame' : 'events.nextTraining')
@@ -43,6 +46,7 @@ export default function NextPanel(props: { club: string; colours: CSSProperties 
             </div>
           )}
         </dl>
+        <MapsButton rink={rink} venue={e.venue} />
         {props.canAnswer && (
           <div className="answers">
             <button className={mine === 'present' ? 'answer on present' : 'answer'} aria-pressed={mine === 'present'} disabled={props.busy} onClick={() => props.onAnswer('present')}>{t('answer.present')}</button>

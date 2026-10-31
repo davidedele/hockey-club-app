@@ -10,6 +10,7 @@ export type FeedEvent = {
   meetup_at: string | null
   venue: string | null
   rink: string | null
+  address?: string | null
   opponent: string | null
   home_away: 'home' | 'away' | null
   cancelled_at: string | null
@@ -65,7 +66,7 @@ export function summary(e: FeedEvent): string {
 }
 
 export function location(e: FeedEvent): string {
-  const parts = [e.rink, e.venue].filter((p): p is string => !!p && p.trim() !== '')
+  const parts = [e.rink, e.address, e.venue].filter((p): p is string => !!p && p.trim() !== '')
   return [...new Set(parts)].join(', ')
 }
 

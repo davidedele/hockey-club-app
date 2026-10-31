@@ -17,7 +17,7 @@ for f in "$root"/supabase/apply/apply_*.sql; do
   n="$(basename "$f" | sed -E 's/apply_([0-9]{4})_.*/\1/')"
   db="t$n"
   psqlc -d postgres -c "create database $db" >/dev/null
-  psqlc -v ON_ERROR_STOP=1 -d "$db" -f "$root/supabase/tests/00_shim.sql" >/dev/null
+  psqlc -d "$db" -f "$root/supabase/tests/00_shim.sql" >/dev/null 2>&1  # the roles already exist from the first database
   for m in "$root"/supabase/migrations/*.sql; do
     [ "$(basename "$m" | cut -c1-4)" -ge "$n" ] && break
     psqlc -v ON_ERROR_STOP=1 -d "$db" -f "$m" >/dev/null

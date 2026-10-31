@@ -364,6 +364,15 @@ for (const width of WIDTHS) {
   await page.keyboard.press('Space')
   check((await heads.nth(1).getAttribute('aria-expanded')) === 'true', 'folds: Space does not open the group')
 
+  // The venue button: Apple Maps on an iPhone, Google Maps elsewhere; 44 pixels; on the event page and the next event panel.
+  await settle(`/events/${training}`)
+  const maps = page.locator('main a.maps-button').first()
+  check((await maps.count()) === 1, 'maps: the event page has no "Apri in Mappe" button')
+  check(/google\.com\/maps.*Via%20Esempio/.test((await maps.getAttribute('href')) ?? ''), 'maps: the link does not search the address in Google Maps')
+  check(((await maps.boundingBox())?.height ?? 0) >= 43.5, 'maps: the button is under 44 pixels')
+  await settle('/')
+  check((await page.locator('main a.maps-button').count()) >= 1, 'maps: the next event on Home has no "Apri in Mappe" button')
+
   // The certificate: no date field without a file (decision 94); with a file the date field is there.
   await settle('/profile/documents')
   check((await page.locator('main input[type=date]').count()) === 0, 'certificate: a date field shows although no file was uploaded')

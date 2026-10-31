@@ -5,6 +5,7 @@ import { errorText, t } from '../i18n'
 import { checked } from '../lib/formcheck'
 import { centsToEuro, euroToCents } from '../lib/ice'
 import { useSession } from '../lib/session'
+import { forgetRinks } from '../lib/rinks'
 import { supabase } from '../lib/supabase'
 import type { Rink, RinkPrice } from '../lib/types'
 
@@ -19,7 +20,7 @@ export default function RinkSettings() {
 
   const load = useCallback(async () => {
     const [r, p] = await Promise.all([
-      supabase.from('rinks').select('id, name').order('name'),
+      supabase.from('rinks').select('id, name, address, note').order('name'),
       supabase.from('rink_prices').select('rink_id, price_cents'),
     ])
     setRinks((r.data ?? []) as Rink[])
@@ -73,6 +74,8 @@ function rinkError(error: { message?: string; code?: string }) {
 function RinkRow({ rink, price, onChange }: { rink: Rink; price: number | null; onChange: () => Promise<void> }) {
   const [name, setName] = useState(rink.name)
   const [euros, setEuros] = useState(price === null ? '' : centsToEuro(price))
+  const [address, setAddress] = useState(rink.address ?? '')
+  const [note, setNote] = useState(rink.note ?? '')
   const [busy, setBusy] = useState(false)
   const [confirming, setConfirming] = useState(false)
   const [error, setError] = useState('')
@@ -84,7 +87,7 @@ function RinkRow({ rink, price, onChange }: { rink: Rink; price: number | null; 
     if (Number.isNaN(cents)) return setError(t('rinks.priceInvalid'))
     setBusy(true)
     // A change that a rule silently refuses comes back with no rows, and must not look like it worked.
-    const named = await supabase.from('rinks').update({ name: name.trim() }).eq('id', rink.id).select()
+    const named = await supabase.from('rinks').update({ name: name.trim(), address: address.trim() || null, note: note.trim() || null }).eq('id', rink.id).select()
     if (named.error) { setBusy(false); return setError(rinkError(named.error)) }
     if (!named.data || named.data.length === 0) { setBusy(false); return setError(errorText({ message: 'forbidden' })) }
     const priced = cents === null
@@ -92,6 +95,7 @@ function RinkRow({ rink, price, onChange }: { rink: Rink; price: number | null; 
       : await supabase.from('rink_prices').upsert({ rink_id: rink.id, price_cents: cents })
     setBusy(false)
     if (priced.error) return setError(errorText(priced.error))
+    forgetRinks()
     await onChange()
   }
 
@@ -110,6 +114,13 @@ function RinkRow({ rink, price, onChange }: { rink: Rink; price: number | null; 
       <form {...checked(save)}>
         <label>{t('rinks.name')}
           <input required maxLength={40} value={name} onChange={(e) => setName(e.target.value)} />
+        </label>
+        <label>{t('rinks.address')}
+          <input autoComplete="street-address" maxLength={200} value={address} onChange={(e) => setAddress(e.target.value)} />
+        </label>
+        <label>{t('rinks.note')}
+          <input maxLength={200} value={note} onChange={(e) => setNote(e.target.value)} />
+          <span className="hint">{t('rinks.noteHint')}</span>
         </label>
         <label>{t('rinks.price')}
           <input inputMode="decimal" value={euros} onChange={(e) => setEuros(e.target.value)} />

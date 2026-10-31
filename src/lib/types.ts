@@ -204,6 +204,8 @@ export interface LeagueSync {
 export interface Rink {
   id: number
   name: string
+  address?: string | null
+  note?: string | null
 }
 
 export interface RinkPrice {

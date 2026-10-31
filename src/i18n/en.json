@@ -957,5 +957,11 @@
   "club.sumDocsYes": "Privacy notice uploaded",
   "club.sumDocsNo": "No privacy notice uploaded",
   "champ.count": "{shown} of {total}",
-  "champ.more": "Show {n} more"
+  "champ.more": "Show {n} more",
+  "maps.open": "Open in Maps",
+  "event.address": "Address",
+  "event.rinkNote": "Note on the rink",
+  "rinks.address": "Address (optional)",
+  "rinks.note": "Note (optional)",
+  "rinks.noteHint": "For example where to park or which entrance to use."
 }
