@@ -31,6 +31,13 @@ select test.rows('the newest first, scores from the club side', $$select 1 from 
 select test.rows('a game against someone else has no history of the other team', $$select 1 from public.opponent_history(pg_temp.u('a4'))$$, 0);
 select test.rows('a training has none', $$select 1 from public.opponent_history(pg_temp.u('a0')) where false$$, 0);
 select test.logout();
+-- Repeated spaces inside a name count as one, in the game, in the club's own games and in the league games.
+update public.events set opponent = 'HC   Fanano' where id = pg_temp.u('a0');
+update public.events set opponent = ' hc fanano  ' where id = pg_temp.u('a1');
+update public.league_matches set home = 'HC    FANANO' where id = 500;
+select test.login(pg_temp.u('1'));
+select test.rows('double spaces inside a name do not hide the meetings', $$select 1 from public.opponent_history(pg_temp.u('a0'))$$, 3);
+select test.logout();
 select test.login(pg_temp.u('9'));
 select test.rows('someone without a profile reads nothing', $$select 1 from public.opponent_history(pg_temp.u('a0'))$$, 0);
 select test.logout();
