@@ -1167,5 +1167,14 @@
   "docs.certDateHintMonths": "La data della visita medica scritta sul certificato. Il certificato vale {months} da quel giorno.",
   "reqdocs.monthsOne": "1 mese",
   "reqdocs.monthsMany": "{n} mesi",
-  "reqdocs.year": "un anno"
+  "reqdocs.year": "un anno",
+  "card.heading": "La mia scheda",
+  "card.hint": "I tuoi numeri della stagione in una immagine da condividere o salvare. L'immagine si crea sul tuo telefono e non viene caricata da nessuna parte.",
+  "card.make": "Crea la scheda",
+  "card.title": "Stagione",
+  "card.trainings": "Allenamenti",
+  "card.share": "Condividi",
+  "card.download": "Salva l'immagine",
+  "card.alt": "La tua scheda della stagione",
+  "card.error": "Non sono riuscito a creare l'immagine. Riprova."
 }

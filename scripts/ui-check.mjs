@@ -572,6 +572,17 @@ for (const width of WIDTHS) {
     await page.evaluate(() => localStorage.removeItem('view-as'))
   }
 
+  // The season card (V12): made on the phone, a canvas of the right proportions and two buttons of 44 pixels.
+  await settle('/profile/season')
+  await page.click('main button:has-text("Crea la scheda")')
+  await page.waitForTimeout(200)
+  const card = await page.locator('main canvas.season-card-canvas').boundingBox()
+  check(Boolean(card) && Math.abs(card.width / card.height - 1080 / 1350) < 0.02, 'season card: the picture is missing or has the wrong proportions')
+  const painted = await page.evaluate(() => { const c = document.querySelector('canvas.season-card-canvas'); if (!c) return false; const d = c.getContext('2d').getImageData(540, 700, 1, 1).data; return d[3] > 0 })
+  check(painted, 'season card: the picture is empty')
+  for (const label of ['Condividi', 'Salva l\'immagine']) check(((await page.locator(`main button:has-text("${label}")`).boundingBox())?.height ?? 0) >= 43.5, `season card: "${label}" is under 44 pixels or missing`)
+  await page.screenshot({ path: join(out, 'season-card.png'), fullPage: true })
+
   // The notification panel: fully inside the window, closes on a tap outside, on Escape and after a link, and gives the focus back.
   const bell = async (width, height, label) => {
     const target = await context.newPage()

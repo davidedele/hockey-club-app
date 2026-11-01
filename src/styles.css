@@ -1264,3 +1264,4 @@ button.fold-head { display: flex; align-items: center; justify-content: space-be
 .review-row > .error { flex-basis: 100%; margin: 0; }
 
 .legend { display: block; margin-bottom: .25rem; font-weight: 500; }
+.season-card-canvas { display: block; width: 100%; max-width: 22rem; height: auto; aspect-ratio: 1080 / 1350; border-radius: var(--radius); border: 1px solid var(--line); margin: .75rem 0; }

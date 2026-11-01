@@ -1167,5 +1167,14 @@
   "docs.certDateHintMonths": "The date of the medical visit written on the certificate. The certificate is valid {months} from that day.",
   "reqdocs.monthsOne": "1 month",
   "reqdocs.monthsMany": "{n} months",
-  "reqdocs.year": "one year"
+  "reqdocs.year": "one year",
+  "card.heading": "My card",
+  "card.hint": "Your season numbers in a picture to share or save. The picture is made on your phone and is not uploaded anywhere.",
+  "card.make": "Make the card",
+  "card.title": "Season",
+  "card.trainings": "Trainings",
+  "card.share": "Share",
+  "card.download": "Save the picture",
+  "card.alt": "Your season card",
+  "card.error": "I could not make the picture. Try again."
 }
