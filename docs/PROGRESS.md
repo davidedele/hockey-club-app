@@ -8,6 +8,7 @@ Migrations up to 0035 are applied to the Supabase test project (apply files of 0
 
 ## Session log
 05. 1 November 2026, last features run (branch `claude/loving-ramanujan-7r2zpk`, from main 0efe7f4). Nothing applied to any Supabase project.
+   3. V11 offline use: page Senza connessione, copy in the cache `offline-data-v1`, purge at sign out through the app and the service worker (`public/sw.js`), decision 137, rule in `docs/CLOSING.md`. Unit tests of the rule (`offline.test.ts`), checker flow (opens online, goes offline, shows the note, signs out, copy gone).
    2. V9 fantahockey: migration 0056 (`apply_0056_fantahockey.sql`), tab Fantahockey in Statistiche, decision 136. Tests `54_fantahockey.sql` (every rule, hidden picks, points, table), interface check of the tab in the board and the player view.
    1. N14 championship statistics: migration 0055 (`apply_0055_league_game_stats.sql`), function `league-details` (to deploy), tabs on Campionato, privacy draft line, decision 135. The league site answered (200) and the reader parsed real pages. Database tests `53_league_game_stats.sql`, 1442 ok lines in all; interface check of the three Campionato views at six widths, 0 findings.
 04. 1 November 2026, fix brief 3 and the last voted ideas (branch `claude/adoring-noether-k0hbs6`, from main 9c870ce). The closing document is `docs/CLOSING.md`. Nothing was applied to any Supabase project; the new apply files are `apply_0053_two_step_optional.sql` and `apply_0054_required_documents.sql` (both wait for Davide).

@@ -1287,3 +1287,4 @@ button.fold-head { display: flex; align-items: center; justify-content: space-be
 .off-lines > div { display: grid; grid-template-columns: 7rem minmax(0, 1fr); gap: .5rem; }
 .off-lines dt { color: var(--muted); }
 .off-lines dd { margin: 0; overflow-wrap: anywhere; }
+.offline-note + button { margin-bottom: 1rem; }

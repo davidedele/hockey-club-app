@@ -127,7 +127,9 @@ function embed(rows, table, select) {
   })
 }
 
+let apiDown = false
 async function answer(route) {
+  if (apiDown) return route.abort('failed')
   const req = route.request()
   const url = new URL(req.url())
   const json = (body, status = 200, headers = {}) => route.fulfill({ status, contentType: 'application/json', headers: { 'access-control-allow-origin': '*', 'access-control-allow-headers': '*', 'access-control-expose-headers': 'content-range', ...headers }, body: JSON.stringify(body) })
@@ -171,7 +173,7 @@ const ROUTES = [
   ['certificate-review', '/members/certificates', 'sub'], ['member-edit', `/members/${member}`, 'sub'], ['member-documents', `/members/${member}/documents`, 'sub'],
   ['profile', '/profile'], ['profile-info', '/profile/info', 'sub'], ['profile-documents', '/documents', 'sub'],
   ['profile-absences', '/profile/absences', 'sub'], ['profile-season', '/profile/season', 'sub'], ['profile-club-documents', '/profile/club-documents', 'sub'], ['profile-security', '/profile/security', 'sub'], ['profile-notifications', '/profile/notifications', 'sub'],
-  ['profile-calendar', '/profile/calendar', 'sub'], ['profile-app', '/profile/app', 'sub'],
+  ['profile-calendar', '/profile/calendar', 'sub'], ['offline', '/offline', 'sub'], ['profile-app', '/profile/app', 'sub'],
   ['settings', '/settings'], ['settings-club', '/settings/club', 'sub'], ['settings-documents', '/settings/documents', 'sub'], ['settings-groups', '/settings/groups', 'sub'],
   ['settings-rinks', '/settings/rinks', 'sub'], ['settings-ice', '/settings/ice', 'sub'], ['settings-invites', '/settings/invites', 'sub'],
   ['login', '/login', 'auth'],
@@ -525,6 +527,36 @@ for (const width of WIDTHS) {
     check(/è attiva/.test(await page.locator('main h2').first().innerText()), 'two step: a verified app does not read as active')
     fixtures.mockFactors = []
     fixtures.tables.club_settings[0].mfa_required_from = keepDate
+  }
+
+  // Offline use (decision 137): with the database unreachable the app opens on the saved copy, read only, says that the data is
+  // not up to date, keeps no contact or rating, and signing out deletes the copy.
+  {
+    await settle('/')
+    await page.waitForTimeout(800)
+    const kept = await page.evaluate(async () => (await caches.has('offline-data-v1')) ? await (await (await caches.open('offline-data-v1')).match('/offline-copy.json')).text() : null)
+    check(kept !== null && kept.includes('"events"'), 'offline: no saved copy was made after opening the app online')
+    check(kept === null || !/@example\.test|phone|rating|email/.test(kept), 'offline: the saved copy holds a contact or a rating')
+    apiDown = true
+    // A phone with no signal says so: the page is opened with navigator.onLine false.
+    await page.addInitScript(() => { if (localStorage.getItem('fake-offline')) Object.defineProperty(navigator, 'onLine', { get: () => false }) })
+    await page.evaluate(() => localStorage.setItem('fake-offline', '1'))
+    await settle('/')
+    const text = await page.locator('body').innerText()
+    check(text.includes('Dati non aggiornati'), 'offline: the saved copy is shown without the note "Dati non aggiornati"')
+    check(!(await page.locator('main button:text-is("Presente"), main button:text-is("Assente")').count()), 'offline: the saved copy offers answer buttons')
+    check(!(await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth + 1)), 'offline: the saved copy scrolls sideways')
+    await page.screenshot({ path: join(out, 'offline-1280.png'), fullPage: true })
+    await page.setViewportSize({ width: 375, height: 812 })
+    await page.locator('.fold-head').first().click().catch(() => {})
+    await page.screenshot({ path: join(out, 'offline-375.png'), fullPage: true })
+    await page.setViewportSize({ width: 1280, height: 800 })
+    apiDown = false
+    await page.evaluate(() => localStorage.removeItem('fake-offline'))
+    await settle('/profile')
+    await page.locator('button.shell-signout').first().click()
+    await page.waitForTimeout(600)
+    check(await page.evaluate(async () => !(await caches.has('offline-data-v1'))), 'offline: signing out left the saved copy on the phone')
   }
 
   // The Giocatore view shows only the person's own groups (decision 131). The sample person belongs to A and B; the training of
