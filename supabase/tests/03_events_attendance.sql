@@ -161,8 +161,8 @@ select test.affected('coach removes the rest of a series', $$delete from public.
 select test.rows('the first event of the series remains', $$select * from public.events where title = 'Giovedì'$$, 1);
 select test.logout();
 select test.login('00000000-0000-0000-0000-0000000000b1');
-select test.works('board removes a member', $$delete from public.profiles where id = '00000000-0000-0000-0000-000000000001'$$);
-select test.rows('the records of a removed member are gone', $$select * from public.attendance_records where user_id = '00000000-0000-0000-0000-000000000001'$$, 0);
+select test.fails('board cannot remove a member row directly (migration 0050)', $$delete from public.profiles where id = '00000000-0000-0000-0000-000000000001'$$, 'permission denied');
+select test.rows('the member is still there', $$select * from public.profiles where id = '00000000-0000-0000-0000-000000000001'$$, 1);
 select test.logout();
 
 rollback;

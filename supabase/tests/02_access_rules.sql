@@ -59,17 +59,18 @@ select test.affected('player cannot edit another profile', $$update public.profi
 select test.fails('player cannot change own id', $$update public.profiles set id = gen_random_uuid() where id = '00000000-0000-0000-0000-000000000001'$$, 'permission denied');
 select test.fails('player cannot insert a profile', $$insert into public.profiles (id, first_name, last_name) values ('00000000-0000-0000-0000-0000000000d1', 'A', 'B')$$, 'permission denied');
 select test.fails('jersey number must be 0 to 99', $$update public.profiles set jersey_number = 100 where id = '00000000-0000-0000-0000-000000000001'$$, 'check constraint');
-select test.affected('player cannot delete a profile', $$delete from public.profiles where id = '00000000-0000-0000-0000-000000000002'$$, 0);
+select test.fails('player cannot delete a profile', $$delete from public.profiles where id = '00000000-0000-0000-0000-000000000002'$$, 'permission denied');
 select test.logout();
 select test.login('00000000-0000-0000-0000-0000000000d1');
 select test.rows('account without profile sees no profiles', 'select * from public.profiles', 0);
 select test.logout();
 select test.login('00000000-0000-0000-0000-0000000000c1');
 select test.affected('coach edits another profile', $$update public.profiles set jersey_number = 9 where id = '00000000-0000-0000-0000-000000000002'$$, 1);
-select test.affected('coach cannot delete a profile', $$delete from public.profiles where id = '00000000-0000-0000-0000-000000000002'$$, 0);
+select test.fails('coach cannot delete a profile', $$delete from public.profiles where id = '00000000-0000-0000-0000-000000000002'$$, 'permission denied');
 select test.logout();
 select test.login('00000000-0000-0000-0000-0000000000b1');
-select test.affected('board deletes a profile', $$delete from public.profiles where id = '00000000-0000-0000-0000-000000000003'$$, 1);
+select test.fails('board cannot delete a profile either (migration 0050)', $$delete from public.profiles where id = '00000000-0000-0000-0000-000000000003'$$, 'permission denied');
+select test.rows('and the profile is still there', $$select * from public.profiles where id = '00000000-0000-0000-0000-000000000003'$$, 1);
 select test.logout();
 select test.login_anon();
 select test.fails('anonymous cannot read profiles', 'select * from public.profiles', 'permission denied');
@@ -84,7 +85,7 @@ select test.fails('player cannot edit own email', $$update public.profile_contac
 select test.fails('player cannot insert a contact', $$insert into public.profile_contacts (user_id, email) values ('00000000-0000-0000-0000-0000000000d1', 'x@example.test')$$, 'permission denied');
 select test.logout();
 select test.login('00000000-0000-0000-0000-0000000000c1');
-select test.rows('coach sees all contacts', 'select * from public.profile_contacts', 4);
+select test.rows('coach sees all contacts', 'select * from public.profile_contacts', 5);
 select test.affected('coach edits a phone', $$update public.profile_contacts set phone = '3334445555' where user_id = '00000000-0000-0000-0000-000000000002'$$, 1);
 select test.logout();
 select test.login('00000000-0000-0000-0000-0000000000d1');
@@ -93,7 +94,7 @@ select test.logout();
 
 \echo == group members
 select test.login('00000000-0000-0000-0000-000000000001');
-select test.rows('member sees all group memberships', 'select * from public.group_members', 3);
+select test.rows('member sees all group memberships', 'select * from public.group_members', 4);
 select test.fails('player cannot join a group directly', $$insert into public.group_members (group_id, user_id) select id, '00000000-0000-0000-0000-000000000001' from public.groups where code = 'B'$$, 'row-level security');
 select test.affected('player cannot remove another member', $$delete from public.group_members where user_id = '00000000-0000-0000-0000-000000000002'$$, 0);
 select test.logout();

@@ -13,6 +13,15 @@ create table auth.users (
   raw_user_meta_data jsonb not null default '{}'::jsonb,
   banned_until timestamptz
 );
+-- Sign in identities, as far as the migrations use them. In Supabase the email column is generated from identity_data.
+create table auth.identities (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users (id) on delete cascade,
+  provider text not null default 'email',
+  provider_id text,
+  identity_data jsonb not null default '{}'::jsonb,
+  email text generated always as (lower(identity_data ->> 'email')) stored
+);
 create function auth.uid() returns uuid language sql stable as $$
   select nullif(current_setting('request.jwt.claim.sub', true), '')::uuid
 $$;
