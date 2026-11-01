@@ -37,8 +37,10 @@ export default function SectionShell(props: {
             {items.map((i) => (
               <li key={i.to}>
                 <NavLink to={i.to} className={({ isActive }) => (isActive || (atIndex && i.to === indexTo) ? 'active' : undefined)}>
-                  <span className="sl">{i.label}</span>
-                  {i.extra && <span className="sx">{i.extra}</span>}
+                  <span className="sl">
+                    <span className="sl-label">{i.label}</span>
+                    {i.extra && <span className="sx">{i.extra}</span>}
+                  </span>
                   <Chevron />
                 </NavLink>
               </li>

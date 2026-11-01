@@ -16,6 +16,7 @@ Read this file, and the open items of `docs/UI_BACKLOG.md`, before touching a pa
 8. A wait longer than a second shows a skeleton of what is coming, not a line of text or a spinner; a loading number shows an en dash.
 
 9. A settings page with more than two groups of settings shows them as folded rows (`Fold` in `src/components/Fold.tsx`): a real button with `aria-expanded`, the title and a one line summary of what is set. All are closed on first load, only one is open at a time, and the open one stays open after a save because the page keeps its state and the closed bodies are only hidden.
+10. In a menu row (the profile and settings section lists) and in a table row, no two pieces of text may overlap and no text may leave its row, at any width from 320 to 1280 pixels and with larger text. A status goes under its label, never beside it on the same line. `scripts/ui-check.mjs` measures it and tries every certificate and consent status.
 
 ## 2. Controls
 
@@ -65,6 +66,7 @@ Read this file, and the open items of `docs/UI_BACKLOG.md`, before touching a pa
 6. Match predictions and other club fun (decision 119): the form to guess is part of the Giocatore view only; the list of guesses after the start and the tables are club information and show in every view. A person's guess is never shown to others before the game starts. Where a score has our side first, the text says so.
 7. A row with a long name and an action (club documents) lets the action drop under the name instead of leaving the window.
 8. Vibration (the shift timer) does not work on iPhone Safari, which does not allow web pages to vibrate. It is a limit of the phone, not a fault of the app, so nothing replaces it; the warning is the underline of the time, and the timer's help text says so. Never rely on vibration alone to tell a person something.
+9. In the Giocatore view everything that follows the group choice is limited to the person's own groups (decision 131): the selector lists only those groups and "Tutti i gruppi" is "I miei gruppi" (hidden when there is one). A page that follows the group choice asks `useGroupFilter().inView(groupIds)` or `useScopeGroups()`, never the list of all groups. The staff views are not limited. `scripts/ui-check.mjs` checks it.
 
 ## 6. How to check
 

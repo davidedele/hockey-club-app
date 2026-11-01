@@ -15,7 +15,7 @@ import { useSession } from '../lib/session'
 import { supabase } from '../lib/supabase'
 import type { Contact, Group, MemberDocument, Profile } from '../lib/types'
 import { useClub } from '../lib/club'
-import { summary } from '../lib/documents'
+import { summary, toVerify } from '../lib/documents'
 
 type MemberKey = 'name' | 'number' | 'position' | 'groups' | 'email' | 'phone' | 'docs'
 
@@ -27,7 +27,7 @@ export default function Members() {
   const [contacts, setContacts] = useState<Contact[]>([])
   const [docs, setDocs] = useState<MemberDocument[]>([])
   const club = useClub()
-  const { groupId: filter } = useGroupFilter()
+  const { groupId: filter, scope } = useGroupFilter()
   const [query, setQuery] = useState('')
   const [page, setPage] = useState(1)
   // Another group has fewer people, so go back to the first page rather than land on an empty one.
@@ -58,7 +58,7 @@ export default function Members() {
   const q = query.trim().toLowerCase()
   const visible = profiles.filter(
     (p) =>
-      (filter === null || memberships.some((m) => m.user_id === p.id && m.group_id === filter)) &&
+      (filter === null ? !scope || memberships.some((m) => m.user_id === p.id && scope.includes(m.group_id)) : memberships.some((m) => m.user_id === p.id && m.group_id === filter)) &&
       (!q || `${p.first_name} ${p.last_name}`.toLowerCase().includes(q) || `${p.last_name} ${p.first_name}`.toLowerCase().includes(q)),
   )
   const groupsOf = (id: string) => memberships.filter((m) => m.user_id === id).map((m) => codeById.get(m.group_id)).filter(Boolean).join(', ')
@@ -87,9 +87,12 @@ export default function Members() {
   }
   // Staff see each member's paperwork at a glance, linked to their documents page.
   function docCell(id: string) {
-    const state = summary(docs.filter((d) => d.user_id === id), club.privacyNoticePath)
+    const mine = docs.filter((d) => d.user_id === id)
+    const state = summary(mine, club.privacyNoticePath)
+    // A certificate that waits for staff opens the review list, where the file and the confirmation are.
+    const waiting = toVerify(mine).length > 0 && state.text === t('docs.sumCertToVerify')
     return (
-      <Link className={`doc-status ${state.level}`} to={`/members/${id}/documents`}>
+      <Link className={`doc-status ${state.level}`} to={waiting ? '/members/certificates' : `/members/${id}/documents`}>
         <span className="dot" aria-hidden="true" />{state.text}
       </Link>
     )
@@ -97,7 +100,10 @@ export default function Members() {
 
   return (
     <div className="page wide">
-      <PageHeader title={t('members.title')} />
+      <PageHeader
+        title={t('members.title')}
+        actions={isStaff && <Link className="button secondary" to="/members/certificates">{docs.length ? t('certs.linkCount', { n: String(toVerify(docs.filter((d) => profiles.some((p) => p.id === d.user_id))).length) }) : t('certs.link')}</Link>}
+      />
       <div className="toolbar">
         <label className="search">
           <span>{t('members.search')}</span>

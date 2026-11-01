@@ -20,5 +20,6 @@ Start here:
 3. `docs/SPORTEASY_NOTES.md` holds what the current app does, so nothing is lost.
 4. `docs/SETUP_TEST_PROJECT.md` explains how to set up the test database and run the app and the tests.
 5. `docs/PROGRESS.md` holds what has been done and what comes next.
+6. `docs/CLOSING.md` is the full stop of the build: what the app does, what was left out, what waits for Davide, what to do before members join, and the known limits.
 
 Built with React, TypeScript and Vite, on Supabase (Postgres with row level security).

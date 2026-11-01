@@ -133,7 +133,7 @@ async function answer(route) {
   const json = (body, status = 200, headers = {}) => route.fulfill({ status, contentType: 'application/json', headers: { 'access-control-allow-origin': '*', 'access-control-allow-headers': '*', 'access-control-expose-headers': 'content-range', ...headers }, body: JSON.stringify(body) })
   if (req.method() === 'OPTIONS') return json({})
   const p = url.pathname
-  if (p.startsWith('/auth/v1/user')) return json({ id: ME, email: fixtures.me.email, aud: 'authenticated', role: 'authenticated' })
+  if (p.startsWith('/auth/v1/user')) return json({ id: ME, email: fixtures.me.email, aud: 'authenticated', role: 'authenticated', factors: fixtures.mockFactors ?? [] })
   if (p.startsWith('/auth/v1/')) return json({})
   if (p.startsWith('/functions/v1/league-match')) return json(fixtures.match)
   if (p.startsWith('/functions/v1/')) return json({ changed: false })
@@ -168,11 +168,11 @@ const ROUTES = [
   ['event-training', `/events/${training}`, 'sub'], ['event-game', `/events/${game}`, 'sub'], ['event-game-last-tab', `/events/${game}?tab=lineup`, 'sub'], ['event-training-last-tab', `/events/${training}?tab=plan`, 'sub'], ['event-future-game', `/events/${futureGame}`, 'sub'],
   ['event-new', '/events/new', 'sub'], ['attendance-missing', '/attendance?tab=missing'],
   ['announcements', '/announcements', 'sub'], ['drills', '/drills'],
-  ['member-edit', `/members/${member}`, 'sub'], ['member-documents', `/members/${member}/documents`, 'sub'],
+  ['certificate-review', '/members/certificates', 'sub'], ['member-edit', `/members/${member}`, 'sub'], ['member-documents', `/members/${member}/documents`, 'sub'],
   ['profile', '/profile'], ['profile-info', '/profile/info', 'sub'], ['profile-documents', '/documents', 'sub'],
   ['profile-absences', '/profile/absences', 'sub'], ['profile-season', '/profile/season', 'sub'], ['profile-club-documents', '/profile/club-documents', 'sub'], ['profile-security', '/profile/security', 'sub'], ['profile-notifications', '/profile/notifications', 'sub'],
   ['profile-calendar', '/profile/calendar', 'sub'], ['profile-app', '/profile/app', 'sub'],
-  ['settings', '/settings'], ['settings-club', '/settings/club', 'sub'], ['settings-groups', '/settings/groups', 'sub'],
+  ['settings', '/settings'], ['settings-club', '/settings/club', 'sub'], ['settings-documents', '/settings/documents', 'sub'], ['settings-groups', '/settings/groups', 'sub'],
   ['settings-rinks', '/settings/rinks', 'sub'], ['settings-ice', '/settings/ice', 'sub'], ['settings-invites', '/settings/invites', 'sub'],
   ['login', '/login', 'auth'],
 ].filter(([name]) => name.includes(only))
@@ -227,6 +227,34 @@ function measure() {
   }
   // Names with digits in the people lists.
   for (const el of document.querySelectorAll('.person-name, [data-person-name]')) if (/\d/.test(el.textContent)) problems.push(`name with digits: ${el.textContent.trim()}`)
+  // No two pieces of text overlap inside a menu row or a table row, and no text spills out of its row (UI rule 1.10).
+  // A piece is an element with text of its own, or a status dot; the text is measured line by line.
+  for (const row of document.querySelectorAll('.shell-nav a, main tr, main .list .member')) {
+    if (!visible(row)) continue
+    const pieces = []
+    for (const el of row.querySelectorAll('*')) {
+      if (!visible(el)) continue
+      const own = [...el.childNodes].some((c) => c.nodeType === 3 && c.textContent.trim())
+      if (!own && !el.classList.contains('dot')) continue
+      const rects = []
+      if (el.classList.contains('dot')) rects.push(el.getBoundingClientRect())
+      for (const c of el.childNodes) {
+        if (c.nodeType !== 3 || !c.textContent.trim()) continue
+        const range = document.createRange()
+        range.selectNodeContents(c)
+        rects.push(...[...range.getClientRects()].filter((r) => r.width > 0.5 && r.height > 0.5))
+      }
+      pieces.push({ label: el.classList.contains('dot') ? 'status dot' : name(el), rects })
+    }
+    const rr = row.getBoundingClientRect()
+    for (let i = 0; i < pieces.length; i++) {
+      for (const r of pieces[i].rects) if (r.right > rr.right + 1 || r.left < rr.left - 1) problems.push(`text spills out of its row: "${pieces[i].label}" in "${name(row)}"`)
+      for (let j = i + 1; j < pieces.length; j++) {
+        const hit = pieces[i].rects.some((a) => pieces[j].rects.some((b) => Math.min(a.right, b.right) - Math.max(a.left, b.left) > 1 && Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top) > 1))
+        if (hit) problems.push(`text overlaps: "${pieces[i].label}" and "${pieces[j].label}" in "${name(row)}"`)
+      }
+    }
+  }
   // Tab strips that are wider than the window must show a fade on the edge with more tabs, and keep the active tab in view.
   for (const strip of document.querySelectorAll('.tabstrip')) {
     const nav = strip.querySelector('.ev-tabs')
@@ -314,6 +342,7 @@ for (const width of WIDTHS) {
   const problems = []
   const check = (ok, text) => { if (!ok) problems.push(text) }
   const settle = async (path) => { await page.goto(origin + path); await page.waitForLoadState('networkidle').catch(() => {}); await page.waitForTimeout(300) }
+  const asViewEarly = async (view, path) => { await page.goto(origin + '/'); await page.evaluate((v) => localStorage.setItem('view-as', v), view); await settle(path) }
   const active = () => page.evaluate(() => ({ role: document.activeElement?.getAttribute('role'), checked: document.activeElement?.getAttribute('aria-checked'), text: document.activeElement?.textContent?.trim(), cls: document.activeElement?.className }))
 
   // The group menu opens on the chosen item, moves with the arrows and gives the focus back on Escape.
@@ -409,6 +438,150 @@ for (const width of WIDTHS) {
   check((await page.locator('main input[type=date]').count()) === 0, 'certificate: a date field shows although no file was uploaded')
   await settle(`/members/${member}/documents`)
   check((await page.locator('main input[type=date]').count()) === 1, 'certificate: no date field although a file was uploaded')
+
+  // Every certificate and consent status in the profile menu and on the Members page, from phone to computer width:
+  // no text overlaps or spills out of its row (decision 128, UI rule 1.10).
+  {
+    const days = (n) => new Date(Date.now() - n * 864e5).toISOString().slice(0, 10)
+    const until = (n) => new Date(Date.parse(days(n)) + 365 * 864e5).toISOString().slice(0, 10)
+    const file = `${ME}/medical_certificate-2000000000.jpg`
+    const certs = {
+      'no certificate': null,
+      'file, no date': { issued_on: null, issued_source: null, valid_until: null, file_path: file },
+      'typed date': { issued_on: days(10), issued_source: 'typed', valid_until: until(10), file_path: file },
+      'expired': { issued_on: days(400), issued_source: 'read', valid_until: until(400), file_path: file },
+      'expiring': { issued_on: days(350), issued_source: 'read', valid_until: until(350), file_path: file },
+      'valid': { issued_on: days(20), issued_source: 'read', valid_until: until(20), file_path: file },
+    }
+    const consents = { 'no notice': [null, null], 'not given': ['club/privacy.pdf', null], 'old notice': ['club/privacy.pdf', 'club/old.pdf'], 'given': ['club/privacy.pdf', 'club/privacy.pdf'] }
+    const keepDocs = fixtures.tables.member_documents.slice()
+    const keepNotice = fixtures.tables.club_settings[0].privacy_notice_path
+    const combos = [...Object.keys(certs).map((c) => [c, 'given']), ['valid', 'no notice'], ['valid', 'not given'], ['valid', 'old notice'], ['no certificate', 'not given']]
+    const seenTexts = new Set()
+    for (const [c, k] of combos) {
+      const [notice, given] = consents[k]
+      fixtures.tables.club_settings[0].privacy_notice_path = notice
+      const others = keepDocs.filter((d) => d.user_id !== ME)
+      const mine = []
+      if (certs[c]) mine.push({ user_id: ME, kind: 'medical_certificate', accepted_at: null, verified_at: null, verified_by: null, updated_by: ME, updated_at: new Date().toISOString(), ...certs[c] })
+      if (given) mine.push({ user_id: ME, kind: 'privacy_consent', valid_until: null, file_path: given, accepted_at: days(30), updated_by: ME, updated_at: new Date().toISOString() })
+      fixtures.tables.member_documents = [...others, ...mine]
+      for (const width of [320, 375, 768, 1024, 1280]) {
+        await page.setViewportSize({ width, height: 900 })
+        await settle(width < 768 ? '/profile' : '/profile/info')
+        const m = await page.evaluate(measure)
+        for (const text of m.problems.filter((x) => /overlap|spills/.test(x))) problems.push(`menu rows: ${c} + ${k} at ${width}px: ${text}`)
+        seenTexts.add(await page.evaluate(() => document.querySelector('.shell-nav .doc-status')?.textContent ?? ''))
+      }
+    }
+    check(seenTexts.size >= 8, `menu rows: only ${seenTexts.size} different status texts were tried`)
+    await page.setViewportSize({ width: 1280, height: 800 })
+    fixtures.tables.member_documents = keepDocs
+    fixtures.tables.club_settings[0].privacy_notice_path = keepNotice
+  }
+
+  // The certificate review list (decision 129): staff only, one row per certificate waiting, a second list of the ones the
+  // person confirmed themselves; Home and Members link to it; a staff member sees "Conferma la data" on their own page and the
+  // Giocatore view does not.
+  await settle('/members/certificates')
+  check((await page.locator('main .review-row').count()) >= 2, 'review list: fewer rows than the waiting and the self confirmed certificates')
+  check(/Confermato dal diretto interessato/.test(await page.locator('main').innerText()), 'review list: the self confirmed certificate is not marked "Confermato dal diretto interessato"')
+  check((await page.locator('main .review-row button:has-text("Conferma la data")').count()) >= 1, 'review list: no "Conferma la data" action')
+  await settle('/')
+  check((await page.locator('section[aria-labelledby=home-staff] a[href="/members/certificates"]').count()) === 1, 'review list: the Home figure does not link to it')
+  await settle('/members')
+  check((await page.locator('main a[href="/members/certificates"]').count()) >= 2, 'review list: Members has no link to it (button and column)')
+  {
+    const keepDocs = fixtures.tables.member_documents.slice()
+    fixtures.tables.member_documents = [...keepDocs, { user_id: ME, kind: 'medical_certificate', issued_on: new Date(Date.now() - 5 * 864e5).toISOString().slice(0, 10), issued_source: 'typed', valid_until: null, file_path: `${ME}/medical_certificate-2000000000.jpg`, accepted_at: null, verified_at: null, verified_by: null, updated_by: ME, updated_at: new Date().toISOString() }]
+    await asViewEarly('board', '/profile/documents')
+    check((await page.locator('main button:has-text("Conferma la data")').count()) === 1, 'own certificate: a staff view shows no "Conferma la data"')
+    await asViewEarly('player', '/profile/documents')
+    check((await page.locator('main button:has-text("Conferma la data")').count()) === 0 && (await page.locator('main button:has-text("Salva la data")').count()) === 1, 'own certificate: the Giocatore view shows the confirm action')
+    await asViewEarly('player', '/members/certificates')
+    check(new URL(page.url()).pathname === '/', 'review list: the Giocatore view can open it')
+    await page.goto(origin + '/')
+    await page.evaluate(() => localStorage.removeItem('view-as'))
+    fixtures.tables.member_documents = keepDocs
+  }
+
+  // The two step sign in is optional (decision 130): no "obbligatoria", no deadline when the club set none, an unfinished
+  // setup is explained and keeps a field for the code, and a verified one reads as active.
+  {
+    const keepDate = fixtures.tables.club_settings[0].mfa_required_from
+    fixtures.tables.club_settings[0].mfa_required_from = null
+    await settle('/profile/security')
+    const plain = await page.locator('main').innerText()
+    check(/Facoltativa/.test(plain) && !/obbligatori/i.test(plain) && !/prima delle/.test(plain), 'two step: the page does not read as optional, or shows a deadline although the club set none')
+    check(/Richiesta al direttivo/.test(plain) && /non richiede la verifica in due passaggi a nessuno/.test(plain), 'two step: the board does not see that nothing is required')
+    fixtures.mockFactors = [{ id: 'f1', factor_type: 'totp', status: 'unverified', friendly_name: 'App' }]
+    await settle('/profile/security')
+    check(/La configurazione non è stata completata/.test(await page.locator('main').innerText()) && (await page.locator('main input[autocomplete=one-time-code]').count()) === 1, 'two step: an unfinished setup is not explained or has no code field')
+    fixtures.mockFactors = [{ id: 'f2', factor_type: 'totp', status: 'verified', friendly_name: 'App' }]
+    await settle('/profile/security')
+    check(/è attiva/.test(await page.locator('main h2').first().innerText()), 'two step: a verified app does not read as active')
+    fixtures.mockFactors = []
+    fixtures.tables.club_settings[0].mfa_required_from = keepDate
+  }
+
+  // The Giocatore view shows only the person's own groups (decision 131). The sample person belongs to A and B; the training of
+  // C1 must not appear anywhere, the selector lists A and B with "I miei gruppi", and the staff views stay unlimited.
+  {
+    const SEEN = 'Allenamento C1 riservato'
+    const where = []
+    for (const path of ['/events', '/', '/stats', '/stats?tab=players', '/campionato', '/members']) {
+      await asViewEarly('player', path)
+      const body = await page.locator('body').innerText()
+      if (body.includes(SEEN)) where.push(path)
+      if (/\bC1\b/.test(await page.locator('main .chips, main .stats-filters').allInnerTexts().then((x) => x.join(' ')).catch(() => ''))) where.push(`${path} (a chip of C1)`)
+    }
+    check(where.length === 0, `groups: the Giocatore view shows a group the person is not in, on: ${where.join(', ')}`)
+    await asViewEarly('player', '/events')
+    await page.click('.side-switch .ms-button')
+    const items = (await page.locator('.side-switch [role=menuitemradio]').allInnerTexts()).map((x) => x.trim())
+    check(items.join('|') === 'I miei gruppi|A|B', `groups: the selector of the Giocatore view lists "${items.join('|')}" instead of I miei gruppi, A, B`)
+    await page.keyboard.press('Escape')
+    await asViewEarly('board', '/events')
+    check((await page.locator('body').innerText()).includes(SEEN), 'groups: the board view no longer shows the events of every group')
+    await page.click('.side-switch .ms-button')
+    const staffItems = (await page.locator('.side-switch [role=menuitemradio]').allInnerTexts()).map((x) => x.trim())
+    check(staffItems[0] === 'Tutti i gruppi' && staffItems.length === 6, `groups: the staff view selector lists "${staffItems.join('|')}"`)
+    await page.keyboard.press('Escape')
+    await page.goto(origin + '/')
+    await page.evaluate(() => localStorage.removeItem('view-as'))
+  }
+
+  // Required documents (decision 132): the months field is checked by the app, the consent can be a tick box.
+  await settle('/settings/documents')
+  await page.fill('main input[type=number]', '40')
+  await page.click('main button[type=submit]')
+  const rangeMessage = await page.evaluate(() => { const bad = document.querySelector('main input[type=number][aria-invalid=true]'); const id = (bad?.getAttribute('aria-describedby') || '').split(' ').find((x) => x.startsWith('fe-')); return id ? document.getElementById(id)?.textContent?.trim() ?? '' : '' })
+  check(/\S/.test(rangeMessage), 'required documents: 40 months is not refused with a message under the field')
+  {
+    const keepNotice = fixtures.tables.club_settings[0].privacy_notice_path
+    fixtures.tables.club_settings[0].privacy_notice_path = 'club/privacy.pdf'
+    fixtures.tables.club_settings[0].consent_mode = 'tick'
+    await asViewEarly('player', '/profile/documents')
+    check((await page.locator('main input[type=checkbox]').count()) === 1 && (await page.locator('main button:has-text("Ho letto e accetto")').count()) === 0, 'required documents: the tick box mode shows no tick box or still shows the button')
+    fixtures.tables.club_settings[0].consent_mode = 'button'
+    await asViewEarly('player', '/profile/documents')
+    check((await page.locator('main button:has-text("Ho letto e accetto")').count()) === 1, 'required documents: the button mode shows no button')
+    fixtures.tables.club_settings[0].privacy_notice_path = keepNotice
+    delete fixtures.tables.club_settings[0].consent_mode
+    await page.goto(origin + '/')
+    await page.evaluate(() => localStorage.removeItem('view-as'))
+  }
+
+  // The season card (V12): made on the phone, a canvas of the right proportions and two buttons of 44 pixels.
+  await settle('/profile/season')
+  await page.click('main button:has-text("Crea la scheda")')
+  await page.waitForTimeout(200)
+  const card = await page.locator('main canvas.season-card-canvas').boundingBox()
+  check(Boolean(card) && Math.abs(card.width / card.height - 1080 / 1350) < 0.02, 'season card: the picture is missing or has the wrong proportions')
+  const painted = await page.evaluate(() => { const c = document.querySelector('canvas.season-card-canvas'); if (!c) return false; const d = c.getContext('2d').getImageData(540, 700, 1, 1).data; return d[3] > 0 })
+  check(painted, 'season card: the picture is empty')
+  for (const label of ['Condividi', 'Salva l\'immagine']) check(((await page.locator(`main button:has-text("${label}")`).boundingBox())?.height ?? 0) >= 43.5, `season card: "${label}" is under 44 pixels or missing`)
+  await page.screenshot({ path: join(out, 'season-card.png'), fullPage: true })
 
   // The notification panel: fully inside the window, closes on a tap outside, on Escape and after a link, and gives the focus back.
   const bell = async (width, height, label) => {

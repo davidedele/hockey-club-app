@@ -28,9 +28,9 @@ export default function Events() {
   const asPlayer = !isStaff
   const club = useClub()
   const [allEvents, setEvents] = useState<EventRow[]>([])
-  const { groupId } = useGroupFilter()
+  const { inView } = useGroupFilter()
   // The group chosen in the switcher narrows the events shown.
-  const events = useMemo(() => (groupId === null ? allEvents : allEvents.filter((e) => e.event_groups.some((x) => x.group_id === groupId))), [allEvents, groupId])
+  const events = useMemo(() => allEvents.filter((e) => inView(e.event_groups.map((x) => x.group_id))), [allEvents, inView])
   const [groups, setGroups] = useState<Group[]>([])
   const [myGroups, setMyGroups] = useState<number[]>([])
   const [answers, setAnswers] = useState<Map<string, Answer>>(new Map())

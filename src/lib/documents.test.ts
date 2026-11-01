@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { certificateState, consentState, summary } from './documents'
+import { certificateState, confirmedBy, consentState, summary, toVerify } from './documents'
 import type { MemberDocument } from './types'
 
 const FILE = 'u/medical_certificate-2000000000.jpg'
@@ -54,5 +54,37 @@ describe('paperwork', () => {
   it('names what is wrong with the certificate', () => {
     expect(summary([cert({})], null, now).text).toBe('Manca la data di rilascio')
     expect(summary([cert({ issued_on: '2026-03-12', issued_source: 'typed', valid_until: '2027-03-12' })], null, now).text).toBe('Certificato da verificare')
+  })
+})
+
+describe('confirmedBy and toVerify', () => {
+  const base = { user_id: 'u1', kind: 'medical_certificate' as const, valid_until: '2027-05-01', file_path: 'u1/c.jpg', accepted_at: null, issued_on: '2026-05-01', issued_source: 'typed' as const }
+  it('says who confirmed, seen by the viewer', () => {
+    expect(confirmedBy({ ...base, verified_at: '2026-10-01T10:00:00Z', verified_by: 'u1' }, 'u1')).toBe('you')
+    expect(confirmedBy({ ...base, verified_at: '2026-10-01T10:00:00Z', verified_by: 'u1' }, 'staff1')).toBe('self')
+    expect(confirmedBy({ ...base, verified_at: '2026-10-01T10:00:00Z', verified_by: 'staff2' }, 'staff1')).toBe('staff')
+    expect(confirmedBy({ ...base, verified_at: '2026-10-01T10:00:00Z', verified_by: 'staff2' }, 'staff2')).toBe('you')
+    expect(confirmedBy({ ...base, verified_at: null, verified_by: null }, 'staff1')).toBeNull()
+    expect(confirmedBy(undefined, 'staff1')).toBeNull()
+  })
+  it('lists only certificates with a file and a date nobody confirmed', () => {
+    const typed = { ...base }
+    const confirmed = { ...base, user_id: 'u2', verified_at: '2026-10-01T10:00:00Z', verified_by: 'staff2' }
+    const read = { ...base, user_id: 'u3', issued_source: 'read' as const }
+    const noFile = { ...base, user_id: 'u4', file_path: null }
+    const consent = { ...base, user_id: 'u5', kind: 'privacy_consent' as const }
+    expect(toVerify([typed, confirmed, read, noFile, consent], '2026-10-15').map((d) => d.user_id)).toEqual(['u1'])
+  })
+})
+
+describe('the review switch of the club', () => {
+  it('counts a typed date at once when staff review is off, and waits for staff when it is on', async () => {
+    const { setCertificateReview } = await import('./documents')
+    const typed = cert({ issued_on: '2026-10-01', issued_source: 'typed', valid_until: '2027-10-01' })
+    expect(certificateState(typed, now).state).toBe('toVerify')
+    setCertificateReview(false)
+    expect(certificateState(typed, now).state).toBe('valid')
+    setCertificateReview(true)
+    expect(certificateState(typed, now).state).toBe('toVerify')
   })
 })

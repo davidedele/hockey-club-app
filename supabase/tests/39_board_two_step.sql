@@ -22,7 +22,8 @@ begin perform set_config('request.jwt.claims', case when p = '' then '' else jso
 
 \echo == before the date
 select test.login(pg_temp.u('b1'));
-select test.rows('the default grace period is about 30 days', $$select 1 from public.club_settings where mfa_required_from > now() + interval '25 days'$$, 1);
+-- Migration 0053 made the second step optional: the date starts empty. The tests of the optional switch set a date themselves.
+select test.rows('no date is set by default (0053)', $$select 1 from public.club_settings where mfa_required_from is null$$, 1);
 select test.affected('the board works without the second step', $$update public.club_settings set name = 'Club' $$, 1);
 select test.logout();
 

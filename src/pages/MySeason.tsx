@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import PageHeader from '../components/PageHeader'
+import SeasonCard from '../components/SeasonCard'
 import { locale, t } from '../i18n'
 import { attendancePercent, isEmptySeason, useMySeason } from '../lib/myseason'
 import { milestoneKey, type Milestone } from '../lib/milestones'
@@ -64,6 +65,7 @@ export default function MySeason() {
             <div><dt>{t('season.rating')}<small>{t('season.ratingOnly')}</small></dt><dd>{loaded && data?.rating_avg != null ? decimal.format(data.rating_avg) : dash}</dd></div>
           </dl></section>
           <p className="hint">{t('season.ratingNote')}</p>
+          {loaded && data && <SeasonCard data={data} season={season} />}
         </>
       )}
       {milestones !== null && (

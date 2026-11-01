@@ -1,5 +1,6 @@
 import { readableInk } from './colour'
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react'
+import { setCertificateReview } from './documents'
 import { supabase } from './supabase'
 
 // The club's own name, logo and game day colours, set by staff in the app.
@@ -12,13 +13,17 @@ export interface Club {
   privacyNoticePath: string | null
   jerseyLight: string
   jerseyDark: string
+  // Phase 1 of the required documents (decision 132).
+  certificateMonths: number
+  certificateReview: boolean
+  consentMode: 'button' | 'tick'
 }
 
 interface ClubState extends Club {
   reload: () => Promise<void>
 }
 
-const DEFAULT: Club = { name: '', logoPath: null, logoUrl: null, gameDark: '#111111', gameLight: '#ffd400', privacyNoticePath: null, jerseyLight: 'Chiara', jerseyDark: 'Scura' }
+const DEFAULT: Club = { name: '', logoPath: null, logoUrl: null, gameDark: '#111111', gameLight: '#ffd400', privacyNoticePath: null, jerseyLight: 'Chiara', jerseyDark: 'Scura', certificateMonths: 12, certificateReview: true, consentMode: 'button' }
 const Ctx = createContext<ClubState | null>(null)
 
 export function logoUrl(path: string | null): string | null {
@@ -29,13 +34,15 @@ export function ClubProvider({ children }: { children: ReactNode }) {
   const [club, setClub] = useState<Club>(DEFAULT)
 
   const reload = useCallback(async () => {
-    const { data } = await supabase.from('club_settings').select('name, logo_path, game_dark, game_light, privacy_notice_path, jersey_light_name, jersey_dark_name').maybeSingle()
-    const row = data as { name: string; logo_path: string | null; game_dark: string; game_light: string; privacy_notice_path: string | null; jersey_light_name: string; jersey_dark_name: string } | null
+    const { data } = await supabase.from('club_settings').select('name, logo_path, game_dark, game_light, privacy_notice_path, jersey_light_name, jersey_dark_name, certificate_months, certificate_review, consent_mode').maybeSingle()
+    const row = data as { name: string; logo_path: string | null; game_dark: string; game_light: string; privacy_notice_path: string | null; jersey_light_name: string; jersey_dark_name: string; certificate_months: number | null; certificate_review: boolean | null; consent_mode: 'button' | 'tick' | null } | null
     if (!row) return
     setClub({
       name: row.name, logoPath: row.logo_path, logoUrl: logoUrl(row.logo_path), gameDark: row.game_dark, gameLight: row.game_light,
       privacyNoticePath: row.privacy_notice_path, jerseyLight: row.jersey_light_name, jerseyDark: row.jersey_dark_name,
+      certificateMonths: row.certificate_months ?? 12, certificateReview: row.certificate_review ?? true, consentMode: row.consent_mode ?? 'button',
     })
+    setCertificateReview(row.certificate_review ?? true)
   }, [])
 
   // The club's details are only readable after signing in, so they are read again at every sign in

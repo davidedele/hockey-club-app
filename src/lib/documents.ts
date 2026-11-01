@@ -10,6 +10,11 @@ const RANK: Record<Level, number> = { none: 0, ok: 1, soon: 2, bad: 3 }
 // The certificate counts as expiring this many days before its date.
 export const SOON_DAYS = 30
 
+// Whether staff must confirm a date the member typed (the club setting `certificate_review`, on by default). Set when the
+// club settings load; with it off a typed date counts at once, as the database does for the reminders (decision 132).
+let reviewRequired = true
+export const setCertificateReview = (on: boolean) => { reviewRequired = on }
+
 export const today = () => dayKey(new Date().toISOString())
 
 // Where a certificate stands (decisions 94 and 105). A valid one has a file, a date of issue that the
@@ -23,7 +28,7 @@ export type CertState = 'missing' | 'needsDate' | 'toVerify' | 'expired' | 'soon
 export function certificateState(doc: MemberDocument | undefined, now = today()): { level: Level; text: string; state: CertState } {
   if (!doc?.file_path) return { level: 'bad', text: t('docs.certMissing'), state: 'missing' }
   // An old row has an end date and no date of issue: nobody read it from the file.
-  const trusted = Boolean(doc.issued_on) && (doc.issued_source === 'read' || Boolean(doc.verified_at))
+  const trusted = Boolean(doc.issued_on) && (doc.issued_source === 'read' || Boolean(doc.verified_at) || !reviewRequired)
   if (!doc.issued_on && !doc.valid_until) return { level: 'bad', text: t('docs.certNeedsDate'), state: 'needsDate' }
   if (!trusted || !doc.valid_until) {
     return { level: 'soon', text: doc.issued_on ? t('docs.certToVerifyOn', { date: formatDateYear(doc.issued_on) }) : t('docs.certToVerify'), state: 'toVerify' }
@@ -32,6 +37,22 @@ export function certificateState(doc: MemberDocument | undefined, now = today())
   if (doc.valid_until < now) return { level: 'bad', text: t('docs.certExpired', { date }), state: 'expired' }
   if (daysBetween(now, doc.valid_until) <= SOON_DAYS) return { level: 'soon', text: t('docs.certSoon', { date }), state: 'soon' }
   return { level: 'ok', text: t('docs.certValid', { date }), state: 'valid' }
+}
+
+// Who confirmed the date of a certificate, seen by the person looking at it. A staff member may confirm their own
+// certificate in a staff view; the record then says it was the person concerned (decision 129).
+export type Confirmer = 'you' | 'self' | 'staff'
+export function confirmedBy(doc: MemberDocument | undefined, viewer: string): Confirmer | null {
+  if (!doc?.verified_at || !doc.file_path) return null
+  if (doc.verified_by === viewer) return 'you'
+  if (doc.verified_by === doc.user_id) return 'self'
+  return 'staff'
+}
+
+// The certificates that wait for staff: a file and a date nobody confirmed. The Home figure, the Members column and the
+// review list all count with this one function, so the numbers agree.
+export function toVerify(docs: MemberDocument[], now = today()): MemberDocument[] {
+  return docs.filter((d) => d.kind === 'medical_certificate' && certificateState(d, now).state === 'toVerify')
 }
 
 export function consentState(doc: MemberDocument | undefined, noticePath: string | null): { level: Level; text: string } {

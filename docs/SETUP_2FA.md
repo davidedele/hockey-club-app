@@ -1,11 +1,11 @@
 # Setup: two step sign in for the board
 
-Everybody can turn on a second step at sign in (a 6 digit code from an authenticator app). For board accounts it becomes required after a date, and the database enforces it.
+Everybody can turn on a second step at sign in (a 6 digit code from an authenticator app). It is optional for everybody, the board included (migration 0053 clears the date). The board can require it for the board from the page Sicurezza, with a date it chooses; the database then enforces it.
 
 ## 1. Apply the database change
 
 1. Apply `supabase/apply/apply_0041_board_two_step.sql` in the SQL Editor (after the files with lower numbers). It stops by itself on the wrong project or on a second run.
-2. The migration gives the board 30 days from the day it is applied (`club_settings.mfa_required_from`). Until then everything works as before.
+2. Migration 0041 gave the board 30 days; migration 0053 removed the requirement (`club_settings.mfa_required_from` is empty). Nothing is required unless the board sets a date.
 
 ## 2. Check that the project allows it
 
@@ -21,7 +21,7 @@ Everybody can turn on a second step at sign in (a 6 digit code from an authentic
 
 1. A board account whose session did not pass the second step is treated as a plain member by the database (`is_board()` and `is_staff()` are false for it): it cannot change settings, roles, members, invites or documents. It can still sign in, open Sicurezza, enrol, sign in again with the code, and everything works.
 2. Coaches and players are not affected.
-3. The board can move the date, or clear it to switch the rule off: in the SQL Editor, `update public.club_settings set mfa_required_from = null;` (a board session that passed the second step can also do it from the app in a later version).
+3. The board can move the date, or clear it to switch the rule off: in the SQL Editor, `update public.club_settings set mfa_required_from = null;` (the board can also do it from the page Sicurezza).
 
 ## If a board member loses the phone
 
