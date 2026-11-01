@@ -171,7 +171,7 @@ export default function Home() {
             {loaded && laterCount > 0 && (
               <>
                 <div className="nowline"><span>{t('dash.laterTitle')}</span><i aria-hidden="true" /></div>
-                <p className="hint"><Link to="/events">{t(laterCount === 1 ? 'home.laterOne' : 'home.laterMany', { n: String(laterCount) })}</Link></p>
+                <p className="hint"><Link className="inline-action" to="/events">{t(laterCount === 1 ? 'home.laterOne' : 'home.laterMany', { n: String(laterCount) })}</Link></p>
               </>
             )}
           </section>}
