@@ -4,6 +4,19 @@ Every point Davide raised about the interface, with its status. Newest review fi
 
 Status words: Open, In progress, Done (PR number), Decided (waiting for Davide), Won't do (with the reason).
 
+## Polish round 6 (1 November 2026, from QA round 5 item 11, all decided by Davide as proposed). Branch `claude/polish-round-6`
+
+1. Tab strips cut at 375 pixels with no sign that they scroll. Status: Done: a soft fade on the edge with more tabs, the active tab scrolled into view, "Albo d'oro" is now "Albo", a check in the interface checker (this closes item 4 of the follow up run).
+2. La mia stagione: the average rating says what it counts. Status: Done: "Solo le partite in cui hai votato" under the average; the numbers did not change (decision 26 stands for Statistiche).
+3. No vibration on iPhone Safari. Status: Won't do, it is a limit of the phone: said in the timer's help text and in `docs/UI_RULES.md` 5.8.
+4. Sicurezza said "entro il 1 dicembre" while the rule starts at 00:43. Status: Done: the exact hour and day in Italian time.
+5. A board member in no group of a game saw the code prediction_closed. Status: Done: "Non fai parte dei gruppi di questa partita."; a started and a cancelled game have their own texts.
+6. The explanation of cancelling an event was a loose paragraph. Status: Done: it is in the cancel confirmation window.
+7. The training plan page said "Non c'è ancora un piano per questa seduta." twice. Status: Done: once.
+8. The line-up of a finished game with no line-up listed "Libero" places. Status: Done: "Nessuna formazione registrata".
+9. "Voti MVP" counts games, not votes. Status: Done: "Volte MVP" in La mia stagione and in the Statistiche tables.
+10. The opponent history did not treat double spaces inside a name as one. Status: Done (migration 0052, apply file written, not applied to any project).
+
 ## Phone test of 1 November 2026 (Davide, iPhone with Safari). Details and proposed fixes in `docs/FIX_BRIEF_2.md`
 
 1. B13 No message appears in forms with a required field left empty, including sign up and login (iPhone Safari does not show the browser's own message). Status: Done (branch `claude/beautiful-johnson-vsdump`): one helper, `src/lib/formcheck.ts`, used by every form. The iPhone itself still has to be tried by Davide.
