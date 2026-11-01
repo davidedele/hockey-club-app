@@ -30,9 +30,9 @@ Found:
 Change:
 1. A staff screen "Certificati da verificare" (a tab of the Members page or a page under the settings, as the UI rules say for similar lists): one row per member whose certificate has a file and has not been confirmed, with the name, the date of issue as entered or read, a button to open the file, and one action "Conferma la data" with the date field to correct it. After confirming, the row disappears and the count on Home follows.
 2. The Home figure "Certificati da verificare" and the Members column link to that screen.
-3. Decision (Davide to confirm, my default first): staff cannot confirm their own certificate, because a second pair of eyes is the point of the check. In a club with one board member another coach or board member confirms it. The database function `verify_certificate` refuses `p_user = auth.uid()` with its own message, and the screen explains it in Italian. If Davide prefers to allow it, record `verified_by` as the person themselves and say so on the screen.
+3. Decision (Davide, 1 November): a staff member may confirm their own certificate, when they are in a staff view (Direttivo or Allenatore) and open their own documents page. In the Giocatore view the confirm action is not shown (decisions 93 and 106). The database function `verify_certificate` already allows it, since it only checks that the caller is staff, so no migration is needed for this. `verified_by` records the person themselves, and the screen and the list say so ("Confermato da te", and in the review list "Confermato dal diretto interessato"), so the record stays honest.
 
-Proof: with a test member that has a file and a typed date, the board sees the row in the list, opens the file, confirms or corrects the date, and the status becomes valid; the row, the Home count and the Members column all change; own certificate refused. Database tests for the self case and for a coach.
+Proof: with a test member that has a file and a typed date, the board sees the row in the list, opens the file, confirms or corrects the date, and the status becomes valid; the row, the Home count and the Members column all change; a staff member confirms their own certificate in a staff view and does not see the action in the Giocatore view; `verified_by` shows themselves. Database tests for the self case and for a coach.
 
 ## D2. Overlap in "Dati personali"
 
