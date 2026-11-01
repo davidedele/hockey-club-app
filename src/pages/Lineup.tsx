@@ -80,6 +80,8 @@ export default function Lineup({ embedded = false }: { embedded?: boolean }) {
   const over = new Date(event.ends_at).getTime() < Date.now()
   const cancelled = event.cancelled_at !== null
   const canEdit = isStaff && !over && !cancelled
+  // A finished game nobody filled in: no list of empty places, one sentence.
+  const noneRecorded = loaded && over && places.length === 0
   const held = (p: Place) => places.find((x) => x.slot === p.slot && x.unit === p.unit) ?? null
   const placeLabel = (p: Place) =>
     p.slot === 'goalie' ? t('lineup.goalieN', { n: String(p.unit) }) : t(`slot.${p.slot}` as MessageKey)
@@ -177,11 +179,12 @@ export default function Lineup({ embedded = false }: { embedded?: boolean }) {
       {error && <p className="error" role="alert">{error}</p>}
       {isStaff && event.type === 'game' && !over && !cancelled && new Date(event.starts_at).getTime() <= Date.now() && <ShiftTimer />}
       {canEdit && <p className="hint">{t('lineup.help')}</p>}
-      {isStaff && over && <p className="hint">{t('lineup.overHint')}</p>}
+      {isStaff && over && !noneRecorded && <p className="hint">{t('lineup.overHint')}</p>}
       {isStaff && cancelled && <p className="hint">{t('lineup.cancelledHint')}</p>}
-      {!isStaff && places.length === 0 && <p className="hint">{t('lineup.empty')}</p>}
+      {!isStaff && !over && places.length === 0 && <p className="hint">{t('lineup.empty')}</p>}
+      {noneRecorded && <p className="hint">{t('lineup.noneRecorded')}</p>}
 
-      {units().map((section) => (
+      {!noneRecorded && units().map((section) => (
         <section key={section.key}>
           <h2>{t(section.heading)}</h2>
           {section.units.map((u) => (

@@ -1108,5 +1108,6 @@
   "error.prediction_closed": "Non si può più fare il pronostico per questa partita.",
   "predict.closedGroups": "Non fai parte dei gruppi di questa partita.",
   "predict.closedStarted": "La partita è già iniziata: il pronostico non si può più fare né cambiare.",
-  "predict.closedCancelled": "La partita è stata annullata: non c'è nessun pronostico da fare."
+  "predict.closedCancelled": "La partita è stata annullata: non c'è nessun pronostico da fare.",
+  "lineup.noneRecorded": "Nessuna formazione registrata"
 }

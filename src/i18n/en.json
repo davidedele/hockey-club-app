@@ -1108,5 +1108,6 @@
   "error.prediction_closed": "A guess can no longer be made for this game.",
   "predict.closedGroups": "You are not in the groups of this game.",
   "predict.closedStarted": "The game has already started: the guess can no longer be made or changed.",
-  "predict.closedCancelled": "The game was cancelled: there is nothing to guess."
+  "predict.closedCancelled": "The game was cancelled: there is nothing to guess.",
+  "lineup.noneRecorded": "No line-up recorded"
 }
