@@ -202,6 +202,19 @@ export interface LeagueSync {
   message: string | null
 }
 
+export interface LeaguePlayerTotal {
+  team: string
+  player_name: string
+  player_number: string | null
+  games: number
+  goals: number
+  assists: number
+  points: number
+  pp_goals: number
+  penalties: number
+  penalty_minutes: number
+}
+
 export interface Rink {
   id: number
   name: string

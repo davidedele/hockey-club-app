@@ -189,7 +189,9 @@ export const fixtures = {
     ],
     league_matches: leagueMatches, league_standings: standings,
     league_championships: [{ id: 1, name: 'Campionato A', position: 1 }, { id: 2, name: 'Coppa A', position: 2 }, { id: 3, name: 'Campionato B', position: 3 }],
-    league_sync: [{ id: true, started_at: at(-1, 8), finished_at: at(-1, 8, 1), ok: true, message: null }],
+    league_sync: [{ id: true, started_at: at(-1, 8), finished_at: at(-1, 8, 1), ok: true, message: null, details_started_at: at(-1, 8), details_finished_at: at(-1, 8, 1), details_message: null }],
+    // Most of the finished games of the sample competition have been read, three are still to come.
+    league_match_reads: leagueMatches.filter((m) => m.championship_id === 1 && m.home_score !== null).slice(0, 12).map((m) => ({ match_id: m.id })),
     reminder_prefs: [], calendar_tokens: [{ user_id: ME, token: 'sampletoken0123456789sampletoken0123456789', created_at: at(-30, 9) }],
   },
   rpc: {
@@ -207,6 +209,13 @@ export const fixtures = {
       { category: 'assists', user_id: uid(3), first_name: 'Luca', last_name: 'Rossi', value: 9 },
       { category: 'present', user_id: uid(2), first_name: 'Marco', last_name: 'Bianchi', value: 31 },
     ],
+    // Players of the championship, long names and many rows on purpose (the table limit and the narrow screens).
+    league_player_totals: Array.from({ length: 26 }, (_, i) => ({
+      team: ['HC Sample', 'HC Orsi', 'HC Esempio', 'HC Lupi della Valle Antica'][i % 4],
+      player_name: i === 3 ? 'Giovanni Battista Montefusco Della Rovere' : `Giocatore ${String.fromCharCode(65 + i)}${String.fromCharCode(97 + (i % 20))}ti`,
+      player_number: i % 5 === 0 ? null : String(2 + i * 3), games: 3 + (i % 8), goals: 14 - Math.floor(i / 2), assists: 9 - Math.floor(i / 3), points: 23 - Math.floor(i / 2) - Math.floor(i / 3),
+      pp_goals: i % 4, penalties: 6 - Math.floor(i / 5), penalty_minutes: 22 - i,
+    })),
     is_staff: true, is_board: true, is_member: true,
     attendance_summary: summary,
     attendance_grid: gridRows,

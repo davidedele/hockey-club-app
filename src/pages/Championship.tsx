@@ -3,6 +3,7 @@ import PageHeader from '../components/PageHeader'
 import { Link } from 'react-router-dom'
 import { t } from '../i18n'
 import SeasonTabs from '../components/SeasonTabs'
+import LeagueLeaders from '../components/LeagueLeaders'
 import { leagueSync, prettyName, refreshLeague } from '../lib/league'
 import { useGroupFilter } from '../lib/groupfilter'
 import { useSession } from '../lib/session'
@@ -81,6 +82,8 @@ export default function Championship() {
   const upcoming = allUpcoming.slice(0, SHOWN + moreNext)
   const results = allResults.slice(0, SHOWN + moreResults)
   const table = standings.filter((s) => s.championship_id === comp?.id)
+  // The finished games of the whole competition (not only the club's), whose details the player tables are made from.
+  const finishedIds = useMemo(() => matches.filter((m) => m.championship_id === comp?.id && m.home_score !== null).map((m) => m.id), [matches, comp?.id])
 
   async function forceRefresh() {
     setRefreshing(true)
@@ -211,6 +214,7 @@ export default function Championship() {
               {more(results.length, allResults.length, () => setMoreResults(moreResults + SHOWN))}
             </section>
           </div>
+          {comp && <LeagueLeaders championshipId={comp.id} finishedIds={finishedIds} />}
         </>
       )}
 

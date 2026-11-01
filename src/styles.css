@@ -539,6 +539,14 @@ a.doc-status:hover { text-decoration: underline; }
 .lm-vs { color: var(--muted); font-size: .875rem; }
 .lm-venue { font-size: .8125rem; color: var(--muted); }
 .league-source { margin-top: 1.5rem; }
+.league-leaders { margin-top: 2rem; min-width: 0; }
+.league-leaders .tabstrip { margin-bottom: .75rem; }
+.leaders thead th:first-child, .leaders th[scope="row"] { text-align: left; }
+.leaders th[scope="row"] { display: flex; align-items: center; gap: .625rem; min-width: 12rem; font-weight: 400; white-space: normal; }
+.leader-rank { flex: none; min-width: 1.5rem; font: 600 1rem/1 var(--font-display); color: var(--muted); font-variant-numeric: tabular-nums; }
+.leader-who { display: grid; min-width: 0; }
+.leader-name { font-weight: 500; }
+.leader-team { font-size: .8125rem; color: var(--muted); }
 @media (max-width: 767.98px) { .lmatches li > a, .lmatches li > div { grid-template-columns: 4.75rem minmax(0, 1fr); padding: .625rem .75rem; } }
 
 /* Cancelled events stay in the lists, struck through, and take no answers */
