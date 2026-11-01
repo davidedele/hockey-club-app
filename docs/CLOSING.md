@@ -32,7 +32,7 @@ For Davide and the board. It says what the app does today, what was left out on 
 ## 3. Built, but waiting for Davide
 
 1. The apply files, to run in this order in the SQL Editor of the Supabase project, test project first: `apply_0036` to `apply_0056` in `supabase/apply`. On the test project the files up to 0035 are already applied. Each file stops by itself if it is run twice or on the wrong project.
-2. Functions to deploy: `league-sync`, `league-match`, `calendar-feed` (redeploy it: the deployed one does not yet write the rink address), `league-details` (new: reads the finished league games for the player tables), `send-reminders` and `delete-member`.
+2. Functions to deploy: `league-sync`, `league-match`, `calendar-feed`, `league-details` (new: reads the finished league games for the player tables), `send-reminders` and `delete-member`.
 3. Secrets in the project's Edge Functions settings: `REMINDER_SECRET`, `RESEND_API_KEY`, `REMINDER_FROM`, `APP_URL`, `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`, and in the build `VITE_VAPID_PUBLIC_KEY`.
 4. Push setup: `docs/SETUP_PUSH.md`. Until the build has the public key, the notification page says that phone notifications are not yet switched on by the club.
 5. The real sign up test: a new person signs up with an invite link, confirms the email, answers an event, and the board deletes that person's data at the end.
@@ -43,7 +43,7 @@ For Davide and the board. It says what the app does today, what was left out on 
 ## 4. Before real members join
 
 1. The production project in an EU region on the Pro plan (`docs/SETUP_PRODUCTION.md`, section 1).
-2. The final privacy notice, approved by the board and uploaded in the settings (`docs/PRIVACY_NOTICE_DRAFT.md`).
+2. The final privacy notice, approved by the board and uploaded in the settings (`docs/PRIVACY_NOTICE_DRAFT.md`). Davide decided on 1 November 2026: no formal privacy notice during the first small trial; a short mock notice may be uploaded for it, and the president is informed. The real notice is needed before the club goes live.
 3. The email sender with the club's own domain (`docs/SETUP_EMAIL.md`), and "Confirm email" switched on.
 4. A trial with a few real players for a few weeks, as the spec says, before the club moves over from SportEasy.
 5. A backup routine tried once: a monthly dump kept outside Supabase and one restore into a scratch project.
