@@ -133,7 +133,7 @@ async function answer(route) {
   const json = (body, status = 200, headers = {}) => route.fulfill({ status, contentType: 'application/json', headers: { 'access-control-allow-origin': '*', 'access-control-allow-headers': '*', 'access-control-expose-headers': 'content-range', ...headers }, body: JSON.stringify(body) })
   if (req.method() === 'OPTIONS') return json({})
   const p = url.pathname
-  if (p.startsWith('/auth/v1/user')) return json({ id: ME, email: fixtures.me.email, aud: 'authenticated', role: 'authenticated' })
+  if (p.startsWith('/auth/v1/user')) return json({ id: ME, email: fixtures.me.email, aud: 'authenticated', role: 'authenticated', factors: fixtures.mockFactors ?? [] })
   if (p.startsWith('/auth/v1/')) return json({})
   if (p.startsWith('/functions/v1/league-match')) return json(fixtures.match)
   if (p.startsWith('/functions/v1/')) return json({ changed: false })
@@ -503,6 +503,25 @@ for (const width of WIDTHS) {
     await page.goto(origin + '/')
     await page.evaluate(() => localStorage.removeItem('view-as'))
     fixtures.tables.member_documents = keepDocs
+  }
+
+  // The two step sign in is optional (decision 130): no "obbligatoria", no deadline when the club set none, an unfinished
+  // setup is explained and keeps a field for the code, and a verified one reads as active.
+  {
+    const keepDate = fixtures.tables.club_settings[0].mfa_required_from
+    fixtures.tables.club_settings[0].mfa_required_from = null
+    await settle('/profile/security')
+    const plain = await page.locator('main').innerText()
+    check(/Facoltativa/.test(plain) && !/obbligatori/i.test(plain) && !/prima delle/.test(plain), 'two step: the page does not read as optional, or shows a deadline although the club set none')
+    check(/Richiesta al direttivo/.test(plain) && /non richiede la verifica in due passaggi a nessuno/.test(plain), 'two step: the board does not see that nothing is required')
+    fixtures.mockFactors = [{ id: 'f1', factor_type: 'totp', status: 'unverified', friendly_name: 'App' }]
+    await settle('/profile/security')
+    check(/La configurazione non è stata completata/.test(await page.locator('main').innerText()) && (await page.locator('main input[autocomplete=one-time-code]').count()) === 1, 'two step: an unfinished setup is not explained or has no code field')
+    fixtures.mockFactors = [{ id: 'f2', factor_type: 'totp', status: 'verified', friendly_name: 'App' }]
+    await settle('/profile/security')
+    check(/è attiva/.test(await page.locator('main h2').first().innerText()), 'two step: a verified app does not read as active')
+    fixtures.mockFactors = []
+    fixtures.tables.club_settings[0].mfa_required_from = keepDate
   }
 
   // The notification panel: fully inside the window, closes on a tap outside, on Escape and after a link, and gives the focus back.

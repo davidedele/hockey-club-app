@@ -29,19 +29,34 @@ export function useNeedsSecondStep(userId: string | undefined): { needed: boolea
   return { needed, done: () => setNeeded(false) }
 }
 
-// The verified authenticator apps of the signed in person.
+// The authenticator apps of the signed in person: the verified ones, and an unverified one left by a setup that was
+// started and never confirmed (it counts for nothing until the code is typed).
 export function useFactors() {
   const [factors, setFactors] = useState<Factor[] | null>(null)
+  const [unfinished, setUnfinished] = useState<Factor | null>(null)
   const reload = useCallback(async () => {
     try {
       const { data } = await supabase.auth.mfa.listFactors()
       setFactors(((data?.totp ?? []) as Factor[]))
+      const all = ((data?.all ?? []) as (Factor & { status?: string; factor_type?: string })[])
+      setUnfinished(all.find((f) => f.status === 'unverified' && f.factor_type === 'totp') ?? null)
     } catch {
       setFactors([])
+      setUnfinished(null)
     }
   }, [])
   useEffect(() => { void reload() }, [reload])
-  return { factors, reload }
+  return { factors, unfinished, reload }
+}
+
+// The QR code of a setup is shown once by the server. It is kept for this tab, so a reload does not lose it.
+const SETUP_KEY = 'mfa-setup'
+export interface PendingSetup { id: string; qr: string; secret: string }
+export function savedSetup(): PendingSetup | null {
+  try { return JSON.parse(sessionStorage.getItem(SETUP_KEY) ?? 'null') as PendingSetup | null } catch { return null }
+}
+export function keepSetup(s: PendingSetup | null) {
+  try { if (s) sessionStorage.setItem(SETUP_KEY, JSON.stringify(s)); else sessionStorage.removeItem(SETUP_KEY) } catch { /* a private window may refuse */ }
 }
 
 // The code from the authenticator app: six digits, spaces allowed when it is copied.

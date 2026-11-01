@@ -27,6 +27,7 @@ const FILES = {
   '0050': ['no_direct_profile_delete', `to_regprocedure('public.season_leaders(integer)') is not null`, `not exists (select 1 from pg_policies where schemaname = 'public' and tablename = 'profiles' and policyname = 'profiles_delete')`],
   '0051': ['scrub_deleted_account', `to_regclass('public.profiles') is not null and not exists (select 1 from pg_policies where schemaname = 'public' and tablename = 'profiles' and policyname = 'profiles_delete')`, `to_regprocedure('public.scrub_deleted_account(uuid)') is not null`],
   '0052': ['team_name_spaces', `to_regprocedure('public.opponent_history(uuid)') is not null`, `to_regprocedure('public.team_key(text)') is not null`],
+  '0053': ['two_step_optional', col('club_settings', 'mfa_required_from'), `exists (select 1 from information_schema.columns where table_schema = 'public' and table_name = 'club_settings' and column_name = 'mfa_required_from' and column_default is null)`],
 }
 
 mkdirSync(join(root, 'supabase/apply'), { recursive: true })
