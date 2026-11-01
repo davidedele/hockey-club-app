@@ -1245,6 +1245,7 @@ button.fold-head { display: flex; align-items: center; justify-content: space-be
 /* Club documents (V3): the name may be long, the actions drop below it instead of leaving the window. */
 .club-docs .row { flex-wrap: wrap; align-items: flex-start; }
 .club-docs .row > span:first-child { flex: 1 1 12rem; min-width: 0; overflow-wrap: anywhere; }
+.club-docs small.block { display: block; }
 .row-actions { display: flex; flex-wrap: wrap; gap: .25rem 1rem; align-items: center; }
 .button-row { display: flex; flex-wrap: wrap; gap: .5rem .75rem; }
 .ev-main .card { margin-top: 1rem; }

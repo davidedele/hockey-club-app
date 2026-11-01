@@ -12,7 +12,7 @@ export default function Settings() {
   const { isStaff, isBoard, loading } = useSession()
   const club = useClub()
   if (!loading && !isStaff) return <Navigate to="/events" replace />
-  const keys = isBoard ? ['club', 'documents', 'groups', 'rinks', 'ice', 'invites'] : ['invites']
+  const keys = isBoard ? ['club', 'documents', 'groups', 'rinks', 'ice', 'league', 'invites'] : ['invites']
   return (
     <SectionShell
       base="/settings"
