@@ -22,6 +22,7 @@ import { whatsappLink } from '../lib/whatsapp'
 import { supabase } from '../lib/supabase'
 import { formatDay, formatShortDay, formatTime } from '../lib/time'
 import type { Answer, AttendanceRow, EventRow, Group, Rink, Status } from '../lib/types'
+import TabStrip from '../components/TabStrip'
 
 const STATUSES: Status[] = ['on_time', 'late', 'excused', 'unexcused', 'injured', 'not_called_up']
 
@@ -399,11 +400,11 @@ export default function EventDetail() {
         onClose={() => setConfirming(false)}
       />
 
-      <nav className="ev-tabs" aria-label={t('event.tabs')}>
+      <TabStrip label={t('event.tabs')}>
         {tabs.map((x) => (
           <Link key={x.key} to={{ search: x.key === 'info' ? '' : `?tab=${x.key}` }} replace aria-current={x.key === tab ? 'page' : undefined}>{x.label}</Link>
         ))}
-      </nav>
+      </TabStrip>
 
       {tab === 'info' && (
         <div className="ev-cols">

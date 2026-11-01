@@ -165,7 +165,7 @@ const { training, game, member, futureGame } = fixtures.ids
 const ROUTES = [
   ['home', '/'], ['events', '/events'], ['members', '/members'], ['championship', '/campionato'], ['league-match', '/campionato/partita/501', 'sub'], ['stats', '/stats'], ['stats-predictions', '/stats?tab=predictions'], ['stats-hall', '/stats?tab=hall'],
   ['attendance', '/attendance'], ['attendance-events', '/attendance?tab=events'],
-  ['event-training', `/events/${training}`, 'sub'], ['event-game', `/events/${game}`, 'sub'], ['event-future-game', `/events/${futureGame}`, 'sub'],
+  ['event-training', `/events/${training}`, 'sub'], ['event-game', `/events/${game}`, 'sub'], ['event-game-last-tab', `/events/${game}?tab=lineup`, 'sub'], ['event-training-last-tab', `/events/${training}?tab=plan`, 'sub'], ['event-future-game', `/events/${futureGame}`, 'sub'],
   ['event-new', '/events/new', 'sub'], ['attendance-missing', '/attendance?tab=missing'],
   ['announcements', '/announcements', 'sub'], ['drills', '/drills'],
   ['member-edit', `/members/${member}`, 'sub'], ['member-documents', `/members/${member}/documents`, 'sub'],
@@ -227,6 +227,24 @@ function measure() {
   }
   // Names with digits in the people lists.
   for (const el of document.querySelectorAll('.person-name, [data-person-name]')) if (/\d/.test(el.textContent)) problems.push(`name with digits: ${el.textContent.trim()}`)
+  // Tab strips that are wider than the window must show a fade on the edge with more tabs, and keep the active tab in view.
+  for (const strip of document.querySelectorAll('.tabstrip')) {
+    const nav = strip.querySelector('.ev-tabs')
+    if (!nav || !visible(nav)) continue
+    const scrolls = nav.scrollWidth > nav.clientWidth + 1
+    const label = nav.getAttribute('aria-label')
+    const fadeRight = strip.getAttribute('data-more-right') === 'true'
+    const fadeLeft = strip.getAttribute('data-more-left') === 'true'
+    const atEnd = nav.scrollLeft + nav.clientWidth >= nav.scrollWidth - 1
+    if (scrolls && !atEnd && !fadeRight) problems.push(`tab strip "${label}" scrolls but shows no fade on the right edge`)
+    if (scrolls && nav.scrollLeft > 1 && !fadeLeft) problems.push(`tab strip "${label}" is scrolled but shows no fade on the left edge`)
+    if (!scrolls && (fadeRight || fadeLeft)) problems.push(`tab strip "${label}" fits but shows a fade`)
+    const active = nav.querySelector('[aria-current]')
+    if (active) {
+      const a = active.getBoundingClientRect(); const n = nav.getBoundingClientRect()
+      if (a.left < n.left - 1 || a.right > n.right + 1) problems.push(`tab strip "${label}": the active tab "${name(active)}" is not fully in view`)
+    }
+  }
   const frame = document.querySelector('main > .page, main > div > .page, #root > .page')
   const back = document.querySelector('[data-back]')
   const shellNav = document.querySelector('.shell-nav')

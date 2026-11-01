@@ -70,7 +70,7 @@ Status words: Open, In progress, Done (PR number), Decided (waiting for Davide),
 1. New screens: "Ultimi scontri con ..." on a game page, the number hint on Dati personali, "Documenti del club" in the profile list, the video button on a game, "In evidenza" announcements, "Traguardi" in La mia stagione, "Il tuo pronostico" and the list of guesses on a game, the Statistiche tabs "Pronostici" and "Albo d'oro", the shift timer on the line-up tab. Status: Done, checked by the interface checker (except the shift timer, see item 3).
 2. The checker found a club document row whose button left the window at 320 to 390 pixels, and a video link under 44 pixels. Status: Done.
 3. The shift timer only shows for staff during a live game; the checker's sample data has none, so it was looked at by hand only in a scratch run. Status: Open (add a live game to the sample data).
-4. At 375 pixels the Statistiche tab "Albo d'oro" is cut at the edge and scrolls, like the Eventi tabs. Status: Open, Davide to say if a shorter name is wanted.
+4. At 375 pixels the tab strips (Statistiche, event page, Presenze) were cut at the right edge with no sign that they scroll. Status: Done (polish round 6): a soft fade on the edge with more tabs (`TabStrip`), the active tab scrolled into view, "Albo d'oro" shortened to "Albo", and a check in `scripts/ui-check.mjs`.
 5. In the profile list the dot of the "Documenti" status touches the last letter of the word in the checker's screenshot at 1280 pixels. Status: Open, check on a real screen.
 
 ## Earlier reviews

@@ -5,6 +5,7 @@ import AttendanceGrid from './AttendanceGrid'
 import AttendanceSummary from './AttendanceSummary'
 import Unanswered from './Unanswered'
 import PageHeader from '../components/PageHeader'
+import TabStrip from '../components/TabStrip'
 
 // The attendance of the club in one page: the summary per player, the grid per event, and who has
 // not answered yet for the coming days.
@@ -17,11 +18,11 @@ export default function Attendance() {
   return (
     <div className="page wide attendance-page">
       <PageHeader title={t('summary.title')} />
-      <nav className="ev-tabs" aria-label={t('summary.title')}>
+      <TabStrip label={t('summary.title')}>
         <Link to={{ search: '' }} replace aria-current={tab === 'summary' ? 'page' : undefined}>{t('att.tabSummary')}</Link>
         <Link to={{ search: '?tab=events' }} replace aria-current={tab === 'events' ? 'page' : undefined}>{t('att.tabEvents')}</Link>
         <Link to={{ search: '?tab=missing' }} replace aria-current={tab === 'missing' ? 'page' : undefined}>{t('att.tabMissing')}</Link>
-      </nav>
+      </TabStrip>
       {tab === 'summary' && <AttendanceSummary />}
       {tab === 'events' && <AttendanceGrid embedded />}
       {tab === 'missing' && <Unanswered />}
