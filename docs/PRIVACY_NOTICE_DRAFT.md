@@ -19,6 +19,7 @@ Bozza da far approvare dal consiglio prima che entrino i giocatori veri. È una 
 11. Se attivi le notifiche sul telefono: l'indirizzo tecnico del tuo telefono presso il servizio di notifiche del sistema (Apple, Google o il produttore del browser) e le chiavi per scriverti. Non contiene altri dati tuoi. Puoi disattivarle quando vuoi.
 12. Le tue scelte su quali notifiche ricevere e con quale canale.
 13. Se attivi la verifica in due passaggi: l'app di autenticazione collegata al tuo account. È obbligatoria per il consiglio.
+14. Dati pubblici della Lega Hockey Libertas sulle partite del campionato (nome, numero di maglia, gol, assist e penalità dei giocatori di tutte le squadre), copiati dal sito della Lega (punto 4.7).
 
 Non chiediamo data di nascita, altezza, peso o dati dei genitori.
 
@@ -34,7 +35,7 @@ Non chiediamo data di nascita, altezza, peso o dati dei genitori.
 3. Il certificato medico (file e scadenza) è visibile solo a te, agli allenatori e al consiglio.
 4. Chi ha votato chi non lo vede nessuno, nemmeno il consiglio.
 5. Il link di calendario personale mostra solo gli eventi delle tue squadre, senza nomi né presenze.
-7. I dettagli delle partite di campionato (marcatori, penalità, formazioni) vengono letti dal sito pubblico della Lega Hockey Libertas quando apri la partita e non vengono salvati dall'app.
+7. I dettagli delle partite di campionato (marcatori, assist, penalità, formazioni, con nome e numero di maglia dei giocatori di tutte le squadre) vengono letti dal sito pubblico della Lega Hockey Libertas e conservati dall'app per le classifiche dei giocatori del campionato. Sono dati che la Lega pubblica già, anche su persone che non sono socie del club. Li vedono solo i soci registrati e non vengono usati per altro. Anche i tuoi dati di gioco che la Lega pubblica compaiono nelle classifiche del campionato, con il nome come lo scrive la Lega.
 6. I messaggi della discussione di un evento li leggono tutti quelli che vedono quell'evento e si vede chi li ha letti. Li può togliere chi li ha scritti, l'allenatore e il consiglio.
 
 ## 5. Certificato medico
@@ -50,8 +51,9 @@ Con ciascuno serve un accordo sul trattamento dei dati (DPA) e la verifica di do
 ## 7. Per quanto tempo
 1. Dati dell'account e dell'attività: finché fai parte del club. Dopo l'uscita, cancellati o anonimizzati entro [12] mesi.
 2. Certificato medico: finché è valido e fino alla consegna di quello nuovo, poi cancellato.
-3. Statistiche di gara possono restare in forma anonima nello storico del club.
-4. Se chiedi di cancellare i tuoi dati, il consiglio lo fa dalla tua scheda: il tuo nome diventa Utente Eliminato, e vengono cancellati contatto, telefono, foto, certificato medico e suoi file, assenze, link del calendario, preferenze di notifica, telefoni collegati, appartenenza alle squadre; l'account di accesso viene disattivato e privato di email e nome, così non può più essere usato. Presenze, risultati, statistiche e voti restano collegati al profilo anonimo, senza il tuo nome, così le classifiche di stagione non cambiano. I messaggi che hai scritto restano con l'autore Utente Eliminato. In una squadra piccola un risultato può far riconoscere una persona dal contesto: [il consiglio decide con il referente privacy se tenere i risultati anonimi]. I dati pubblici della Lega su di te non dipendono da noi.
+3. I dati copiati dal sito della Lega restano per la stagione del campionato e possono restare nello storico; se non vuoi comparire nelle classifiche del campionato scrivi a [email del club] e il consiglio toglie il tuo nome dalle righe copiate, tenendo però quello che pubblica la Lega.
+4. Statistiche di gara possono restare in forma anonima nello storico del club.
+5. Se chiedi di cancellare i tuoi dati, il consiglio lo fa dalla tua scheda: il tuo nome diventa Utente Eliminato, e vengono cancellati contatto, telefono, foto, certificato medico e suoi file, assenze, link del calendario, preferenze di notifica, telefoni collegati, appartenenza alle squadre; l'account di accesso viene disattivato e privato di email e nome, così non può più essere usato. Presenze, risultati, statistiche e voti restano collegati al profilo anonimo, senza il tuo nome, così le classifiche di stagione non cambiano. I messaggi che hai scritto restano con l'autore Utente Eliminato. In una squadra piccola un risultato può far riconoscere una persona dal contesto: [il consiglio decide con il referente privacy se tenere i risultati anonimi]. I dati pubblici della Lega su di te non dipendono da noi.
 
 ## 8. I tuoi diritti
 Puoi chiedere accesso, correzione, cancellazione, limitazione, portabilità e opporti al trattamento scrivendo a [email del club]. Puoi ritirare il consenso quando vuoi. Hai il diritto di proporre reclamo al Garante per la protezione dei dati personali (garanteprivacy.it).
@@ -66,3 +68,4 @@ Ricevi notifiche per gli eventi a cui non hai ancora risposto, per i cambi di ca
 4. Chi, nel consiglio, può vedere i certificati.
 5. Conferma degli accordi con Supabase, Netlify e Resend.
 6. Se tenere i risultati anonimi dopo la cancellazione dei dati di una persona.
+7. Se il club accetta di togliere dalle classifiche del campionato il nome di chi lo chiede (punto 7.3). L'app non ha ancora uno strumento per farlo: oggi si fa con una richiesta al database.

@@ -21,6 +21,14 @@ export async function refreshLeague(force = false): Promise<boolean> {
   return Boolean((data as { ok?: boolean } | null)?.ok)
 }
 
+// Asks the server to read the next finished games for the player statistics (ten at most, ten minutes apart; the server
+// decides). Returns how many games were read.
+export async function refreshLeagueDetails(): Promise<number> {
+  const { data, error } = await supabase.functions.invoke('league-details', { body: {} })
+  if (error) return 0
+  return Number((data as { read?: number } | null)?.read ?? 0)
+}
+
 const UPPER = new Set(['hc', 'lhl', 'asd', 'ssd'])
 const SMALL = new Set(['di', 'del', 'della', 'delle', 'dei', 'degli', 'e', 'al', 'alla'])
 

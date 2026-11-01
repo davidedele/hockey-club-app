@@ -1,6 +1,7 @@
 import type { Session } from '@supabase/supabase-js'
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react'
 import { clearPendingInvite } from './invite'
+import { purgeOfflineCopy } from './offline'
 import { supabase } from './supabase'
 import type { Profile, Role } from './types'
 
@@ -22,6 +23,8 @@ interface SessionState {
   views: View[]
   setView: (view: View) => void
   reload: () => Promise<void>
+  // The database could not be reached while loading the person (no signal). The app then offers the saved copy.
+  unreachable: boolean
 }
 
 function readView(): View | null {
@@ -41,18 +44,36 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null)
   const [roles, setRoles] = useState<Role[]>([])
   const [chosen, setChosen] = useState<View | null>(readView)
+  const [unreachable, setUnreachable] = useState(false)
 
   const load = useCallback(async (s: Session | null) => {
     if (!s) {
       setProfile(null)
       setRoles([])
+      setUnreachable(false)
+      // Nobody is signed in: nothing of the person stays on the phone (decision 137).
+      void purgeOfflineCopy()
+      return
+    }
+    // A phone that knows it has no connection does not wait for requests that will be tried again and again.
+    if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+      setUnreachable(true)
       return
     }
     const [p, r] = await Promise.all([
       supabase.from('profiles').select('*').eq('id', s.user.id).maybeSingle(),
       supabase.from('user_roles').select('role').eq('user_id', s.user.id),
     ])
-    setProfile((p.data as Profile | null) ?? null)
+    // A failure with no database code is a connection that did not answer; it is not a person who was removed.
+    if (p.error && !p.error.code) {
+      setUnreachable(true)
+      return
+    }
+    setUnreachable(false)
+    const row = (p.data as Profile | null) ?? null
+    // A profile that is gone or marked deleted: the saved copy goes with it.
+    if (!row || (row as { deleted_at?: string | null }).deleted_at) void purgeOfflineCopy()
+    setProfile(row)
     setRoles(((r.data ?? []) as { role: Role }[]).map((x) => x.role))
   }, [])
 
@@ -69,6 +90,14 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     })
     return () => data.subscription.unsubscribe()
   }, [load])
+
+  // The signal is back: load the person again, so the app leaves the saved copy.
+  useEffect(() => {
+    if (!unreachable) return
+    const back = () => void load(session)
+    window.addEventListener('online', back)
+    return () => window.removeEventListener('online', back)
+  }, [unreachable, session, load])
 
   const views: View[] = [
     ...(roles.includes('board') ? (['board'] as const) : []),
@@ -98,6 +127,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     views,
     setView,
     reload: () => load(session),
+    unreachable,
   }
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>
 }
@@ -111,5 +141,6 @@ export function useSession(): SessionState {
 // Signing out also forgets a half used invite, so the next person on this device cannot pick it up.
 export async function signOut() {
   clearPendingInvite()
+  await purgeOfflineCopy()
   await supabase.auth.signOut()
 }

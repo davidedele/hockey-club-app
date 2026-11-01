@@ -10,6 +10,7 @@ import { useAvatarUrls } from '../lib/avatars'
 import TeamStats from '../components/TeamStats'
 import HallOfFame from '../components/HallOfFame'
 import PredictionTable from '../components/PredictionTable'
+import Fantahockey from '../components/Fantahockey'
 import { useGroupFilter } from '../lib/groupfilter'
 import { useSession } from '../lib/session'
 import type { Result } from '../lib/teamstats'
@@ -26,7 +27,7 @@ const one = (n: number | null) => (n === null ? '' : decimal.format(n))
 
 // Season numbers for the whole club: the team's results from the final scores, then players and goalies.
 export default function Stats() {
-  const { profile } = useSession()
+  const { profile, view } = useSession()
   const current = seasonOf(new Date().toISOString())
   const seasons = useMemo(() => Array.from({ length: Math.max(1, current - FIRST_SEASON + 1) }, (_, i) => current - i), [current])
   const [season, setSeason] = useState(current)
@@ -39,7 +40,7 @@ export default function Stats() {
   const [results, setResults] = useState<Result[]>([])
   const [params] = useSearchParams()
   const asked = params.get('tab')
-  const tab = asked === 'players' || asked === 'predictions' || asked === 'hall' ? asked : 'team'
+  const tab = asked === 'players' || asked === 'predictions' || asked === 'fanta' || asked === 'hall' ? asked : 'team'
   const [avatars, setAvatars] = useState<Map<string, string | null>>(new Map())
   const [loaded, setLoaded] = useState(false)
   const [error, setError] = useState('')
@@ -125,12 +126,15 @@ export default function Stats() {
         <Link to={{ search: '' }} replace aria-current={tab === 'team' ? 'page' : undefined}>{t('stats.tabTeam')}</Link>
         <Link to={{ search: '?tab=players' }} replace aria-current={tab === 'players' ? 'page' : undefined}>{t('stats.tabPlayers')}</Link>
         <Link to={{ search: '?tab=predictions' }} replace aria-current={tab === 'predictions' ? 'page' : undefined}>{t('predict.tab')}</Link>
+        <Link to={{ search: '?tab=fanta' }} replace aria-current={tab === 'fanta' ? 'page' : undefined}>{t('fanta.tab')}</Link>
         <Link to={{ search: '?tab=hall' }} replace aria-current={tab === 'hall' ? 'page' : undefined}>{t('hall.tab')}</Link>
       </TabStrip>
 
       {tab === 'hall' && <HallOfFame seasons={seasons} />}
 
       {tab === 'predictions' && <PredictionTable season={season} />}
+
+      {tab === 'fanta' && profile && <Fantahockey season={season} myId={profile.id} canPick={view === 'player'} />}
 
       {tab === 'team' && <div style={colours}><TeamStats results={results} loaded={loaded} /></div>}
 

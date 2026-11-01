@@ -33,7 +33,7 @@ begin
   -- 4. The personal data tables are never readable by anon, and the server only functions are not for signed in people.
   select string_agg(p.proname, ', ') into v_bad
   from pg_proc p join pg_namespace n on n.oid = p.pronamespace
-  where n.nspname = 'public' and p.proname in ('certificates_due', 'certificates_mark_sent', 'reminders_due', 'reminders_mark_sent', 'announcements_due', 'announcements_mark_sent', 'event_notices_due', 'event_notices_mark_sent', 'notification_route', 'push_remove', 'calendar_events')
+  where n.nspname = 'public' and p.proname in ('certificates_due', 'certificates_mark_sent', 'reminders_due', 'reminders_mark_sent', 'announcements_due', 'announcements_mark_sent', 'event_notices_due', 'event_notices_mark_sent', 'notification_route', 'push_remove', 'calendar_events', 'league_details_pending', 'league_details_claim', 'league_details_finish', 'league_store_details', 'fanta_player_points', 'fanta_round_start')
     and has_function_privilege('authenticated', p.oid, 'execute');
   if v_bad is not null then raise exception 'FAIL server only functions a signed in person can run: %', v_bad; end if;
   raise notice 'ok   server only functions are not open to signed in people';

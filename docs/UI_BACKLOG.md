@@ -106,3 +106,10 @@ Status words: Open, In progress, Done (PR number), Decided (waiting for Davide),
 5. League names are stored with a simpler capitalisation than the app shows. Status: Open.
 6. A real PDF certificate upload has not been confirmed. Status: Open (Davide to try).
 7. Destructive actions without confirmation (revoke invite, remove logo, remove certificate file, withdraw consent, remove photo), found by the UX audit of 31 October. Status: Done (PR 37).
+
+## Last features run (1 November 2026)
+
+1. Campionato: the tabs Marcatori, Assistenti, Punti and Penalità sit under the games, ten rows and "Mostra altre 10". Status: Done, to look at on a real phone. At 375 pixels the fourth tab is partly hidden at the right edge, with the fade of the tab strip showing that it scrolls.
+2. Statistiche: a tab Fantahockey with the next game day, the three picks, the last day and the season table. Status: Done.
+3. Senza connessione: a page with the saved events, line-ups and plans, a banner with the way to it and the note "Dati non aggiornati". Status: Done, to try on a real phone with the aeroplane mode on.
+4. Open: a button on the page of a person's own data to delete the saved copy by hand. Not asked for; signing out already deletes it.

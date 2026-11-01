@@ -4,6 +4,10 @@
 const SHELL = 'shell-v1'
 const FILES = 'files-v1'
 const MAX_FILES = 80
+// The saved copy of the next events, line-ups and plans for offline use (written and read by the app itself,
+// see src/lib/offline.ts). The worker never fills it. It only deletes it, when the app asks (sign out, removed
+// person) and when it is installed again, so nothing of a person outlives their session.
+const OFFLINE = 'offline-data-v1'
 
 self.addEventListener('install', (event) => {
   self.skipWaiting()
@@ -14,7 +18,7 @@ self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches
       .keys()
-      .then((names) => Promise.all(names.filter((n) => n !== SHELL && n !== FILES).map((n) => caches.delete(n))))
+      .then((names) => Promise.all(names.filter((n) => n !== SHELL && n !== FILES && n !== OFFLINE).map((n) => caches.delete(n))))
       .then(() => self.clients.claim()),
   )
 })
@@ -50,6 +54,10 @@ async function file(request) {
   }
   return res
 }
+
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'purge-offline') event.waitUntil(caches.delete(OFFLINE))
+})
 
 self.addEventListener('fetch', (event) => {
   const request = event.request

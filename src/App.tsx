@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { personName } from './lib/names'
 import { PageSkeleton } from './components/Skeleton'
 import { Link, NavLink, Navigate, Outlet, Route, Routes, useLocation } from 'react-router-dom'
@@ -15,6 +16,9 @@ import { useGroupFilter } from './lib/groupfilter'
 import { useNotifications } from './lib/notifications'
 import { getPendingInvite } from './lib/invite'
 import { useSession } from './lib/session'
+import { renewOfflineCopy } from './lib/offline'
+import OfflineBanner from './components/OfflineBanner'
+import Offline from './pages/Offline'
 import Announcements from './pages/Announcements'
 import Attendance from './pages/Attendance'
 import ClubSettings from './pages/ClubSettings'
@@ -134,10 +138,24 @@ function Crumbs() {
   )
 }
 
+// Keeps the saved copy for offline use fresh while the app is open and online (decision 137).
+function useOfflineCopy(userId: string | undefined) {
+  useEffect(() => {
+    if (!userId) return
+    const renew = () => void renewOfflineCopy(userId)
+    renew()
+    const visible = () => { if (document.visibilityState === 'visible') renew() }
+    window.addEventListener('online', renew)
+    document.addEventListener('visibilitychange', visible)
+    return () => { window.removeEventListener('online', renew); document.removeEventListener('visibilitychange', visible) }
+  }, [userId])
+}
+
 // Signed in people with a profile get the app. Everyone else is sent to log in.
 function Protected() {
-  const { loading, session, profile, isStaff, isBoard } = useSession()
+  const { loading, session, profile, isStaff, isBoard, unreachable } = useSession()
   const club = useClub()
+  useOfflineCopy(profile?.id)
   const mine = useAvatarUrls([profile?.avatar_path])
   const { pathname } = useLocation()
   const note = useNotifications()
@@ -145,6 +163,16 @@ function Protected() {
   const { groups } = useGroupFilter()
   if (loading) return <PageSkeleton />
   if (!session) return <Navigate to="/login" replace />
+  // No signal when the app opened: the saved copy, read only, instead of a sign in page.
+  if (!profile && unreachable) {
+    return (
+      <div className="shell">
+        <div className="body">
+          <main id="main" tabIndex={-1}><Offline /></main>
+        </div>
+      </div>
+    )
+  }
   if (!profile) {
     const pending = getPendingInvite()
     return <Navigate to={pending ? `/join/${pending}` : '/login'} replace />
@@ -199,6 +227,7 @@ function Protected() {
           <UpdateBanner />
           <PendingBanner count={note.pending} />
           <DocumentsBanner />
+          <OfflineBanner />
         </div>
         <main id="main" tabIndex={-1}>
           <Outlet />
@@ -222,6 +251,7 @@ export default function App() {
       <Route element={<Protected />}>
         <Route path="/" element={<Home />} />
         <Route path="/members" element={<Members />} />
+        <Route path="/offline" element={<Offline />} />
         <Route path="/events" element={<Events />} />
         <Route path="/events/new" element={<EventForm />} />
         <Route path="/events/unanswered" element={<Navigate to="/attendance?tab=missing" replace />} />

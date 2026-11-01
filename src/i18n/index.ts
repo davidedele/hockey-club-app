@@ -82,6 +82,8 @@ const CODES = [
   'player_not_in_event',
   'plan_full',
   'prediction_closed',
+  'fanta_closed',
+  'fanta_invalid',
 ]
 
 // Database errors carry a short code in their message, and sign in errors in their code.
