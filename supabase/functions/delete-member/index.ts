@@ -4,7 +4,8 @@
 // in storage are removed and the sign in account is disabled, so the person can no longer sign in and the
 // email address is free again. The account is NOT deleted: the profile is tied to it, and the club history
 // (answers, attendance, game numbers, ratings, votes, line-ups, messages) is tied to the profile, so
-// deleting the account would erase that history (migration 0042 refuses such a delete).
+// deleting the account would erase that history (migration 0042 refuses such a delete). The sign up data left in
+// the account (names, original email) is emptied by the database function scrub_deleted_account (migration 0051).
 // Deploy with "Verify JWT" on. Secrets: SUPABASE_URL, SUPABASE_ANON_KEY and SUPABASE_SERVICE_ROLE_KEY are set by Supabase.
 import { createClient } from 'npm:@supabase/supabase-js@2.118.0'
 
@@ -57,13 +58,22 @@ Deno.serve(async (req: Request) => {
     const removed = await admin.auth.admin.mfa.deleteFactor({ userId: target, id: factor.id })
     if (removed.error) return json({ error: 'account' }, 500)
   }
+  // Supabase merges user_metadata, so {} clears nothing: every key that exists is sent as null (second layer).
+  const existing = await admin.auth.admin.getUserById(target)
+  if (existing.error && !/not found/i.test(existing.error.message)) return json({ error: 'account' }, 500)
+  const wipe = Object.fromEntries(Object.keys(existing.data?.user?.user_metadata ?? {}).map((key) => [key, null]))
   const account = await admin.auth.admin.updateUserById(target, {
     email: `deleted-${target}@deleted.invalid`,
     email_confirm: true,
     password,
-    user_metadata: {},
+    user_metadata: wipe,
     ban_duration: '876000h',
   })
   if (account.error && !/not found/i.test(account.error.message)) return json({ error: 'account' }, 500)
+  // The reliable layer: the database function empties raw_user_meta_data and keeps only sub, the unusable email
+  // and email_verified in auth.identities, for this person only (migration 0051). It runs last, after the update
+  // above, so nothing rewrites the data afterwards. The caller's own login is used: only the board may run it.
+  const scrubbed = await asCaller.rpc('scrub_deleted_account', { p_user: target })
+  if (scrubbed.error) return json({ error: 'account' }, 500)
   return json({ ok: true })
 })

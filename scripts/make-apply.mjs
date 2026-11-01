@@ -24,6 +24,8 @@ const FILES = {
   '0047': ['my_milestones', col('announcements', 'pinned_at'), `to_regprocedure('public.my_milestones()') is not null`],
   '0048': ['game_predictions', `to_regprocedure('public.my_milestones()') is not null`, `to_regclass('public.game_predictions') is not null`],
   '0049': ['season_leaders', `to_regclass('public.game_predictions') is not null`, `to_regprocedure('public.season_leaders(integer)') is not null`],
+  '0050': ['no_direct_profile_delete', `to_regprocedure('public.season_leaders(integer)') is not null`, `not exists (select 1 from pg_policies where schemaname = 'public' and tablename = 'profiles' and policyname = 'profiles_delete')`],
+  '0051': ['scrub_deleted_account', `to_regclass('public.profiles') is not null and not exists (select 1 from pg_policies where schemaname = 'public' and tablename = 'profiles' and policyname = 'profiles_delete')`, `to_regprocedure('public.scrub_deleted_account(uuid)') is not null`],
 }
 
 mkdirSync(join(root, 'supabase/apply'), { recursive: true })
