@@ -469,7 +469,7 @@ export default function EventDetail() {
             </div>
             {!cancelled && !over && isStaff && <p className="hint">{t('event.cancelHint')}</p>}
             {game && !cancelled && profile && (inMyGroups || started) && (
-              <Predictions eventId={id} myId={profile.id} started={started} canGuess={!isStaff && inMyGroups} />
+              <Predictions eventId={id} myId={profile.id} started={started} canGuess={!isStaff && inMyGroups} inGroups={inMyGroups} />
             )}
             {game && event.opponent && <OpponentHistory eventId={id} opponent={event.opponent} />}
           </div>

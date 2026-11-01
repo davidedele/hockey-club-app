@@ -81,6 +81,7 @@ const CODES = [
   'scope_invalid',
   'player_not_in_event',
   'plan_full',
+  'prediction_closed',
 ]
 
 // Database errors carry a short code in their message, and sign in errors in their code.
