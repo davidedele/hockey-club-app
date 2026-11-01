@@ -22,6 +22,7 @@ import { whatsappLink } from '../lib/whatsapp'
 import { supabase } from '../lib/supabase'
 import { formatDay, formatShortDay, formatTime } from '../lib/time'
 import type { Answer, AttendanceRow, EventRow, Group, Rink, Status } from '../lib/types'
+import TabStrip from '../components/TabStrip'
 
 const STATUSES: Status[] = ['on_time', 'late', 'excused', 'unexcused', 'injured', 'not_called_up']
 
@@ -382,7 +383,7 @@ export default function EventDetail() {
       <ConfirmDialog
         open={cancelling}
         title={t('event.cancelTitle')}
-        body={t('event.cancelBody', { title: event.title, date: dayLabel })}
+        body={`${t('event.cancelBody', { title: event.title, date: dayLabel })} ${t('event.cancelHint')}`}
         choices={[{ label: t('event.cancelGo'), onChoose: () => void setCancelled(true) }]}
         busy={busy}
         onClose={() => setCancelling(false)}
@@ -399,11 +400,11 @@ export default function EventDetail() {
         onClose={() => setConfirming(false)}
       />
 
-      <nav className="ev-tabs" aria-label={t('event.tabs')}>
+      <TabStrip label={t('event.tabs')}>
         {tabs.map((x) => (
           <Link key={x.key} to={{ search: x.key === 'info' ? '' : `?tab=${x.key}` }} replace aria-current={x.key === tab ? 'page' : undefined}>{x.label}</Link>
         ))}
-      </nav>
+      </TabStrip>
 
       {tab === 'info' && (
         <div className="ev-cols">
@@ -466,9 +467,8 @@ export default function EventDetail() {
               {!over && !cancelled && <a className="button secondary small" href={whatsappLink(shareText)} target="_blank" rel="noopener noreferrer">{t('share.whatsapp')}</a>}
               {hasScore && <a className="button secondary small" href={whatsappLink(resultText)} target="_blank" rel="noopener noreferrer">{t('share.result')}</a>}
             </div>
-            {!cancelled && !over && isStaff && <p className="hint">{t('event.cancelHint')}</p>}
             {game && !cancelled && profile && (inMyGroups || started) && (
-              <Predictions eventId={id} myId={profile.id} started={started} canGuess={!isStaff && inMyGroups} />
+              <Predictions eventId={id} myId={profile.id} started={started} canGuess={!isStaff && inMyGroups} inGroups={inMyGroups} />
             )}
             {game && event.opponent && <OpponentHistory eventId={id} opponent={event.opponent} />}
           </div>

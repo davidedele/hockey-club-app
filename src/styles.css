@@ -684,6 +684,14 @@ a.back::before { content: ''; width: 8px; height: 8px; margin-right: .5rem; bord
 .ev-tabs { display: flex; gap: .25rem; margin-bottom: 1rem; padding: .25rem; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); overflow-x: auto; }
 .ev-tabs a { flex: 1 0 auto; display: flex; align-items: center; justify-content: center; min-height: 44px; padding: 0 1rem; border-radius: var(--radius-control); color: var(--muted); font-weight: 500; text-decoration: none; white-space: nowrap; }
 .ev-tabs a[aria-current] { background: var(--accent-soft); color: var(--accent); }
+.tabstrip { position: relative; margin-bottom: 1rem; }
+.tabstrip .ev-tabs { margin-bottom: 0; scrollbar-width: none; }
+.tabstrip .ev-tabs::-webkit-scrollbar { display: none; }
+.tabstrip::before, .tabstrip::after { content: ''; position: absolute; top: 1px; bottom: 1px; width: 2rem; pointer-events: none; opacity: 0; transition: opacity .15s; }
+.tabstrip::before { left: 1px; border-radius: var(--radius) 0 0 var(--radius); background: linear-gradient(to right, var(--surface), transparent); }
+.tabstrip::after { right: 1px; border-radius: 0 var(--radius) var(--radius) 0; background: linear-gradient(to left, var(--surface), transparent); }
+.tabstrip[data-more-left='true']::before, .tabstrip[data-more-right='true']::after { opacity: 1; }
+@media (prefers-reduced-motion: reduce) { .tabstrip::before, .tabstrip::after { transition: none; } }
 
 .card { margin-bottom: 1rem; padding: 1rem; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); }
 .card h2 { margin: 0 0 .75rem; font-size: 1.25rem; }
@@ -1151,6 +1159,7 @@ input[type="color"] { padding: .25rem; }
 .home-facts > div { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .25rem 1rem; min-height: 52px; padding: .375rem 0; border-top: 1px solid var(--line); }
 .home-facts > div:first-child { border-top: 0; }
 .home-facts dt { color: var(--muted); font-size: .9375rem; }
+.home-facts dt small { display: block; font-size: .8125rem; }
 .home-facts dd { margin: 0; font-weight: 500; text-align: right; }
 .home-facts dd a { display: inline-flex; align-items: center; min-height: 44px; }
 .home-page .next { margin: 0; }

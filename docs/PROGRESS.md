@@ -7,6 +7,20 @@ Keep entries short and put the newest first.
 Migrations up to 0035 are applied to the Supabase test project (apply files of 0036 to 0051 are written in `supabase/apply` and wait for Davide). The newest work is on branch `claude/follow-up-final` (follow up run, parts A and B), on top of `claude/beautiful-johnson-vsdump`; read the "What is done and what is not" section below and `docs/VERIFY_ROUND.md` first.
 
 ## Session log
+03. 1 November 2026, polish round 6 (branch `claude/polish-round-6`, from main 6d9aa18, ten small commits, one per item of QA round 5 item 11). No project was touched: nothing was applied to any Supabase project.
+   1. Tab strips: `TabStrip` component (fade on the edge with more tabs, active tab scrolled into view) on Statistiche, the event page and Presenze; "Albo d'oro" is "Albo"; checker rule on every strip and two new routes with the last tab active. Backlog item 4 of the follow up run is closed.
+   2. La mia stagione: "Solo le partite in cui hai votato" under the average rating; numbers unchanged.
+   3. iPhone vibration: a sentence in the timer help text and `docs/UI_RULES.md` 5.8.
+   4. Sicurezza: "prima delle 00:43 del 1 dicembre 2026", from `deadlineParts` (2 unit tests, winter and summer).
+   5. Predictions: the code prediction_closed is mapped, and `closedReason` picks the text (groups, started, cancelled, other); 3 unit tests.
+   6. The cancel explanation moved into the cancel confirmation window.
+   7. Training plan page: the empty sentence shows once.
+   8. Finished game without line-up: "Nessuna formazione registrata".
+   9. "Volte MVP" (new key `stats.colMvpTimes` for the Statistiche tables, `season.mvp` renamed); the column of one game stays "MVP". New checker route `stats-players`.
+  10. Opponent history: migration 0052 (`team_key`, spaces collapsed, case and outer spaces as before), apply file `apply_0052_team_name_spaces.sql` (waits for Davide), 1 new database check (it fails when the collapse is removed).
+  11. Checks: type check clean; unit tests 182 (29 files); build ok (main chunk 583.56 kB, 171.74 kB gzip); database 1313 checks passing, 0 failed; `scripts/test-apply.sh` 51 ok, 0 failed (3 new for 0052); interface checker 235 page views each in light, dark (`UI_CHECK_DARK=1`) and larger text (`UI_CHECK_LARGE=1`), 0 problems. The first dark run found a tab strip showing a fade while it fitted (the strip did not follow font loading); fixed by watching each tab. Screenshots at 375 and 1280 looked at: stats players, stats hall, event line-up tab, event plan tab, La mia stagione, Sicurezza (the sample data now has a deadline date).
+  12. Not seen: the plan page as a player with no plan, and a refused guess on screen (no sample data for them; covered by unit tests and code reading); WebKit not run.
+  13. Next: apply 0052 on the test project, then Davide looks at the tab strips and the timer note on a real iPhone.
 0. 1 November 2026, QA round 5 on the real test project (branch `claude/qa-round-5`). Only the publishable key and the two test logins were used. Writes were named "Prova QA 5" (plus the one "Prova QA 3" event of `scripts/qa-real.mjs`) and all of them were removed again. No email, no push, no reminder call.
    1. Migrations: all present. `my_season`, `verify_certificate`, `mfa_ok`, `opponent_history`, predictions, `season_leaders`, `my_milestones` answer; `notification_route` is refused to both logins; `scrub_deleted_account` and `delete_member_data` say forbidden to the player; the columns `member_documents.issued_on`, `rinks.address`, `club_settings.mfa_required_from` and `events.video_url` exist. A direct DELETE on `profiles` is refused with "permission denied" for board and player; the auth admin delete is refused ("not_admin").
    2. `QA_WRITE=1 node scripts/qa-real.mjs`: 13 of 13 ok. It ran on a Sunday at 01:40 Rome time, so the next Tuesday's unanswered events were correctly left out of banner, bell, Home and Eventi (all 0 and equal to the database). The staff views show no banner and no player events in the bell.

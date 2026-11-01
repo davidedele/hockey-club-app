@@ -61,7 +61,7 @@ export default function MySeason() {
             <div><dt>{t('stats.colAssists')}</dt><dd>{n(data?.assists)}</dd></div>
             <div><dt>{t('stats.colPim')}</dt><dd>{n(data?.penalty_minutes)}</dd></div>
             <div><dt>{t('season.mvp')}</dt><dd>{n(data?.mvp)}</dd></div>
-            <div><dt>{t('season.rating')}</dt><dd>{loaded && data?.rating_avg != null ? decimal.format(data.rating_avg) : dash}</dd></div>
+            <div><dt>{t('season.rating')}<small>{t('season.ratingOnly')}</small></dt><dd>{loaded && data?.rating_avg != null ? decimal.format(data.rating_avg) : dash}</dd></div>
           </dl></section>
           <p className="hint">{t('season.ratingNote')}</p>
         </>

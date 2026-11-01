@@ -16,6 +16,7 @@ import type { Result } from '../lib/teamstats'
 import { supabase } from '../lib/supabase'
 import { seasonLabel, seasonOf } from '../lib/time'
 import type { Group, SeasonRecord, SeasonStatRow } from '../lib/types'
+import TabStrip from '../components/TabStrip'
 
 // The app holds no games before this season.
 const FIRST_SEASON = 2026
@@ -118,12 +119,12 @@ export default function Stats() {
 
       {error && <p className="error" role="alert">{error}</p>}
 
-      <nav className="ev-tabs" aria-label={t('stats.tabs')}>
+      <TabStrip label={t('stats.tabs')}>
         <Link to={{ search: '' }} replace aria-current={tab === 'team' ? 'page' : undefined}>{t('stats.tabTeam')}</Link>
         <Link to={{ search: '?tab=players' }} replace aria-current={tab === 'players' ? 'page' : undefined}>{t('stats.tabPlayers')}</Link>
         <Link to={{ search: '?tab=predictions' }} replace aria-current={tab === 'predictions' ? 'page' : undefined}>{t('predict.tab')}</Link>
         <Link to={{ search: '?tab=hall' }} replace aria-current={tab === 'hall' ? 'page' : undefined}>{t('hall.tab')}</Link>
-      </nav>
+      </TabStrip>
 
       {tab === 'hall' && <HallOfFame seasons={seasons} />}
 
@@ -153,7 +154,7 @@ export default function Stats() {
                 <th scope="col">{t('stats.colAssists')}</th>
                 <th scope="col">{t('stats.colPoints')}</th>
                 <th scope="col">{t('stats.colPim')}</th>
-                <th scope="col">{t('stats.colMvp')}</th>
+                <th scope="col">{t('stats.colMvpTimes')}</th>
                 <th scope="col">{t('stats.colRating')}</th>
               </tr>
             </thead>
@@ -190,7 +191,7 @@ export default function Stats() {
                     <th scope="col">{t('stats.colSaves')}</th>
                     <th scope="col">{t('stats.colSavePct')}</th>
                     <th scope="col">{t('stats.colAgainst')}</th>
-                    <th scope="col">{t('stats.colMvp')}</th>
+                    <th scope="col">{t('stats.colMvpTimes')}</th>
                     <th scope="col">{t('stats.colRating')}</th>
                   </tr>
                 </thead>

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { errorText, t } from '../i18n'
 import { personName } from '../lib/names'
+import { closedReason } from '../lib/predictions'
 import { supabase } from '../lib/supabase'
 
 interface Guess {
@@ -15,7 +16,7 @@ interface Guess {
 // Match predictions (V7). Before the game a player in the game's groups guesses the score, ours first, and
 // can change it until the start. Others' guesses appear only after the start, with the points once the final
 // score is in. canGuess is true only in the player view (decisions 93 and 106).
-export default function Predictions({ eventId, myId, started, canGuess }: { eventId: string; myId: string; started: boolean; canGuess: boolean }) {
+export default function Predictions({ eventId, myId, started, canGuess, inGroups }: { eventId: string; myId: string; started: boolean; canGuess: boolean; inGroups: boolean }) {
   const [mine, setMine] = useState<{ pred_for: number; pred_against: number } | null | undefined>(undefined)
   const [list, setList] = useState<Guess[]>([])
   const [us, setUs] = useState('')
@@ -51,7 +52,13 @@ export default function Predictions({ eventId, myId, started, canGuess }: { even
     setBusy(true)
     const { error: e } = await supabase.rpc('set_prediction', { p_event_id: eventId, p_for: a, p_against: b })
     setBusy(false)
-    if (e) return setError(errorText(e))
+    if (e) {
+      if (!`${e.message ?? ''}`.includes('prediction_closed')) return setError(errorText(e))
+      // One code for four causes: look at the game now to say which one.
+      const g = await supabase.from('events').select('starts_at, cancelled_at').eq('id', eventId).maybeSingle()
+      const row = g.data as { starts_at: string; cancelled_at: string | null } | null
+      return setError(t(closedReason({ cancelled: row?.cancelled_at != null, started: started || (row ? new Date(row.starts_at).getTime() <= Date.now() : false), inGroups })))
+    }
     setSaved(true)
     await load()
   }

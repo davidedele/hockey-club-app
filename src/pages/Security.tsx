@@ -3,10 +3,9 @@ import ConfirmAction from '../components/ConfirmAction'
 import PageHeader from '../components/PageHeader'
 import { errorText, t } from '../i18n'
 import { checked } from '../lib/formcheck'
-import { cleanCode, useFactors, validCode } from '../lib/mfa'
+import { cleanCode, deadlineParts, useFactors, validCode } from '../lib/mfa'
 import { useSession } from '../lib/session'
 import { supabase } from '../lib/supabase'
-import { formatDateYear, dayKey } from '../lib/time'
 
 // "Sicurezza": the second step of signing in, with an authenticator app. Everybody can switch it on; the
 // board has to, after the date the club set (the database then asks the second step for board powers).
@@ -65,11 +64,11 @@ export default function Security() {
   }
 
   const on = (factors?.length ?? 0) > 0
-  const date = from ? formatDateYear(dayKey(from)) : null
+  const deadline = from ? deadlineParts(from) : null
   return (
     <div className="section">
       <PageHeader title={t('mfa.title')} back={{ to: '/profile', label: t('profile.back') }} description={t('mfa.intro')} />
-      {board && !on && <p className="box" role="status">{date ? t('mfa.boardDeadline', { date }) : t('mfa.boardNoDate')}</p>}
+      {board && !on && <p className="box" role="status">{deadline ? t('mfa.boardDeadline', deadline) : t('mfa.boardNoDate')}</p>}
       {board && on && <p className="hint">{t('mfa.boardOn')}</p>}
       {error && <p className="error" role="alert">{error}</p>}
       {message && <p className="hint" role="status">{message}</p>}
