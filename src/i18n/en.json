@@ -1099,7 +1099,7 @@
   "hall.mvp": "Most MVP awards",
   "hall.present": "Most present",
   "shift.title": "Shift timer",
-  "shift.hint": "Tap the line that goes on: the other one stops. The times stay on this phone and are not saved.",
+  "shift.hint": "Tap the line that goes on: the other one stops. The times stay on this phone and are not saved. iPhone has no vibration: that is a limit of the phone, and the warning stays the underline.",
   "shift.limit": "Vibrate after",
   "shift.seconds": "{n} seconds",
   "shift.total": "total {time}",

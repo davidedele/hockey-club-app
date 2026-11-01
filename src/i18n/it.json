@@ -1099,7 +1099,7 @@
   "hall.mvp": "Più volte MVP",
   "hall.present": "Più presente",
   "shift.title": "Cronometro dei cambi",
-  "shift.hint": "Tocca la linea che entra in pista: il cronometro dell'altra si ferma. I tempi restano solo su questo telefono e non vengono salvati.",
+  "shift.hint": "Tocca la linea che entra in pista: il cronometro dell'altra si ferma. I tempi restano solo su questo telefono e non vengono salvati. Su iPhone la vibrazione non c'è: è un limite del telefono, e l'avviso resta la sottolineatura.",
   "shift.limit": "Avvisa con una vibrazione dopo",
   "shift.seconds": "{n} secondi",
   "shift.total": "totale {time}",

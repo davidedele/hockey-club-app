@@ -64,6 +64,7 @@ Read this file, and the open items of `docs/UI_BACKLOG.md`, before touching a pa
 
 6. Match predictions and other club fun (decision 119): the form to guess is part of the Giocatore view only; the list of guesses after the start and the tables are club information and show in every view. A person's guess is never shown to others before the game starts. Where a score has our side first, the text says so.
 7. A row with a long name and an action (club documents) lets the action drop under the name instead of leaving the window.
+8. Vibration (the shift timer) does not work on iPhone Safari, which does not allow web pages to vibrate. It is a limit of the phone, not a fault of the app, so nothing replaces it; the warning is the underline of the time, and the timer's help text says so. Never rely on vibration alone to tell a person something.
 
 ## 6. How to check
 
