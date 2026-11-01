@@ -81,6 +81,15 @@ select test.rows('with the review off, the typed date starts the reminders', $$s
 update public.club_settings set certificate_review = true;
 select test.rows('switched on again, it waits for staff again', $$select 1 from public.certificates_due(pg_temp.noon())$$, 0);
 
+\echo == a board session that lost the second step cannot change the settings
+update public.club_settings set mfa_required_from = now() - interval '1 day';
+select test.login(pg_temp.u('b1'));
+select set_config('request.jwt.claims', jsonb_build_object('aal', 'aal1')::text, true);
+select test.affected('after the date, a plain board session cannot change the months', $$update public.club_settings set certificate_months = 3$$, 0);
+select test.logout();
+select set_config('request.jwt.claims', '', true);
+update public.club_settings set mfa_required_from = null;
+
 \echo == the end date still cannot be typed
 select test.login(pg_temp.u('1'));
 select test.fails('the end date cannot be written by the member', $$update public.member_documents set valid_until = current_date + 900 where user_id = pg_temp.u('1')$$, 'permission denied');

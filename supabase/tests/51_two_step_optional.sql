@@ -48,6 +48,11 @@ select test.affected('and cannot change the club', $$update public.club_settings
 select test.logout();
 select pg_temp.level('');
 
+\echo == a coach cannot set the requirement for the board
+select test.login(pg_temp.u('c1'));
+select test.affected('a coach cannot require the second step', $$update public.club_settings set mfa_required_from = now() + interval '1 day'$$, 0);
+select test.logout();
+
 \echo == players and coaches never depended on it
 update public.club_settings set mfa_required_from = null;
 select test.login(pg_temp.u('1'));

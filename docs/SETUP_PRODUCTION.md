@@ -27,7 +27,7 @@ A checklist for Davide. Nothing here has been created by Claude. The test projec
 1. Authentication, Sign In: switch "Confirm email" on (it is off on the test project) and switch on leaked password protection (Authentication, password security; it needs the Pro plan).
 2. Connect the custom email sender (SMTP of Resend with the club's verified domain) as in `docs/SETUP_EMAIL.md`, so sign up and password emails do not use the small limit of the built in sender.
 3. Set the Site URL to the real site address and add the real site address to the redirect addresses. Remove any localhost or test address from the redirect list.
-4. Turn on TOTP (authenticator app) under multi factor settings, see `docs/SETUP_2FA.md`.
+4. Turn on TOTP (authenticator app) under multi factor settings so that members who want the optional second step can use it, see `docs/SETUP_2FA.md`.
 
 ## 5. The site
 
@@ -43,7 +43,7 @@ A checklist for Davide. Nothing here has been created by Claude. The test projec
 ## 7. Before members join
 
 1. The privacy notice is final and approved by the board (`docs/PRIVACY_NOTICE_DRAFT.md`), and uploaded under Impostazioni, Club, Documenti.
-2. There are two board accounts, both with the two step sign in on.
+2. There are two board accounts. The two step sign in is optional (decision 130); the board may switch it on for themselves and, if they want, require it from the page Sicurezza.
 3. Read `docs/SECURITY_REVIEW.md` and run the catalogue checks again on the production project (every table has row level security, every function has a fixed search path, nothing is open to signed out users beyond the harmless helper).
 4. Invite one trusted player first and try: join, answer an event, notifications on a real phone, deleting that test member's data at the end.
 5. Only then send the team links to the club.

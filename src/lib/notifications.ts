@@ -2,6 +2,7 @@ import { formatShortDay } from './time'
 import { useCallback, useEffect, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import { useSession } from './session'
+import { useScopeGroups, visibleIn } from './groupfilter'
 import { unanswered, weekEnd } from './unanswered'
 import { supabase } from './supabase'
 
@@ -28,6 +29,7 @@ export interface Notifications {
 export function useNotifications(): Notifications {
   const { profile, isStaff } = useSession()
   const location = useLocation()
+  const scope = useScopeGroups()
   const [state, setState] = useState<Notifications>({ pending: 0, announcements: 0, threads: [] })
 
   const load = useCallback(async () => {
@@ -57,12 +59,13 @@ export function useNotifications(): Notifications {
     const unread = ((th.data ?? []) as { event_id: string; unread: number }[]).filter((x) => Number(x.unread) > 0)
     let threads: ThreadNote[] = []
     if (unread.length > 0) {
-      const titles = await supabase.from('events').select('id, title, starts_at').in('id', unread.map((x) => x.event_id))
-      const byId = new Map(((titles.data ?? []) as { id: string; title: string; starts_at: string }[]).map((x) => [x.id, x]))
-      threads = unread.map((x) => ({ event_id: x.event_id, unread: Number(x.unread), title: byId.get(x.event_id)?.title ?? '', day: byId.get(x.event_id) ? formatShortDay(byId.get(x.event_id)!.starts_at) : '' }))
+      const titles = await supabase.from('events').select('id, title, starts_at, event_groups(group_id)').in('id', unread.map((x) => x.event_id))
+      const byId = new Map(((titles.data ?? []) as unknown as { id: string; title: string; starts_at: string; event_groups: { group_id: number }[] }[]).map((x) => [x.id, x]))
+      // In the Giocatore view only the discussions of the person's own groups count (decision 131).
+      threads = unread.filter((x) => !scope || visibleIn((byId.get(x.event_id)?.event_groups ?? []).map((g) => g.group_id), null, scope)).map((x) => ({ event_id: x.event_id, unread: Number(x.unread), title: byId.get(x.event_id)?.title ?? '', day: byId.get(x.event_id) ? formatShortDay(byId.get(x.event_id)!.starts_at) : '' }))
     }
     setState({ pending, announcements, threads })
-  }, [profile, isStaff])
+  }, [profile, isStaff, scope])
 
   useEffect(() => {
     void load()
