@@ -3,6 +3,7 @@ import PageHeader from '../components/PageHeader'
 import Fold, { useFolds } from '../components/Fold'
 import { t, type MessageKey } from '../i18n'
 import { readCopy, usable, type OfflineCopy, type OfflineEvent } from '../lib/offline'
+import { useGroupFilter } from '../lib/groupfilter'
 import { useSession } from '../lib/session'
 import { formatDay, formatShortDay, formatTime } from '../lib/time'
 
@@ -13,6 +14,7 @@ export default function Offline() {
   const userId = session?.user.id
   const [copy, setCopy] = useState<OfflineCopy | null | undefined>(undefined)
   const folds = useFolds()
+  const { inView } = useGroupFilter()
 
   useEffect(() => {
     let live = true
@@ -20,8 +22,12 @@ export default function Offline() {
     return () => { live = false }
   }, [userId])
 
-  // Events that are not over yet.
-  const events = useMemo(() => (copy?.events ?? []).filter((e) => Date.parse(e.ends_at) >= Date.now()), [copy])
+  // Events that are not over yet. In the Giocatore view only the person's own groups show (decision 131); with no
+  // connection the groups cannot be loaded, and the copy holds only what the person may read anyway.
+  const events = useMemo(
+    () => (copy?.events ?? []).filter((e) => Date.parse(e.ends_at) >= Date.now() && (unreachable || inView(e.group_ids))),
+    [copy, unreachable, inView],
+  )
 
   const summary = (e: OfflineEvent) => [formatTime(e.starts_at), e.venue, e.cancelled ? t('offline.cancelled') : e.answer ? t(`answer.${e.answer}` as MessageKey) : null].filter(Boolean).join(', ')
 
@@ -58,7 +64,7 @@ export default function Offline() {
                   {lineup.sort((a, b) => a.slot.localeCompare(b.slot) || a.unit - b.unit).map((l) => (
                     <li key={`${l.slot}${l.unit}`} className="row">
                       <span>{l.slot === 'goalie' ? t('lineup.goalieN', { n: String(l.unit) }) : `${t(`slot.${l.slot}` as MessageKey)} ${l.unit}`}</span>
-                      <span data-person-name>{l.name}{l.jersey_number ? ` (${l.jersey_number})` : ''}</span>
+                      <span><span data-person-name>{l.name}</span>{l.jersey_number ? ` (${l.jersey_number})` : ''}</span>
                     </li>
                   ))}
                 </ul>
