@@ -15,3 +15,8 @@ export function mapsUrl(query: string, apple: boolean = isApple()): string {
   const q = encodeURIComponent(query)
   return apple ? `https://maps.apple.com/?q=${q}` : `https://www.google.com/maps/search/?api=1&query=${q}`
 }
+
+// The place as a person reads it: the free text venue and the rink, written once each ("Agorà · Grande").
+export function placeLabel(place: { venue?: string | null; rink?: string | null }): string {
+  return [place.venue, place.rink].map((x) => (x ?? '').trim()).filter((x, i, all) => x !== '' && all.indexOf(x) === i).join(' · ')
+}
