@@ -524,6 +524,33 @@ for (const width of WIDTHS) {
     fixtures.tables.club_settings[0].mfa_required_from = keepDate
   }
 
+  // The Giocatore view shows only the person's own groups (decision 131). The sample person belongs to A and B; the training of
+  // C1 must not appear anywhere, the selector lists A and B with "I miei gruppi", and the staff views stay unlimited.
+  {
+    const SEEN = 'Allenamento C1 riservato'
+    const where = []
+    for (const path of ['/events', '/', '/stats', '/stats?tab=players', '/campionato', '/members']) {
+      await asViewEarly('player', path)
+      const body = await page.locator('body').innerText()
+      if (body.includes(SEEN)) where.push(path)
+      if (/\bC1\b/.test(await page.locator('main .chips, main .stats-filters').allInnerTexts().then((x) => x.join(' ')).catch(() => ''))) where.push(`${path} (a chip of C1)`)
+    }
+    check(where.length === 0, `groups: the Giocatore view shows a group the person is not in, on: ${where.join(', ')}`)
+    await asViewEarly('player', '/events')
+    await page.click('.side-switch .ms-button')
+    const items = (await page.locator('.side-switch [role=menuitemradio]').allInnerTexts()).map((x) => x.trim())
+    check(items.join('|') === 'I miei gruppi|A|B', `groups: the selector of the Giocatore view lists "${items.join('|')}" instead of I miei gruppi, A, B`)
+    await page.keyboard.press('Escape')
+    await asViewEarly('board', '/events')
+    check((await page.locator('body').innerText()).includes(SEEN), 'groups: the board view no longer shows the events of every group')
+    await page.click('.side-switch .ms-button')
+    const staffItems = (await page.locator('.side-switch [role=menuitemradio]').allInnerTexts()).map((x) => x.trim())
+    check(staffItems[0] === 'Tutti i gruppi' && staffItems.length === 6, `groups: the staff view selector lists "${staffItems.join('|')}"`)
+    await page.keyboard.press('Escape')
+    await page.goto(origin + '/')
+    await page.evaluate(() => localStorage.removeItem('view-as'))
+  }
+
   // The notification panel: fully inside the window, closes on a tap outside, on Escape and after a link, and gives the focus back.
   const bell = async (width, height, label) => {
     const target = await context.newPage()

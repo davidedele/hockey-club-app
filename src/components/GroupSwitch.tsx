@@ -5,10 +5,10 @@ import MenuSelect from './MenuSelect'
 // Picks the group the whole app looks at. It stays chosen until it is changed.
 // A button shows the group in use and opens the list; on phones it is shortened to fit the header.
 export default function GroupSwitch({ className, short = false }: { className?: string; short?: boolean }) {
-  const { groups, groupId, setGroupId } = useGroupFilter()
+  const { groups, groupId, setGroupId, scope } = useGroupFilter()
   if (groups.length < 2) return null
   const options = [
-    { value: null as number | null, label: t(short ? 'group.allShort' : 'group.all') },
+    { value: null as number | null, label: t(scope ? (short ? 'group.mineShort' : 'group.mine') : short ? 'group.allShort' : 'group.all') },
     ...groups.map((g) => ({ value: g.id as number | null, label: g.name })),
   ]
   // In the phone top bar the selector is a round 44 pixel button like the others: the group code in a

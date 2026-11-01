@@ -1143,5 +1143,7 @@
   "mfa.clubTurnOffTitle": "Non richiedere più la verifica?",
   "mfa.clubTurnOffBody": "La verifica torna facoltativa per tutti, anche per il direttivo.",
   "mfa.clubNeedOwn": "Per richiederla al direttivo devi prima attivare la tua verifica, altrimenti perderesti i tuoi poteri.",
-  "mfa.clubDateInvalid": "Scegli una data da domani in poi."
+  "mfa.clubDateInvalid": "Scegli una data da domani in poi.",
+  "group.mine": "I miei gruppi",
+  "group.mineShort": "I miei"
 }

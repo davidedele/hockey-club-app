@@ -32,7 +32,7 @@ export default function Home() {
   // Being present at an event is a player thing: the answer buttons and the list of events to answer are in the Giocatore view only (decision 93).
   const asPlayer = !isStaff
   const club = useClub()
-  const { groupId } = useGroupFilter()
+  const { groupId, scope, inView: inGroups } = useGroupFilter()
   const [events, setEvents] = useState<EventRow[]>([])
   const [groups, setGroups] = useState<Group[]>([])
   const [myGroups, setMyGroups] = useState<number[]>([])
@@ -89,7 +89,7 @@ export default function Home() {
 
   const live = useMemo(() => events.filter((e) => !e.cancelled_at), [events])
   const mineOnly = (e: EventRow) => e.event_groups.some((x) => myGroups.includes(x.group_id))
-  const inView = (e: EventRow) => groupId === null || e.event_groups.some((x) => x.group_id === groupId)
+  const inView = (e: EventRow) => inGroups(e.event_groups.map((x) => x.group_id))
   const next = live.find((e) => mineOnly(e) && inView(e)) ?? live.find(inView)
   // The same events as the banner, the bell and the Eventi heading: this week, until Monday 00:00 (decision 92).
   const due = asPlayer ? unanswered({ events, answers, notCalledUp: notCalled, myGroups }) : { inWindow: [] as EventRow[], later: [] as EventRow[] }
@@ -116,7 +116,7 @@ export default function Home() {
   }
 
   // The league part: the chosen group, or the person's own group with a league team.
-  const linked = groups.filter((g) => g.league_team && (g.league_championships ?? []).length)
+  const linked = groups.filter((g) => g.league_team && (g.league_championships ?? []).length && (!scope || scope.includes(g.id)))
   const team = linked.find((g) => g.id === groupId) ?? linked.find((g) => myGroups.includes(g.id)) ?? linked[0]
   const last = team ? matches.find((x) => x.home === team.league_team || x.away === team.league_team) : undefined
   const row = team ? standings.find((s) => s.team === team.league_team && (team.league_championships ?? []).includes(s.championship_id)) : undefined

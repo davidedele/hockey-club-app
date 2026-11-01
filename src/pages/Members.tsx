@@ -27,7 +27,7 @@ export default function Members() {
   const [contacts, setContacts] = useState<Contact[]>([])
   const [docs, setDocs] = useState<MemberDocument[]>([])
   const club = useClub()
-  const { groupId: filter } = useGroupFilter()
+  const { groupId: filter, scope } = useGroupFilter()
   const [query, setQuery] = useState('')
   const [page, setPage] = useState(1)
   // Another group has fewer people, so go back to the first page rather than land on an empty one.
@@ -58,7 +58,7 @@ export default function Members() {
   const q = query.trim().toLowerCase()
   const visible = profiles.filter(
     (p) =>
-      (filter === null || memberships.some((m) => m.user_id === p.id && m.group_id === filter)) &&
+      (filter === null ? !scope || memberships.some((m) => m.user_id === p.id && scope.includes(m.group_id)) : memberships.some((m) => m.user_id === p.id && m.group_id === filter)) &&
       (!q || `${p.first_name} ${p.last_name}`.toLowerCase().includes(q) || `${p.last_name} ${p.first_name}`.toLowerCase().includes(q)),
   )
   const groupsOf = (id: string) => memberships.filter((m) => m.user_id === id).map((m) => codeById.get(m.group_id)).filter(Boolean).join(', ')

@@ -1143,5 +1143,7 @@
   "mfa.clubTurnOffTitle": "Stop requiring the second step?",
   "mfa.clubTurnOffBody": "The second step becomes optional for everybody again, the board included.",
   "mfa.clubNeedOwn": "To require it for the board you must first switch on your own second step, otherwise you would lose your powers.",
-  "mfa.clubDateInvalid": "Choose a date from tomorrow on."
+  "mfa.clubDateInvalid": "Choose a date from tomorrow on.",
+  "group.mine": "My groups",
+  "group.mineShort": "Mine"
 }

@@ -31,7 +31,9 @@ export default function Stats() {
   const seasons = useMemo(() => Array.from({ length: Math.max(1, current - FIRST_SEASON + 1) }, (_, i) => current - i), [current])
   const [season, setSeason] = useState(current)
   const [groups, setGroups] = useState<Group[]>([])
-  const { groupId: group, setGroupId: setGroup } = useGroupFilter()
+  const { groupId: chosenGroup, setGroupId: setGroup, scope, groups: ownable } = useGroupFilter()
+  // In the Giocatore view the statistics are of one of the person's own groups: the chosen one, or the first (decision 131).
+  const group = chosenGroup ?? (scope && scope.length ? scope[0] : null)
   const [rows, setRows] = useState<SeasonStatRow[]>([])
   const [record, setRecord] = useState<SeasonRecord | null>(null)
   const [results, setResults] = useState<Result[]>([])
@@ -107,9 +109,9 @@ export default function Stats() {
         ) : (
           <p className="season-name">{t('stats.season')} {seasonLabel(season)}</p>
         )}
-        {tab !== 'predictions' && <div className="chips">
-          <button className={group === null ? 'chip on' : 'chip'} aria-pressed={group === null} onClick={() => setGroup(null)}>{t('stats.allGroups')}</button>
-          {groups.map((g) => (
+        {tab !== 'predictions' && (!scope || ownable.length > 1) && <div className="chips">
+          {!scope && <button className={group === null ? 'chip on' : 'chip'} aria-pressed={group === null} onClick={() => setGroup(null)}>{t('stats.allGroups')}</button>}
+          {groups.filter((g) => !scope || scope.includes(g.id)).map((g) => (
             <button key={g.id} className={group === g.id ? 'chip on' : 'chip'} aria-pressed={group === g.id} onClick={() => setGroup(g.id)}>
               <GroupBadge group={g} size="small" />{g.name}
             </button>

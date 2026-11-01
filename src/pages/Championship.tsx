@@ -23,7 +23,7 @@ export default function Championship() {
   const [standings, setStandings] = useState<LeagueStanding[]>([])
   const [eventOf, setEventOf] = useState<Map<number, string>>(new Map())
   const [sync, setSync] = useState<LeagueSync | null>(null)
-  const { groupId } = useGroupFilter()
+  const { groupId, scope } = useGroupFilter()
   const [compId, setCompId] = useState<number | null>(null)
   const [onlyOurs, setOnlyOurs] = useState(false)
   // How many more of each list were asked for, ten at a time.
@@ -64,7 +64,7 @@ export default function Championship() {
     })
   }, [load])
 
-  const linked = useMemo(() => groups.filter((g) => g.league_team && (g.league_championships ?? []).length), [groups])
+  const linked = useMemo(() => groups.filter((g) => g.league_team && (g.league_championships ?? []).length && (!scope || scope.includes(g.id))), [groups, scope])
   // The group comes from the selector of the whole app. With all groups chosen, or a group with no
   // league team, the person's own linked group is shown, and the page says which one.
   const chosen = linked.find((g) => g.id === groupId)
