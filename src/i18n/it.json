@@ -968,7 +968,7 @@
   "season.intro": "I tuoi numeri della stagione: presenze e partite. Li vedi solo tu.",
   "season.attendance": "Presenze",
   "season.games": "Partite",
-  "season.mvp": "Voti MVP",
+  "season.mvp": "Volte MVP",
   "season.rating": "Media dei voti ricevuti",
   "season.ratingNote": "Non si vede chi ha dato quale voto.",
   "season.ratingOnly": "Solo le partite in cui hai votato",
@@ -1109,5 +1109,6 @@
   "predict.closedGroups": "Non fai parte dei gruppi di questa partita.",
   "predict.closedStarted": "La partita è già iniziata: il pronostico non si può più fare né cambiare.",
   "predict.closedCancelled": "La partita è stata annullata: non c'è nessun pronostico da fare.",
-  "lineup.noneRecorded": "Nessuna formazione registrata"
+  "lineup.noneRecorded": "Nessuna formazione registrata",
+  "stats.colMvpTimes": "Volte MVP"
 }

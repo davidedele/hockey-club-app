@@ -968,7 +968,7 @@
   "season.intro": "Your numbers for the season: attendance and games. Only you can see them.",
   "season.attendance": "Attendance",
   "season.games": "Games",
-  "season.mvp": "MVP votes",
+  "season.mvp": "Times MVP",
   "season.rating": "Average rating received",
   "season.ratingNote": "Nobody sees who gave which rating.",
   "season.ratingOnly": "Only the games you voted on",
@@ -1109,5 +1109,6 @@
   "predict.closedGroups": "You are not in the groups of this game.",
   "predict.closedStarted": "The game has already started: the guess can no longer be made or changed.",
   "predict.closedCancelled": "The game was cancelled: there is nothing to guess.",
-  "lineup.noneRecorded": "No line-up recorded"
+  "lineup.noneRecorded": "No line-up recorded",
+  "stats.colMvpTimes": "Times MVP"
 }

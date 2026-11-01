@@ -154,7 +154,7 @@ export default function Stats() {
                 <th scope="col">{t('stats.colAssists')}</th>
                 <th scope="col">{t('stats.colPoints')}</th>
                 <th scope="col">{t('stats.colPim')}</th>
-                <th scope="col">{t('stats.colMvp')}</th>
+                <th scope="col">{t('stats.colMvpTimes')}</th>
                 <th scope="col">{t('stats.colRating')}</th>
               </tr>
             </thead>
@@ -191,7 +191,7 @@ export default function Stats() {
                     <th scope="col">{t('stats.colSaves')}</th>
                     <th scope="col">{t('stats.colSavePct')}</th>
                     <th scope="col">{t('stats.colAgainst')}</th>
-                    <th scope="col">{t('stats.colMvp')}</th>
+                    <th scope="col">{t('stats.colMvpTimes')}</th>
                     <th scope="col">{t('stats.colRating')}</th>
                   </tr>
                 </thead>
