@@ -15,7 +15,7 @@ import { useSession } from '../lib/session'
 import { supabase } from '../lib/supabase'
 import type { Contact, Group, MemberDocument, Profile } from '../lib/types'
 import { useClub } from '../lib/club'
-import { summary } from '../lib/documents'
+import { summary, toVerify } from '../lib/documents'
 
 type MemberKey = 'name' | 'number' | 'position' | 'groups' | 'email' | 'phone' | 'docs'
 
@@ -87,9 +87,12 @@ export default function Members() {
   }
   // Staff see each member's paperwork at a glance, linked to their documents page.
   function docCell(id: string) {
-    const state = summary(docs.filter((d) => d.user_id === id), club.privacyNoticePath)
+    const mine = docs.filter((d) => d.user_id === id)
+    const state = summary(mine, club.privacyNoticePath)
+    // A certificate that waits for staff opens the review list, where the file and the confirmation are.
+    const waiting = toVerify(mine).length > 0 && state.text === t('docs.sumCertToVerify')
     return (
-      <Link className={`doc-status ${state.level}`} to={`/members/${id}/documents`}>
+      <Link className={`doc-status ${state.level}`} to={waiting ? '/members/certificates' : `/members/${id}/documents`}>
         <span className="dot" aria-hidden="true" />{state.text}
       </Link>
     )
@@ -97,7 +100,10 @@ export default function Members() {
 
   return (
     <div className="page wide">
-      <PageHeader title={t('members.title')} />
+      <PageHeader
+        title={t('members.title')}
+        actions={isStaff && <Link className="button secondary" to="/members/certificates">{docs.length ? t('certs.linkCount', { n: String(toVerify(docs.filter((d) => profiles.some((p) => p.id === d.user_id))).length) }) : t('certs.link')}</Link>}
+      />
       <div className="toolbar">
         <label className="search">
           <span>{t('members.search')}</span>

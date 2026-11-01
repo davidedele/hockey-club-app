@@ -168,7 +168,7 @@ const ROUTES = [
   ['event-training', `/events/${training}`, 'sub'], ['event-game', `/events/${game}`, 'sub'], ['event-game-last-tab', `/events/${game}?tab=lineup`, 'sub'], ['event-training-last-tab', `/events/${training}?tab=plan`, 'sub'], ['event-future-game', `/events/${futureGame}`, 'sub'],
   ['event-new', '/events/new', 'sub'], ['attendance-missing', '/attendance?tab=missing'],
   ['announcements', '/announcements', 'sub'], ['drills', '/drills'],
-  ['member-edit', `/members/${member}`, 'sub'], ['member-documents', `/members/${member}/documents`, 'sub'],
+  ['certificate-review', '/members/certificates', 'sub'], ['member-edit', `/members/${member}`, 'sub'], ['member-documents', `/members/${member}/documents`, 'sub'],
   ['profile', '/profile'], ['profile-info', '/profile/info', 'sub'], ['profile-documents', '/documents', 'sub'],
   ['profile-absences', '/profile/absences', 'sub'], ['profile-season', '/profile/season', 'sub'], ['profile-club-documents', '/profile/club-documents', 'sub'], ['profile-security', '/profile/security', 'sub'], ['profile-notifications', '/profile/notifications', 'sub'],
   ['profile-calendar', '/profile/calendar', 'sub'], ['profile-app', '/profile/app', 'sub'],
@@ -342,6 +342,7 @@ for (const width of WIDTHS) {
   const problems = []
   const check = (ok, text) => { if (!ok) problems.push(text) }
   const settle = async (path) => { await page.goto(origin + path); await page.waitForLoadState('networkidle').catch(() => {}); await page.waitForTimeout(300) }
+  const asViewEarly = async (view, path) => { await page.goto(origin + '/'); await page.evaluate((v) => localStorage.setItem('view-as', v), view); await settle(path) }
   const active = () => page.evaluate(() => ({ role: document.activeElement?.getAttribute('role'), checked: document.activeElement?.getAttribute('aria-checked'), text: document.activeElement?.textContent?.trim(), cls: document.activeElement?.className }))
 
   // The group menu opens on the chosen item, moves with the arrows and gives the focus back on Escape.
@@ -477,6 +478,31 @@ for (const width of WIDTHS) {
     await page.setViewportSize({ width: 1280, height: 800 })
     fixtures.tables.member_documents = keepDocs
     fixtures.tables.club_settings[0].privacy_notice_path = keepNotice
+  }
+
+  // The certificate review list (decision 129): staff only, one row per certificate waiting, a second list of the ones the
+  // person confirmed themselves; Home and Members link to it; a staff member sees "Conferma la data" on their own page and the
+  // Giocatore view does not.
+  await settle('/members/certificates')
+  check((await page.locator('main .review-row').count()) >= 2, 'review list: fewer rows than the waiting and the self confirmed certificates')
+  check(/Confermato dal diretto interessato/.test(await page.locator('main').innerText()), 'review list: the self confirmed certificate is not marked "Confermato dal diretto interessato"')
+  check((await page.locator('main .review-row button:has-text("Conferma la data")').count()) >= 1, 'review list: no "Conferma la data" action')
+  await settle('/')
+  check((await page.locator('section[aria-labelledby=home-staff] a[href="/members/certificates"]').count()) === 1, 'review list: the Home figure does not link to it')
+  await settle('/members')
+  check((await page.locator('main a[href="/members/certificates"]').count()) >= 2, 'review list: Members has no link to it (button and column)')
+  {
+    const keepDocs = fixtures.tables.member_documents.slice()
+    fixtures.tables.member_documents = [...keepDocs, { user_id: ME, kind: 'medical_certificate', issued_on: new Date(Date.now() - 5 * 864e5).toISOString().slice(0, 10), issued_source: 'typed', valid_until: null, file_path: `${ME}/medical_certificate-2000000000.jpg`, accepted_at: null, verified_at: null, verified_by: null, updated_by: ME, updated_at: new Date().toISOString() }]
+    await asViewEarly('board', '/profile/documents')
+    check((await page.locator('main button:has-text("Conferma la data")').count()) === 1, 'own certificate: a staff view shows no "Conferma la data"')
+    await asViewEarly('player', '/profile/documents')
+    check((await page.locator('main button:has-text("Conferma la data")').count()) === 0 && (await page.locator('main button:has-text("Salva la data")').count()) === 1, 'own certificate: the Giocatore view shows the confirm action')
+    await asViewEarly('player', '/members/certificates')
+    check(new URL(page.url()).pathname === '/', 'review list: the Giocatore view can open it')
+    await page.goto(origin + '/')
+    await page.evaluate(() => localStorage.removeItem('view-as'))
+    fixtures.tables.member_documents = keepDocs
   }
 
   // The notification panel: fully inside the window, closes on a tap outside, on Escape and after a link, and gives the focus back.

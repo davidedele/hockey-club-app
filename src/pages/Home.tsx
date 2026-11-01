@@ -252,7 +252,7 @@ export default function Home() {
                 </div>
                 <div>
                   <dt>{t('home.certToVerify')}</dt>
-                  <dd><Link to="/members">{members === null ? dash : t(certToVerify === 1 ? 'home.peopleOne' : 'home.peopleMany', { n: String(certToVerify) })}</Link></dd>
+                  <dd><Link to="/members/certificates">{members === null ? dash : t(certToVerify === 1 ? 'home.peopleOne' : 'home.peopleMany', { n: String(certToVerify) })}</Link></dd>
                 </div>
                 <div>
                   <dt>{t('home.certSoon')}</dt>

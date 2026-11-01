@@ -19,6 +19,7 @@ import Announcements from './pages/Announcements'
 import Attendance from './pages/Attendance'
 import ClubSettings from './pages/ClubSettings'
 import Documents from './pages/Documents'
+import CertificateReview from './pages/CertificateReview'
 import Championship from './pages/Championship'
 import DocumentsBanner from './components/DocumentsBanner'
 import UpdateBanner from './components/UpdateBanner'
@@ -234,6 +235,7 @@ export default function App() {
         <Route path="/events/:id/lineup" element={<Lineup />} />
         <Route path="/events/:id/plan" element={<Plan />} />
         <Route path="/drills" element={<Drills />} />
+        <Route path="/members/certificates" element={<CertificateReview />} />
         <Route path="/members/:id" element={<MemberEdit />} />
         <Route path="/members/:id/documents" element={<Documents />} />
         <Route path="/documents" element={<Navigate to="/profile/documents" replace />} />

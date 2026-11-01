@@ -98,6 +98,7 @@ const docs = [
   cert(uid(2), 165, 'read', false),
   cert(uid(3), 353, 'read', false),
   cert(uid(4), 20, 'typed', false),
+  { ...cert(uid(6), 30, 'typed', true), verified_by: uid(6) },
   { user_id: uid(5), kind: 'medical_certificate', issued_on: null, issued_source: null, valid_until: null, file_path: certFile(uid(5)), accepted_at: null, verified_at: null, verified_by: null, updated_by: uid(5), updated_at: at(-20, 9) },
 ]
 

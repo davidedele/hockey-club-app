@@ -1250,3 +1250,14 @@ button.fold-head { display: flex; align-items: center; justify-content: space-be
 .shift-times b { font-size: 1.25rem; }
 .shift-times b.over { text-decoration: underline; }
 .milestones .row { flex-wrap: wrap; gap: .25rem 1rem; }
+
+/* Certificate review list (staff): the person and the file on one side, the date and the action on the other; they wrap on phones. */
+.review-list { list-style: none; margin: 0; padding: 0; }
+.review-row { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: .75rem 1.5rem; padding: 1rem 0; border-top: 1px solid var(--line); }
+.review-row:first-child { border-top: 0; }
+.review-who { display: flex; flex-direction: column; align-items: flex-start; gap: .125rem; min-width: 0; flex: 1 1 16rem; }
+.review-who > a { display: inline-flex; align-items: center; min-height: 44px; font-weight: 500; }
+.review-name { font-weight: 600; font-size: 1.0625rem; }
+.review-form { display: flex; flex-wrap: wrap; align-items: flex-end; gap: .5rem .75rem; margin: 0; flex: 0 1 auto; }
+.review-form label { min-width: 0; }
+.review-row > .error { flex-basis: 100%; margin: 0; }

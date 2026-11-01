@@ -1110,5 +1110,22 @@
   "predict.closedStarted": "The game has already started: the guess can no longer be made or changed.",
   "predict.closedCancelled": "The game was cancelled: there is nothing to guess.",
   "lineup.noneRecorded": "No line-up recorded",
-  "stats.colMvpTimes": "Times MVP"
+  "stats.colMvpTimes": "Times MVP",
+  "certs.title": "Certificates to verify",
+  "certs.intro": "Open the file, check the date of issue and confirm it. If the date is wrong, correct it before confirming.",
+  "certs.empty": "No certificates to verify.",
+  "certs.countOne": "1 certificate to verify",
+  "certs.countMany": "{n} certificates to verify",
+  "certs.issuedRead": "Issued on {date}, date read from the file",
+  "certs.issuedTyped": "Issued on {date}, date typed by the member",
+  "certs.noDate": "No date of issue",
+  "certs.own": "This is your own certificate. The confirmation will be recorded as made by the person concerned.",
+  "certs.selfTitle": "Confirmed by the person concerned",
+  "certs.selfHint": "The person confirmed their own certificate in a staff view. Another member of staff can check it again.",
+  "certs.recheck": "Confirm again",
+  "certs.link": "Certificates to verify",
+  "certs.linkCount": "Certificates to verify ({n})",
+  "docs.confirmedByYou": "Confirmed by you",
+  "docs.confirmedBySelf": "Confirmed by the person concerned",
+  "docs.confirmedByStaff": "Confirmed by staff"
 }

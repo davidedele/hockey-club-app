@@ -6,7 +6,7 @@ import PageHeader from '../components/PageHeader'
 import { errorText, t } from '../i18n'
 import { checked } from '../lib/formcheck'
 import { useClub } from '../lib/club'
-import { certificateState, consentState, shrinkDocument, today, type Level } from '../lib/documents'
+import { certificateState, confirmedBy, consentState, shrinkDocument, today, type Level } from '../lib/documents'
 import { findIssueDate } from '../lib/issued'
 import { readText } from '../lib/ocr'
 import { useSession } from '../lib/session'
@@ -73,6 +73,7 @@ export default function Documents() {
   const cert = docs.find((x) => x.kind === 'medical_certificate')
   const consent = docs.find((x) => x.kind === 'privacy_consent')
   const certNow = certificateState(cert)
+  const confirmer = confirmedBy(cert, profile.id)
   const consentNow = consentState(consent, club.privacyNoticePath)
   const name = person ? personName(person) : ''
 
@@ -110,7 +111,7 @@ export default function Documents() {
     e.preventDefault()
     if (!date) return
     setBusy(true)
-    if (!own && isStaff) {
+    if (isStaff) {
       const { error } = await supabase.rpc('verify_certificate', { p_user: userId, p_issued_on: date })
       await finish(error ? errorText(error) : '', t('docs.certConfirmed'))
       return
@@ -211,6 +212,8 @@ export default function Documents() {
       <section className="doc-card" aria-labelledby="cert-title">
         <h2 id="cert-title">{t('docs.cert')}</h2>
         {loaded && <Status level={certNow.level} text={certNow.text} />}
+        {confirmer && <p className="hint">{t(confirmer === 'you' ? 'docs.confirmedByYou' : confirmer === 'self' ? 'docs.confirmedBySelf' : 'docs.confirmedByStaff')}</p>}
+        {isStaff && own && cert?.file_path && !cert.verified_at && <p className="hint">{t('certs.own')}</p>}
         {cert?.file_path && (
           <form {...checked(saveDate)}>
             <label>
@@ -219,8 +222,8 @@ export default function Documents() {
               <span className="hint">{t('docs.certDateHint')}</span>{' '}
               <span className="hint">{t('docs.certWarnHint')}</span>
             </label>
-            <button type="submit" className="secondary" disabled={busy || (own && date === (cert.issued_on ?? '') && Boolean(cert.issued_on)) || (!own && Boolean(cert.verified_at) && date === (cert.issued_on ?? ''))}>
-              {own ? t('docs.certSaveDate') : t('docs.certConfirm')}
+            <button type="submit" className="secondary" disabled={busy || (!isStaff && date === (cert.issued_on ?? '') && Boolean(cert.issued_on)) || (isStaff && Boolean(cert.verified_at) && date === (cert.issued_on ?? ''))}>
+              {isStaff ? t('docs.certConfirm') : t('docs.certSaveDate')}
             </button>
             {reading && <p className="hint" role="status">{t('docs.certReading')}</p>}
           </form>

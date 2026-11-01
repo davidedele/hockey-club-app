@@ -7,6 +7,7 @@ Status words: Open, In progress, Done (PR number), Decided (waiting for Davide),
 ## Fix brief 3 (1 November 2026, Davide's desktop test). Branch `claude/adoring-noether-k0hbs6`
 
 1. D2 In Dati personali on a computer the status "Certificato da verificare" overlapped the label "Documenti". Status: Done: the status sits under the label in every row of a section menu; `scripts/ui-check.mjs` now fails on overlapping or spilling text in a menu row or table row and tries every certificate and consent status at 320, 375, 768, 1024 and 1280 pixels (before: 33 findings on the old layout, after: none). UI rule 1.10.
+2. D1 There was no list of the certificates waiting for review and a staff member could not confirm their own. Status: Done: the page "Certificati da verificare" (`/members/certificates`) lists the people whose certificate has a file and a date nobody confirmed (name, how the date was found, the file, the date field and "Conferma la data"), a second list shows the ones confirmed by the person themselves with "Conferma di nuovo" for another staff member; it is linked from the Home figure, from a button on Membri (with the count) and from the Documenti column of a person who waits. A staff member sees "Conferma la data" on their own documents page in a staff view, with "Confermato da te" or "Confermato dal diretto interessato" after; the Giocatore view keeps "Salva la data".
 
 ## Polish round 6 (1 November 2026, from QA round 5 item 11, all decided by Davide as proposed). Branch `claude/polish-round-6`
 

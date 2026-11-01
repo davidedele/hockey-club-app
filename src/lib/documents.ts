@@ -34,6 +34,22 @@ export function certificateState(doc: MemberDocument | undefined, now = today())
   return { level: 'ok', text: t('docs.certValid', { date }), state: 'valid' }
 }
 
+// Who confirmed the date of a certificate, seen by the person looking at it. A staff member may confirm their own
+// certificate in a staff view; the record then says it was the person concerned (decision 129).
+export type Confirmer = 'you' | 'self' | 'staff'
+export function confirmedBy(doc: MemberDocument | undefined, viewer: string): Confirmer | null {
+  if (!doc?.verified_at || !doc.file_path) return null
+  if (doc.verified_by === viewer) return 'you'
+  if (doc.verified_by === doc.user_id) return 'self'
+  return 'staff'
+}
+
+// The certificates that wait for staff: a file and a date nobody confirmed. The Home figure, the Members column and the
+// review list all count with this one function, so the numbers agree.
+export function toVerify(docs: MemberDocument[], now = today()): MemberDocument[] {
+  return docs.filter((d) => d.kind === 'medical_certificate' && certificateState(d, now).state === 'toVerify')
+}
+
 export function consentState(doc: MemberDocument | undefined, noticePath: string | null): { level: Level; text: string } {
   if (!noticePath) return { level: 'none', text: t('docs.noticeMissing') }
   if (!doc?.accepted_at) return { level: 'bad', text: t('docs.consentMissing') }
