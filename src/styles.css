@@ -1273,3 +1273,17 @@ button.fold-head { display: flex; align-items: center; justify-content: space-be
 
 .legend { display: block; margin-bottom: .25rem; font-weight: 500; }
 .season-card-canvas { display: block; width: 100%; max-width: 22rem; height: auto; aspect-ratio: 1080 / 1350; border-radius: var(--radius); border: 1px solid var(--line); margin: .75rem 0; }
+
+/* Fantahockey: one row per person, the picks under the name */
+.fanta-person { display: grid; gap: .125rem; padding: .75rem 1rem; }
+.fanta-head { display: flex; justify-content: space-between; gap: 1rem; align-items: baseline; }
+.fanta-total { font-weight: 500; font-variant-numeric: tabular-nums; }
+.fanta-picks { color: var(--muted); font-size: .875rem; overflow-wrap: anywhere; }
+
+/* Saved copy for offline use */
+.offline-note { display: grid; gap: .25rem; margin: 0 0 1rem; }
+.offline-note strong { color: var(--ink); }
+.off-lines { display: grid; gap: .5rem; margin: 0 0 1rem; }
+.off-lines > div { display: grid; grid-template-columns: 7rem minmax(0, 1fr); gap: .5rem; }
+.off-lines dt { color: var(--muted); }
+.off-lines dd { margin: 0; overflow-wrap: anywhere; }

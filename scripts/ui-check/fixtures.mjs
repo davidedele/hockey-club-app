@@ -155,6 +155,7 @@ export const fixtures = {
     user_roles: [{ user_id: ME, role: 'board' }, { user_id: ME, role: 'coach' }],
     events, event_groups: eventGroups, attendance_answers: answers, attendance_records: records,
     club_settings: [{ id: true, name: 'Hockey Club Sample', logo_path: null, game_dark: '#fffb00', game_light: '#000000', jersey_light_name: 'Chiara', jersey_dark_name: 'Scura', privacy_notice_path: null, mfa_required_from: '2026-11-30T23:43:00Z' }],
+    fanta_picks: [],
     game_predictions: [{ event_id: eid(6), pred_for: 4, pred_against: 2 }],
     game_stats: stats, mvp_votes: [], game_ratings: [],
     announcements: [
@@ -216,6 +217,13 @@ export const fixtures = {
       player_number: i % 5 === 0 ? null : String(2 + i * 3), games: 3 + (i % 8), goals: 14 - Math.floor(i / 2), assists: 9 - Math.floor(i / 3), points: 23 - Math.floor(i / 2) - Math.floor(i / 3),
       pp_goals: i % 4, penalties: 6 - Math.floor(i / 5), penalty_minutes: 22 - i,
     })),
+    // Fantahockey: the next game day, the last one with the picks of six people, and the season table.
+    fanta_next_round: [{ round_day: '2026-11-08', starts_at: at(3, 18), games: 2 }],
+    fanta_last_round: [{ round_day: '2026-10-20', starts_at: at(-12, 19), games: 1, over: true }],
+    fanta_candidates: people.filter((p) => p.groups.length).map((p) => ({ user_id: p.id, first_name: p.first_name, last_name: p.last_name, jersey_number: p.jersey_number })),
+    fanta_round_list: people.filter((p) => p.groups.includes(1)).slice(0, 6).flatMap((p, i) =>
+      [0, 1, 2].map((k) => { const q = people[(i + k + 1) % people.length]; return { user_id: p.id, first_name: p.first_name, last_name: p.last_name, player_id: q.id, player_first_name: q.first_name, player_last_name: q.last_name, points: (i * 3 + k * 5) % 11 } })),
+    fanta_table: people.filter((p) => p.groups.includes(1)).slice(0, 6).map((p, i) => ({ user_id: p.id, first_name: p.first_name, last_name: p.last_name, rounds: 3 - (i % 2), points: 40 - 5 * i })),
     is_staff: true, is_board: true, is_member: true,
     attendance_summary: summary,
     attendance_grid: gridRows,

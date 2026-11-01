@@ -30,6 +30,7 @@ const FILES = {
   '0053': ['two_step_optional', col('club_settings', 'mfa_required_from'), `exists (select 1 from information_schema.columns where table_schema = 'public' and table_name = 'club_settings' and column_name = 'mfa_required_from' and column_default is null)`],
   '0054': ['required_documents', col('club_settings', 'mfa_required_from'), col('club_settings', 'certificate_months')],
   '0055': ['league_game_stats', `to_regclass('public.league_matches') is not null and to_regprocedure('public.team_key(text)') is not null`, `to_regclass('public.league_goals') is not null`],
+  '0056': ['fantahockey', `to_regclass('public.league_goals') is not null and to_regclass('public.game_predictions') is not null`, `to_regclass('public.fanta_picks') is not null`],
 }
 
 mkdirSync(join(root, 'supabase/apply'), { recursive: true })

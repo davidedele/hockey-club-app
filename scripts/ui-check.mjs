@@ -163,7 +163,7 @@ async function answer(route) {
 // 4. The pages. "sub" pages must offer a way back; "auth" pages are outside the app frame.
 const { training, game, member, futureGame } = fixtures.ids
 const ROUTES = [
-  ['home', '/'], ['events', '/events'], ['members', '/members'], ['championship', '/campionato'], ['championship-assists', '/campionato?stats=assists'], ['championship-penalties', '/campionato?stats=penalties'], ['league-match', '/campionato/partita/501', 'sub'], ['stats', '/stats'], ['stats-players', '/stats?tab=players'], ['stats-predictions', '/stats?tab=predictions'], ['stats-hall', '/stats?tab=hall'],
+  ['home', '/'], ['events', '/events'], ['members', '/members'], ['championship', '/campionato'], ['championship-assists', '/campionato?stats=assists'], ['championship-penalties', '/campionato?stats=penalties'], ['league-match', '/campionato/partita/501', 'sub'], ['stats', '/stats'], ['stats-players', '/stats?tab=players'], ['stats-predictions', '/stats?tab=predictions'], ['stats-hall', '/stats?tab=hall'], ['stats-fanta', '/stats?tab=fanta'], ['stats-fanta-player', '/stats?tab=fanta', 'player'],
   ['attendance', '/attendance'], ['attendance-events', '/attendance?tab=events'],
   ['event-training', `/events/${training}`, 'sub'], ['event-game', `/events/${game}`, 'sub'], ['event-game-last-tab', `/events/${game}?tab=lineup`, 'sub'], ['event-training-last-tab', `/events/${training}?tab=plan`, 'sub'], ['event-future-game', `/events/${futureGame}`, 'sub'],
   ['event-new', '/events/new', 'sub'], ['attendance-missing', '/attendance?tab=missing'],
@@ -310,10 +310,13 @@ for (const width of WIDTHS) {
     const errors = []
     page.on('pageerror', (e) => errors.push(String(e.stack || e.message).split('\n').slice(0, 3).join(' | ')))
     page.on('console', (m) => { if (m.type() === 'error' && !/Failed to load resource|status of 40[46]/.test(m.text())) errors.push(m.text()) })
+    // A "player" page is opened in the Giocatore view; the choice is taken out again afterwards, as the storage is shared.
+    if (kind === 'player') { await page.goto(origin + '/'); await page.evaluate(() => localStorage.setItem('view-as', 'player')) }
     await page.goto(origin + path)
     await page.waitForLoadState('networkidle').catch(() => {})
     await page.waitForTimeout(400)
     const m = await page.evaluate(measure)
+    if (kind === 'player') await page.evaluate(() => localStorage.removeItem('view-as'))
     if (kind === 'auth') {
       const shown = await page.evaluate(() => ({ path: location.pathname, password: Boolean(document.querySelector('input[type=password]')), email: Boolean(document.querySelector('input[type=email]')) }))
       if (shown.path !== path || !shown.password || !shown.email) m.problems.push(`the page does not show the sign in form: opened ${path}, ended on ${shown.path}, email field ${shown.email}, password field ${shown.password}`)
