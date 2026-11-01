@@ -125,7 +125,8 @@ button.danger { background: var(--danger); color: var(--on-danger); }
 .score label { flex: 1; }
 
 /* Members */
-.member { display: grid; grid-template-columns: 40px 1fr auto; align-items: center; gap: .75rem; }
+.member { display: grid; grid-template-columns: 40px minmax(0, 1fr) auto; align-items: center; gap: .75rem; }
+.member > div { min-width: 0; overflow-wrap: anywhere; }
 .jersey { font: 600 1.75rem/1 var(--font-display); color: var(--muted); text-align: center; }
 .member-name { font-weight: 500; }
 .contacts { display: flex; gap: 1rem; flex-wrap: wrap; margin-top: .25rem; font-size: .875rem; }
