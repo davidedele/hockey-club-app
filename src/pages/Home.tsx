@@ -9,7 +9,7 @@ import { certificateState } from '../lib/documents'
 import { useGroupFilter } from '../lib/groupfilter'
 import { prettyName } from '../lib/league'
 import { useSession } from '../lib/session'
-import { unanswered } from '../lib/unanswered'
+import { staffWindow, unanswered } from '../lib/unanswered'
 import { attendancePercent, isEmptySeason, useMySeason } from '../lib/myseason'
 import { supabase } from '../lib/supabase'
 import { formatDay, formatShortDay, formatTime, seasonOf } from '../lib/time'
@@ -74,7 +74,7 @@ export default function Home() {
       const [d, p, u] = await Promise.all([
         supabase.from('member_documents').select('*').eq('kind', 'medical_certificate'),
         supabase.from('profiles').select('id').is('deleted_at', null),
-        supabase.rpc('unanswered_people', { p_days: 7 }),
+        supabase.rpc('unanswered_people', staffWindow()),
       ])
       setDocs((d.data ?? []) as MemberDocument[])
       setMembers(((p.data ?? []) as { id: string }[]).length)

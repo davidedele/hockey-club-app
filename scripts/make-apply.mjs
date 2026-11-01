@@ -31,6 +31,9 @@ const FILES = {
   '0054': ['required_documents', col('club_settings', 'mfa_required_from'), col('club_settings', 'certificate_months')],
   '0055': ['league_game_stats', `to_regclass('public.league_matches') is not null and to_regprocedure('public.team_key(text)') is not null`, `to_regclass('public.league_goals') is not null`],
   '0056': ['fantahockey', `to_regclass('public.league_goals') is not null and to_regclass('public.game_predictions') is not null`, `to_regclass('public.fanta_picks') is not null`],
+  '0057': ['fantahockey_own_groups', `to_regclass('public.fanta_picks') is not null`, `to_regprocedure('public.fanta_scope(boolean)') is not null`],
+  '0058': ['league_hidden_players', `to_regclass('public.league_goals') is not null and to_regprocedure('public.team_key(text)') is not null`, `to_regclass('public.league_hidden_players') is not null`],
+  '0059': ['unanswered_until', `to_regprocedure('public.unanswered_people(integer)') is not null or to_regprocedure('public.unanswered_people(integer, timestamptz)') is not null`, `to_regprocedure('public.unanswered_people(integer, timestamptz)') is not null`],
 }
 
 mkdirSync(join(root, 'supabase/apply'), { recursive: true })

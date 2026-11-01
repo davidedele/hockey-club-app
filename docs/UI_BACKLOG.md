@@ -113,3 +113,10 @@ Status words: Open, In progress, Done (PR number), Decided (waiting for Davide),
 2. Statistiche: a tab Fantahockey with the next game day, the three picks, the last day and the season table. Status: Done.
 3. Senza connessione: a page with the saved events, line-ups and plans, a banner with the way to it and the note "Dati non aggiornati". Status: Done, to try on a real phone with the aeroplane mode on.
 4. Open: a button on the page of a person's own data to delete the saved copy by hand. Not asked for; signing out already deletes it.
+
+## Fantahockey own groups and small items (1 November 2026)
+
+1. Davide, 1 November: in the Giocatore view a person sees only the things of their own groups, and Fantahockey told a player of group A the date of a game of another group and let them pick players of any group. Status: Done (migration 0057, decision 138). The explanation and the round line say "dei tuoi gruppi" in the Giocatore view; when the person's groups have no game coming up the page says so and shows no form. The checker has a page for that case (`stats-fanta-nogames`).
+2. The Home card "Da gestire" said "Senza risposta nei prossimi 7 giorni" while the window everywhere else is the calendar week (decision 92). Status: Done, it says "Senza risposta questa settimana" and uses the same end of the week (migration 0059, decision 140). The attendance tab has "Questa settimana" as its first chip, selected at first.
+3. A way to hide a league player from the championship statistics for a privacy request. Status: Done, Impostazioni, Statistiche del campionato (board only), migration 0058, decision 139. To look at on a real screen: the long team names in the list at 320 pixels.
+4. Open: the classifica dei pronostici and the Albo d'oro show names and numbers of every group to a player (see the audit in `docs/PROGRESS.md`). Davide decides.

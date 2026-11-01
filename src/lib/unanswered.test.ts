@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { unanswered, weekEnd } from './unanswered'
+import { staffWindow, unanswered, weekEnd } from './unanswered'
 
 const at = (iso: string) => new Date(iso)
 
@@ -58,5 +58,25 @@ describe('unanswered', () => {
   it('is empty on Sunday evening after the last event and full again on Monday', () => {
     expect(unanswered(facts, at('2026-11-01T18:30:00Z')).inWindow).toEqual([])
     expect(unanswered(facts, at('2026-11-01T23:00:00Z')).inWindow.map((e) => e.id)).toEqual(['next'])
+  })
+})
+
+describe('staffWindow', () => {
+  const event = (id: string, starts: string): { id: string; starts_at: string; ends_at: string; cancelled_at: null; event_groups: { group_id: number }[] } => ({ id, starts_at: starts, ends_at: new Date(new Date(starts).getTime() + 3600_000).toISOString(), cancelled_at: null, event_groups: [{ group_id: 1 }] })
+  it('ends exactly where the window of the banner, the bell and the Eventi heading ends', () => {
+    for (const now of ['2026-10-28T10:00:00Z', '2026-11-01T22:30:00Z', '2026-11-01T23:00:00Z', '2026-10-25T11:00:00Z', '2026-03-29T00:30:00Z']) {
+      const n = at(now)
+      expect(staffWindow(n).p_until).toBe(unanswered({ events: [], answers: new Set<string>(), notCalledUp: new Set<string>(), myGroups: [1] }, n).end.toISOString())
+    }
+  })
+  it('counts the same events as the person own list: before the end in, at the end out', () => {
+    const now = at('2026-10-28T10:00:00Z')
+    const until = new Date(staffWindow(now).p_until)
+    const events = [event('in', '2026-11-01T22:59:00Z'), event('edge', '2026-11-01T23:00:00Z'), event('later', '2026-11-03T18:00:00Z')]
+    const mine = unanswered({ events, answers: new Set<string>(), notCalledUp: new Set<string>(), myGroups: [1] }, now).inWindow.map((e) => e.id)
+    // The database rule is "starts before p_until".
+    const staff = events.filter((e) => new Date(e.starts_at) < until).map((e) => e.id)
+    expect(staff).toEqual(mine)
+    expect(mine).toEqual(['in'])
   })
 })

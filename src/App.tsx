@@ -30,6 +30,7 @@ import DocumentsBanner from './components/DocumentsBanner'
 import UpdateBanner from './components/UpdateBanner'
 import GroupSettings from './pages/GroupSettings'
 import IceHours from './pages/IceHours'
+import LeagueStatsSettings from './pages/LeagueStatsSettings'
 import RinkSettings from './pages/RinkSettings'
 import Settings from './pages/Settings'
 import Stats from './pages/Stats'
@@ -288,6 +289,7 @@ export default function App() {
           <Route path="groups" element={<GroupSettings />} />
           <Route path="rinks" element={<RinkSettings />} />
           <Route path="ice" element={<IceHours />} />
+          <Route path="league" element={<LeagueStatsSettings />} />
           <Route path="invites" element={<Invites />} />
         </Route>
         <Route path="/invites" element={<Navigate to="/settings/invites" replace />} />

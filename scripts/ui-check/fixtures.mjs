@@ -218,6 +218,11 @@ export const fixtures = {
       pp_goals: i % 4, penalties: 6 - Math.floor(i / 5), penalty_minutes: 22 - i,
     })),
     // Fantahockey: the next game day, the last one with the picks of six people, and the season table.
+    league_hidden_list: [
+      { team: 'HC Sample', player_name: 'Mario Rossi', hidden_at: at(-2, 10), hidden_by_name: 'Delegeanu Davide' },
+      { team: 'HC Altro Club con un nome molto lungo', player_name: 'Giovanni Battista Montefiore', hidden_at: at(-1, 9), hidden_by_name: null },
+    ],
+    league_team_players: [{ player_name: 'Mario Rossi' }, { player_name: 'Luca Bianchi' }],
     fanta_next_round: [{ round_day: '2026-11-08', starts_at: at(3, 18), games: 2 }],
     fanta_last_round: [{ round_day: '2026-10-20', starts_at: at(-12, 19), games: 1, over: true }],
     fanta_candidates: people.filter((p) => p.groups.length).map((p) => ({ user_id: p.id, first_name: p.first_name, last_name: p.last_name, jersey_number: p.jersey_number })),

@@ -12,8 +12,11 @@ interface Candidate { user_id: string; first_name: string; last_name: string; je
 interface TableRow { user_id: string; first_name: string; last_name: string; rounds: number; points: number }
 
 // Fantahockey (V9): before a game day each member picks three players of the club. The picks stay private until the
-// first game of the day starts, then everybody reads them with the points. canPick is true only in the Giocatore view.
+// first game of the day of the picker starts, then the people who share a group read them with the points. canPick is
+// true only in the Giocatore view, which is also the only view limited to the person's own groups.
 export default function Fantahockey({ season, myId, canPick }: { season: number; myId: string; canPick: boolean }) {
+  // In the Giocatore view everything follows the person's own groups; the staff views look at every group (decision 138).
+  const all = !canPick
   const [next, setNext] = useState<NextRound | null | undefined>(undefined)
   const [last, setLast] = useState<LastRound | null>(null)
   const [candidates, setCandidates] = useState<Candidate[]>([])
@@ -27,10 +30,10 @@ export default function Fantahockey({ season, myId, canPick }: { season: number;
 
   const load = useCallback(async () => {
     const [n, l, c, tb] = await Promise.all([
-      supabase.rpc('fanta_next_round'),
-      supabase.rpc('fanta_last_round'),
-      supabase.rpc('fanta_candidates'),
-      supabase.rpc('fanta_table', { p_season: season }),
+      supabase.rpc('fanta_next_round', { p_all: all }),
+      supabase.rpc('fanta_last_round', { p_all: all }),
+      supabase.rpc('fanta_candidates', { p_all: all }),
+      supabase.rpc('fanta_table', { p_season: season, p_all: all }),
     ])
     const nextRound = ((n.data ?? []) as NextRound[])[0] ?? null
     const lastRound = ((l.data ?? []) as LastRound[])[0] ?? null
@@ -45,10 +48,10 @@ export default function Fantahockey({ season, myId, canPick }: { season: number;
       setPicks(ids.length === 3 ? ids : ['', '', ''])
     }
     if (lastRound) {
-      const r = await supabase.rpc('fanta_round_list', { p_day: lastRound.round_day })
+      const r = await supabase.rpc('fanta_round_list', { p_day: lastRound.round_day, p_all: all })
       setRound((r.data ?? []) as RoundPick[])
     } else setRound([])
-  }, [season, myId])
+  }, [season, myId, all])
 
   useEffect(() => { void load() }, [load])
 
@@ -73,16 +76,16 @@ export default function Fantahockey({ season, myId, canPick }: { season: number;
 
   return (
     <>
-      <p className="hint">{t('fanta.intro')}</p>
+      <p className="hint">{t(canPick ? 'fanta.intro' : 'fanta.introStaff')}</p>
 
       {next !== undefined && (
         <section className="card" aria-labelledby="fanta-next">
           <h2 id="fanta-next">{t('fanta.next')}</h2>
           {next === null ? (
-            <p className="hint">{t('fanta.noNext')}</p>
+            <p className="hint">{t(canPick ? 'fanta.noNext' : 'fanta.noNextStaff')}</p>
           ) : (
             <>
-              <p>{t('fanta.nextWhen', { day: formatDay(next.starts_at), time: formatTime(next.starts_at), n: String(next.games) })}</p>
+              <p>{t(canPick ? 'fanta.nextWhen' : 'fanta.nextWhenStaff', { day: formatDay(next.starts_at), time: formatTime(next.starts_at), n: String(next.games) })}</p>
               {canPick ? (
                 <>
                   {[0, 1, 2].map((i) => (

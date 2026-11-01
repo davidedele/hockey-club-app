@@ -128,6 +128,8 @@ function embed(rows, table, select) {
 }
 
 let apiDown = false
+// A page of kind "nogames" is opened with groups that have no game coming up (Fantahockey says so and offers no form).
+let noGames = false
 async function answer(route) {
   if (apiDown) return route.abort('failed')
   const req = route.request()
@@ -146,6 +148,7 @@ async function answer(route) {
   if (p.startsWith('/storage/')) return route.fulfill({ status: 404, body: '' })
   if (p.startsWith('/rest/v1/rpc/')) {
     const name = p.split('/').pop()
+    if (noGames && (name === 'fanta_next_round' || name === 'fanta_candidates')) return json([])
     return json(fixtures.rpc[name] ?? [])
   }
   if (p.startsWith('/rest/v1/')) {
@@ -165,7 +168,7 @@ async function answer(route) {
 // 4. The pages. "sub" pages must offer a way back; "auth" pages are outside the app frame.
 const { training, game, member, futureGame } = fixtures.ids
 const ROUTES = [
-  ['home', '/'], ['events', '/events'], ['members', '/members'], ['championship', '/campionato'], ['championship-assists', '/campionato?stats=assists'], ['championship-penalties', '/campionato?stats=penalties'], ['league-match', '/campionato/partita/501', 'sub'], ['stats', '/stats'], ['stats-players', '/stats?tab=players'], ['stats-predictions', '/stats?tab=predictions'], ['stats-hall', '/stats?tab=hall'], ['stats-fanta', '/stats?tab=fanta'], ['stats-fanta-player', '/stats?tab=fanta', 'player'],
+  ['home', '/'], ['events', '/events'], ['members', '/members'], ['championship', '/campionato'], ['championship-assists', '/campionato?stats=assists'], ['championship-penalties', '/campionato?stats=penalties'], ['league-match', '/campionato/partita/501', 'sub'], ['stats', '/stats'], ['stats-players', '/stats?tab=players'], ['stats-predictions', '/stats?tab=predictions'], ['stats-hall', '/stats?tab=hall'], ['stats-fanta', '/stats?tab=fanta'], ['stats-fanta-player', '/stats?tab=fanta', 'player'], ['stats-fanta-nogames', '/stats?tab=fanta', 'nogames'],
   ['attendance', '/attendance'], ['attendance-events', '/attendance?tab=events'],
   ['event-training', `/events/${training}`, 'sub'], ['event-game', `/events/${game}`, 'sub'], ['event-game-last-tab', `/events/${game}?tab=lineup`, 'sub'], ['event-training-last-tab', `/events/${training}?tab=plan`, 'sub'], ['event-future-game', `/events/${futureGame}`, 'sub'],
   ['event-new', '/events/new', 'sub'], ['attendance-missing', '/attendance?tab=missing'],
@@ -175,7 +178,7 @@ const ROUTES = [
   ['profile-absences', '/profile/absences', 'sub'], ['profile-season', '/profile/season', 'sub'], ['profile-club-documents', '/profile/club-documents', 'sub'], ['profile-security', '/profile/security', 'sub'], ['profile-notifications', '/profile/notifications', 'sub'],
   ['profile-calendar', '/profile/calendar', 'sub'], ['offline', '/offline', 'sub'], ['profile-app', '/profile/app', 'sub'],
   ['settings', '/settings'], ['settings-club', '/settings/club', 'sub'], ['settings-documents', '/settings/documents', 'sub'], ['settings-groups', '/settings/groups', 'sub'],
-  ['settings-rinks', '/settings/rinks', 'sub'], ['settings-ice', '/settings/ice', 'sub'], ['settings-invites', '/settings/invites', 'sub'],
+  ['settings-rinks', '/settings/rinks', 'sub'], ['settings-ice', '/settings/ice', 'sub'], ['settings-league', '/settings/league', 'sub'], ['settings-invites', '/settings/invites', 'sub'],
   ['login', '/login', 'auth'],
 ].filter(([name]) => name.includes(only))
 
@@ -313,12 +316,19 @@ for (const width of WIDTHS) {
     page.on('pageerror', (e) => errors.push(String(e.stack || e.message).split('\n').slice(0, 3).join(' | ')))
     page.on('console', (m) => { if (m.type() === 'error' && !/Failed to load resource|status of 40[46]/.test(m.text())) errors.push(m.text()) })
     // A "player" page is opened in the Giocatore view; the choice is taken out again afterwards, as the storage is shared.
-    if (kind === 'player') { await page.goto(origin + '/'); await page.evaluate(() => localStorage.setItem('view-as', 'player')) }
+    if (kind === 'player' || kind === 'nogames') { await page.goto(origin + '/'); await page.evaluate(() => localStorage.setItem('view-as', 'player')) }
+    noGames = kind === 'nogames'
     await page.goto(origin + path)
     await page.waitForLoadState('networkidle').catch(() => {})
     await page.waitForTimeout(400)
     const m = await page.evaluate(measure)
-    if (kind === 'player') await page.evaluate(() => localStorage.removeItem('view-as'))
+    if (kind === 'player' || kind === 'nogames') await page.evaluate(() => localStorage.removeItem('view-as'))
+    if (kind === 'nogames') {
+      const shown = await page.evaluate(() => ({ text: document.body.innerText, selects: document.querySelectorAll('main select').length }))
+      if (!shown.text.includes('I tuoi gruppi non hanno partite in programma')) m.problems.push('Fantahockey does not say that the groups have no game coming up')
+      if (shown.selects > 0) m.problems.push('Fantahockey offers the pick form although the groups have no game coming up')
+    }
+    noGames = false
     if (kind === 'auth') {
       const shown = await page.evaluate(() => ({ path: location.pathname, password: Boolean(document.querySelector('input[type=password]')), email: Boolean(document.querySelector('input[type=email]')) }))
       if (shown.path !== path || !shown.password || !shown.email) m.problems.push(`the page does not show the sign in form: opened ${path}, ended on ${shown.path}, email field ${shown.email}, password field ${shown.password}`)
@@ -415,6 +425,17 @@ for (const width of WIDTHS) {
   check(!(await page.isVisible('dialog[open]')), 'delete member: Escape does not close the window')
 
   // Settings groups are folded rows: all closed on first load, one open at a time, a real button with aria-expanded.
+  // Championship statistics (board): the hidden players are listed with "Mostra di nuovo"; hiding asks first, naming the player.
+  await settle('/settings/league')
+  check((await page.locator('main .club-docs li').count()) === 2, 'league statistics: the two hidden players are not listed')
+  check((await page.locator('main button', { hasText: 'Mostra di nuovo' }).count()) === 2, 'league statistics: a hidden player has no "Mostra di nuovo" button')
+  await page.click('main .ms-button')
+  await page.locator('main [role=menuitemradio]').nth(1).click()
+  await page.fill('main input[list]', 'Mario Rossi')
+  await page.click('main button[type=submit]')
+  check(await page.isVisible('dialog[open] h2:has-text("Nascondere Mario Rossi")'), 'league statistics: hiding does not ask first, naming the player')
+  check(await page.evaluate(() => document.activeElement?.textContent === 'Annulla'), 'league statistics: the focus is not on Annulla')
+  await page.keyboard.press('Escape')
   await settle('/settings/club')
   const heads = page.locator('main .fold-head')
   check((await heads.count()) === 3, 'folds: the club settings do not show three folded groups')

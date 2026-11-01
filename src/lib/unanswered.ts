@@ -11,6 +11,13 @@ export function weekEnd(now: Date = new Date()): Date {
   return new Date(italyToIso(addDays(today, daysToMonday), '00:00'))
 }
 
+// The window of the staff figure "Senza risposta questa settimana" (Home card and attendance tab): the database lists the
+// people with an event that starts before p_until, so the figure ends where the banner, the bell and the Eventi heading
+// end (decision 92). The staff count people, the others count events; the window is the same.
+export function staffWindow(now: Date = new Date()): { p_until: string } {
+  return { p_until: weekEnd(now).toISOString() }
+}
+
 type Needed = Pick<EventRow, 'id' | 'starts_at' | 'ends_at' | 'cancelled_at' | 'event_groups'>
 type Facts<E extends Needed> = {
   events: E[]
