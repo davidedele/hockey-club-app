@@ -32,6 +32,7 @@ const FILES = {
   '0055': ['league_game_stats', `to_regclass('public.league_matches') is not null and to_regprocedure('public.team_key(text)') is not null`, `to_regclass('public.league_goals') is not null`],
   '0056': ['fantahockey', `to_regclass('public.league_goals') is not null and to_regclass('public.game_predictions') is not null`, `to_regclass('public.fanta_picks') is not null`],
   '0057': ['fantahockey_own_groups', `to_regclass('public.fanta_picks') is not null`, `to_regprocedure('public.fanta_scope(boolean)') is not null`],
+  '0058': ['league_hidden_players', `to_regclass('public.league_goals') is not null and to_regprocedure('public.team_key(text)') is not null`, `to_regclass('public.league_hidden_players') is not null`],
 }
 
 mkdirSync(join(root, 'supabase/apply'), { recursive: true })
