@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { isApple, mapsUrl, placeQuery } from './maps'
+import { isApple, mapsUrl, placeLabel, placeQuery } from './maps'
 
 describe('maps link', () => {
   it('uses Apple Maps on an iPhone and Google Maps elsewhere', () => {
@@ -20,5 +20,11 @@ describe('maps link', () => {
   })
   it('escapes characters that would break the link', () => {
     expect(mapsUrl('A&B #1', false)).toContain('A%26B%20%231')
+  })
+  it('writes the place with the venue and the rink once each, and nothing when there is none', () => {
+    expect(placeLabel({ venue: 'Agorà', rink: 'Grande' })).toBe('Agorà · Grande')
+    expect(placeLabel({ venue: null, rink: 'Piccola' })).toBe('Piccola')
+    expect(placeLabel({ venue: 'Piccola', rink: 'Piccola' })).toBe('Piccola')
+    expect(placeLabel({ venue: ' ', rink: undefined })).toBe('')
   })
 })

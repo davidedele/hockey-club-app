@@ -58,7 +58,7 @@ export default function Home() {
       supabase.from('group_members').select('group_id').eq('user_id', profile.id),
       supabase.from('attendance_answers').select('event_id, answer').eq('user_id', profile.id),
       supabase.from('attendance_records').select('event_id').eq('user_id', profile.id).eq('status', 'not_called_up'),
-      supabase.from('announcements').select('id, title, created_at').order('created_at', { ascending: false }).limit(SHOWN),
+      supabase.from('announcements').select('id, title, created_at').order('pinned_at', { ascending: false, nullsFirst: false }).order('created_at', { ascending: false }).limit(SHOWN),
       supabase.from('league_matches').select('*').not('home_score', 'is', null).order('starts_at', { ascending: false }).limit(200),
       supabase.from('league_standings').select('*').order('position'),
     ])
@@ -171,7 +171,7 @@ export default function Home() {
             {loaded && laterCount > 0 && (
               <>
                 <div className="nowline"><span>{t('dash.laterTitle')}</span><i aria-hidden="true" /></div>
-                <p className="hint"><Link to="/events">{t(laterCount === 1 ? 'home.laterOne' : 'home.laterMany', { n: String(laterCount) })}</Link></p>
+                <p className="hint"><Link className="inline-action" to="/events">{t(laterCount === 1 ? 'home.laterOne' : 'home.laterMany', { n: String(laterCount) })}</Link></p>
               </>
             )}
           </section>}

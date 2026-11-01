@@ -15,6 +15,7 @@ import { ConfirmDialog } from '../components/ConfirmAction'
 import { jerseyName, useClub } from '../lib/club'
 import { useCrumb } from '../lib/crumb'
 import MapsButton from '../components/MapsButton'
+import { placeLabel } from '../lib/maps'
 import { useSession } from '../lib/session'
 import type { CSSProperties } from 'react'
 import { whatsappLink } from '../lib/whatsapp'
@@ -373,7 +374,7 @@ export default function EventDetail() {
             </div>
           </div>
         )}
-        {(event.venue || rinkName) && <p className="ev-venue">{[event.venue, rinkName].filter(Boolean).join(' · ')}</p>}
+        {placeLabel({ venue: event.venue, rink: rinkName }) && <p className="ev-venue">{placeLabel({ venue: event.venue, rink: rinkName })}</p>}
       </header>
 
       {error && <p className="error" role="alert">{error}</p>}

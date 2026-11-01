@@ -222,7 +222,7 @@ export default function Drills() {
               <h2>{d.title}</h2>
               {d.notes && <p className="ann-body">{d.notes}</p>}
               <div className="actions">
-                {link && <a href={link} target="_blank" rel="noopener noreferrer">{t('drills.open')}</a>}
+                {link && <a className="inline-action" href={link} target="_blank" rel="noopener noreferrer">{t('drills.open')}</a>}
                 {d.video_url && <a className="inline-action" href={d.video_url} target="_blank" rel="noopener noreferrer">{t('drills.watch')}</a>}
               </div>
               <p className="hint">{count === 0 ? t('drills.usedNever') : t(count === 1 ? 'drills.usedOne' : 'drills.used', { n: String(count) })}</p>

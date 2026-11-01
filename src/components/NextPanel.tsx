@@ -2,6 +2,7 @@ import type { CSSProperties } from 'react'
 import { Link } from 'react-router-dom'
 import { t } from '../i18n'
 import { jerseyName, useClub } from '../lib/club'
+import { placeLabel } from '../lib/maps'
 import { useRinks } from '../lib/rinks'
 import MapsButton from './MapsButton'
 import { formatDay, formatTime } from '../lib/time'
@@ -37,7 +38,7 @@ export default function NextPanel(props: { club: string; colours: CSSProperties 
           </div>
           <div>
             <dt>{t('event.venue')}</dt>
-            <dd>{e.venue || t('common.none')}</dd>
+            <dd>{placeLabel({ venue: e.venue, rink: rink?.name }) || t('common.none')}</dd>
           </div>
           {game && e.jersey && (
             <div>
