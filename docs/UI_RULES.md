@@ -71,6 +71,8 @@ Read this file, and the open items of `docs/UI_BACKLOG.md`, before touching a pa
 10. A table of players of other teams (the Campionato player tables) has the player and the team in the first column, the ranked number first after it, ten rows with "Mostra altre 10" and the count "10 di 26", and under it a line that says where the data comes from and that names are matched as the league writes them.
 11. A page shown from the saved copy for offline use says "Dati non aggiornati" and when the copy was saved at the top, offers no button that changes data, and says what is kept. Nothing about contacts, documents, ratings or messages is ever on it (decision 137).
 12. Picks that stay hidden until a time (the match predictions, fantahockey) are never shown before that time, not even to the board, and the page says when they become visible.
+13. Fantahockey and every other screen that lists games, rounds or people of the club follows decision 131 in the Giocatore view: only the person's own groups, in the choices, in the dates and in the people listed. A function that serves it takes `p_all` and the screen passes true only in the staff views; the database honours it only for coaches and the board. When the groups have no game coming up the page says so in one sentence and shows no form.
+14. A privacy tool of the board (hiding a league player) asks for a confirmation that names the person, says what is removed and what stays, and can be undone from the same page.
 
 ## 6. How to check
 
