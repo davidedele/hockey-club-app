@@ -1025,7 +1025,7 @@
   "mfa.removeTitle": "Turn off two step sign in?",
   "mfa.removeBody": "The account asks for the password only again. For the board, after the set date, board powers stay blocked until you turn it on again.",
   "mfa.factorName": "Authenticator app",
-  "mfa.boardDeadline": "As a board member you must turn on two step sign in by {date}. After that date, without it you cannot use the board functions.",
+  "mfa.boardDeadline": "As a board member you must turn on two step sign in before {time} on {date} (Italian time). From then on, without it you cannot use the board functions.",
   "mfa.boardNoDate": "As a board member we ask you to turn on two step sign in.",
   "mfa.boardOn": "As a board member you have it on: it is asked at every sign in.",
   "mfa.gateTitle": "Two step sign in",

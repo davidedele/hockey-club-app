@@ -151,7 +151,7 @@ export const fixtures = {
     profiles, profile_contacts: contacts, groups, group_members: groupMembers,
     user_roles: [{ user_id: ME, role: 'board' }, { user_id: ME, role: 'coach' }],
     events, event_groups: eventGroups, attendance_answers: answers, attendance_records: records,
-    club_settings: [{ id: true, name: 'Hockey Club Sample', logo_path: null, game_dark: '#fffb00', game_light: '#000000', jersey_light_name: 'Chiara', jersey_dark_name: 'Scura', privacy_notice_path: null }],
+    club_settings: [{ id: true, name: 'Hockey Club Sample', logo_path: null, game_dark: '#fffb00', game_light: '#000000', jersey_light_name: 'Chiara', jersey_dark_name: 'Scura', privacy_notice_path: null, mfa_required_from: '2026-11-30T23:43:00Z' }],
     game_predictions: [{ event_id: eid(6), pred_for: 4, pred_against: 2 }],
     game_stats: stats, mvp_votes: [], game_ratings: [],
     announcements: [

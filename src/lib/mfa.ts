@@ -1,5 +1,11 @@
 import { useCallback, useEffect, useState } from 'react'
 import { supabase } from './supabase'
+import { dayKey, formatDateYear, formatTime } from './time'
+
+// The exact moment the second step starts to count, in Italian time: the day (with the year) and the hour.
+export function deadlineParts(iso: string): { date: string; time: string } {
+  return { date: formatDateYear(dayKey(iso)), time: formatTime(iso) }
+}
 
 export interface Factor { id: string; friendly_name?: string | null }
 
