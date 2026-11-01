@@ -172,7 +172,7 @@ const ROUTES = [
   ['profile', '/profile'], ['profile-info', '/profile/info', 'sub'], ['profile-documents', '/documents', 'sub'],
   ['profile-absences', '/profile/absences', 'sub'], ['profile-season', '/profile/season', 'sub'], ['profile-club-documents', '/profile/club-documents', 'sub'], ['profile-security', '/profile/security', 'sub'], ['profile-notifications', '/profile/notifications', 'sub'],
   ['profile-calendar', '/profile/calendar', 'sub'], ['profile-app', '/profile/app', 'sub'],
-  ['settings', '/settings'], ['settings-club', '/settings/club', 'sub'], ['settings-groups', '/settings/groups', 'sub'],
+  ['settings', '/settings'], ['settings-club', '/settings/club', 'sub'], ['settings-documents', '/settings/documents', 'sub'], ['settings-groups', '/settings/groups', 'sub'],
   ['settings-rinks', '/settings/rinks', 'sub'], ['settings-ice', '/settings/ice', 'sub'], ['settings-invites', '/settings/invites', 'sub'],
   ['login', '/login', 'auth'],
 ].filter(([name]) => name.includes(only))
@@ -547,6 +547,27 @@ for (const width of WIDTHS) {
     const staffItems = (await page.locator('.side-switch [role=menuitemradio]').allInnerTexts()).map((x) => x.trim())
     check(staffItems[0] === 'Tutti i gruppi' && staffItems.length === 6, `groups: the staff view selector lists "${staffItems.join('|')}"`)
     await page.keyboard.press('Escape')
+    await page.goto(origin + '/')
+    await page.evaluate(() => localStorage.removeItem('view-as'))
+  }
+
+  // Required documents (decision 132): the months field is checked by the app, the consent can be a tick box.
+  await settle('/settings/documents')
+  await page.fill('main input[type=number]', '40')
+  await page.click('main button[type=submit]')
+  const rangeMessage = await page.evaluate(() => { const bad = document.querySelector('main input[type=number][aria-invalid=true]'); const id = (bad?.getAttribute('aria-describedby') || '').split(' ').find((x) => x.startsWith('fe-')); return id ? document.getElementById(id)?.textContent?.trim() ?? '' : '' })
+  check(/\S/.test(rangeMessage), 'required documents: 40 months is not refused with a message under the field')
+  {
+    const keepNotice = fixtures.tables.club_settings[0].privacy_notice_path
+    fixtures.tables.club_settings[0].privacy_notice_path = 'club/privacy.pdf'
+    fixtures.tables.club_settings[0].consent_mode = 'tick'
+    await asViewEarly('player', '/profile/documents')
+    check((await page.locator('main input[type=checkbox]').count()) === 1 && (await page.locator('main button:has-text("Ho letto e accetto")').count()) === 0, 'required documents: the tick box mode shows no tick box or still shows the button')
+    fixtures.tables.club_settings[0].consent_mode = 'button'
+    await asViewEarly('player', '/profile/documents')
+    check((await page.locator('main button:has-text("Ho letto e accetto")').count()) === 1, 'required documents: the button mode shows no button')
+    fixtures.tables.club_settings[0].privacy_notice_path = keepNotice
+    delete fixtures.tables.club_settings[0].consent_mode
     await page.goto(origin + '/')
     await page.evaluate(() => localStorage.removeItem('view-as'))
   }

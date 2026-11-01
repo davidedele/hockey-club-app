@@ -13,6 +13,9 @@ import { useSession } from '../lib/session'
 import { supabase } from '../lib/supabase'
 import type { MemberDocument } from '../lib/types'
 
+// "un anno" for 12, otherwise the number of months.
+const monthsText = (n: number) => (n === 12 ? t('reqdocs.year') : t(n === 1 ? 'reqdocs.monthsOne' : 'reqdocs.monthsMany', { n: String(n) }))
+
 const MAX_BYTES = 5 * 1024 * 1024
 const LINK_SECONDS = 600
 
@@ -219,7 +222,7 @@ export default function Documents() {
             <label>
               {t('docs.certDate')}
               <input type="date" required max={today()} value={date} onChange={(e) => { typed.current = true; setDate(e.target.value) }} />
-              <span className="hint">{t('docs.certDateHint')}</span>{' '}
+              <span className="hint">{t('docs.certDateHintMonths', { months: monthsText(club.certificateMonths) })}</span>{' '}
               <span className="hint">{t('docs.certWarnHint')}</span>
             </label>
             <button type="submit" className="secondary" disabled={busy || (!isStaff && date === (cert.issued_on ?? '') && Boolean(cert.issued_on)) || (isStaff && Boolean(cert.verified_at) && date === (cert.issued_on ?? ''))}>
@@ -250,7 +253,13 @@ export default function Documents() {
         {noticeLink && <p><a href={noticeLink} target="_blank" rel="noopener noreferrer">{t('docs.noticeOpen')}</a></p>}
         {own && club.privacyNoticePath && (
           <div className="actions">
-            {consentNow.level !== 'ok' && <button disabled={busy} onClick={() => void accept()}>{t('docs.consentAccept')}</button>}
+            {consentNow.level !== 'ok' && club.consentMode === 'button' && <button disabled={busy} onClick={() => void accept()}>{t('docs.consentAccept')}</button>}
+            {consentNow.level !== 'ok' && club.consentMode === 'tick' && (
+              <label className="check">
+                <input type="checkbox" checked={false} disabled={busy} onChange={() => void accept()} />
+                {t('docs.consentTick')}
+              </label>
+            )}
             {consent && <ConfirmAction label={t('docs.consentWithdraw')} title={t('docs.consentWithdrawTitle')} body={t('docs.consentWithdrawBody')} confirm={t('docs.consentWithdraw')} disabled={busy} onConfirm={() => void withdraw()} />}
           </div>
         )}

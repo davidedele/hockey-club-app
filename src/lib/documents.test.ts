@@ -76,3 +76,15 @@ describe('confirmedBy and toVerify', () => {
     expect(toVerify([typed, confirmed, read, noFile, consent], '2026-10-15').map((d) => d.user_id)).toEqual(['u1'])
   })
 })
+
+describe('the review switch of the club', () => {
+  it('counts a typed date at once when staff review is off, and waits for staff when it is on', async () => {
+    const { setCertificateReview } = await import('./documents')
+    const typed = cert({ issued_on: '2026-10-01', issued_source: 'typed', valid_until: '2027-10-01' })
+    expect(certificateState(typed, now).state).toBe('toVerify')
+    setCertificateReview(false)
+    expect(certificateState(typed, now).state).toBe('valid')
+    setCertificateReview(true)
+    expect(certificateState(typed, now).state).toBe('toVerify')
+  })
+})

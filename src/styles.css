@@ -1262,3 +1262,5 @@ button.fold-head { display: flex; align-items: center; justify-content: space-be
 .review-form { display: flex; flex-wrap: wrap; align-items: flex-end; gap: .5rem .75rem; margin: 0; flex: 0 1 auto; }
 .review-form label { min-width: 0; }
 .review-row > .error { flex-basis: 100%; margin: 0; }
+
+.legend { display: block; margin-bottom: .25rem; font-weight: 500; }
