@@ -227,6 +227,34 @@ function measure() {
   }
   // Names with digits in the people lists.
   for (const el of document.querySelectorAll('.person-name, [data-person-name]')) if (/\d/.test(el.textContent)) problems.push(`name with digits: ${el.textContent.trim()}`)
+  // No two pieces of text overlap inside a menu row or a table row, and no text spills out of its row (UI rule 1.10).
+  // A piece is an element with text of its own, or a status dot; the text is measured line by line.
+  for (const row of document.querySelectorAll('.shell-nav a, main tr, main .list .member')) {
+    if (!visible(row)) continue
+    const pieces = []
+    for (const el of row.querySelectorAll('*')) {
+      if (!visible(el)) continue
+      const own = [...el.childNodes].some((c) => c.nodeType === 3 && c.textContent.trim())
+      if (!own && !el.classList.contains('dot')) continue
+      const rects = []
+      if (el.classList.contains('dot')) rects.push(el.getBoundingClientRect())
+      for (const c of el.childNodes) {
+        if (c.nodeType !== 3 || !c.textContent.trim()) continue
+        const range = document.createRange()
+        range.selectNodeContents(c)
+        rects.push(...[...range.getClientRects()].filter((r) => r.width > 0.5 && r.height > 0.5))
+      }
+      pieces.push({ label: el.classList.contains('dot') ? 'status dot' : name(el), rects })
+    }
+    const rr = row.getBoundingClientRect()
+    for (let i = 0; i < pieces.length; i++) {
+      for (const r of pieces[i].rects) if (r.right > rr.right + 1 || r.left < rr.left - 1) problems.push(`text spills out of its row: "${pieces[i].label}" in "${name(row)}"`)
+      for (let j = i + 1; j < pieces.length; j++) {
+        const hit = pieces[i].rects.some((a) => pieces[j].rects.some((b) => Math.min(a.right, b.right) - Math.max(a.left, b.left) > 1 && Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top) > 1))
+        if (hit) problems.push(`text overlaps: "${pieces[i].label}" and "${pieces[j].label}" in "${name(row)}"`)
+      }
+    }
+  }
   // Tab strips that are wider than the window must show a fade on the edge with more tabs, and keep the active tab in view.
   for (const strip of document.querySelectorAll('.tabstrip')) {
     const nav = strip.querySelector('.ev-tabs')
@@ -409,6 +437,47 @@ for (const width of WIDTHS) {
   check((await page.locator('main input[type=date]').count()) === 0, 'certificate: a date field shows although no file was uploaded')
   await settle(`/members/${member}/documents`)
   check((await page.locator('main input[type=date]').count()) === 1, 'certificate: no date field although a file was uploaded')
+
+  // Every certificate and consent status in the profile menu and on the Members page, from phone to computer width:
+  // no text overlaps or spills out of its row (decision 128, UI rule 1.10).
+  {
+    const days = (n) => new Date(Date.now() - n * 864e5).toISOString().slice(0, 10)
+    const until = (n) => new Date(Date.parse(days(n)) + 365 * 864e5).toISOString().slice(0, 10)
+    const file = `${ME}/medical_certificate-2000000000.jpg`
+    const certs = {
+      'no certificate': null,
+      'file, no date': { issued_on: null, issued_source: null, valid_until: null, file_path: file },
+      'typed date': { issued_on: days(10), issued_source: 'typed', valid_until: until(10), file_path: file },
+      'expired': { issued_on: days(400), issued_source: 'read', valid_until: until(400), file_path: file },
+      'expiring': { issued_on: days(350), issued_source: 'read', valid_until: until(350), file_path: file },
+      'valid': { issued_on: days(20), issued_source: 'read', valid_until: until(20), file_path: file },
+    }
+    const consents = { 'no notice': [null, null], 'not given': ['club/privacy.pdf', null], 'old notice': ['club/privacy.pdf', 'club/old.pdf'], 'given': ['club/privacy.pdf', 'club/privacy.pdf'] }
+    const keepDocs = fixtures.tables.member_documents.slice()
+    const keepNotice = fixtures.tables.club_settings[0].privacy_notice_path
+    const combos = [...Object.keys(certs).map((c) => [c, 'given']), ['valid', 'no notice'], ['valid', 'not given'], ['valid', 'old notice'], ['no certificate', 'not given']]
+    const seenTexts = new Set()
+    for (const [c, k] of combos) {
+      const [notice, given] = consents[k]
+      fixtures.tables.club_settings[0].privacy_notice_path = notice
+      const others = keepDocs.filter((d) => d.user_id !== ME)
+      const mine = []
+      if (certs[c]) mine.push({ user_id: ME, kind: 'medical_certificate', accepted_at: null, verified_at: null, verified_by: null, updated_by: ME, updated_at: new Date().toISOString(), ...certs[c] })
+      if (given) mine.push({ user_id: ME, kind: 'privacy_consent', valid_until: null, file_path: given, accepted_at: days(30), updated_by: ME, updated_at: new Date().toISOString() })
+      fixtures.tables.member_documents = [...others, ...mine]
+      for (const width of [320, 375, 768, 1024, 1280]) {
+        await page.setViewportSize({ width, height: 900 })
+        await settle(width < 768 ? '/profile' : '/profile/info')
+        const m = await page.evaluate(measure)
+        for (const text of m.problems.filter((x) => /overlap|spills/.test(x))) problems.push(`menu rows: ${c} + ${k} at ${width}px: ${text}`)
+        seenTexts.add(await page.evaluate(() => document.querySelector('.shell-nav .doc-status')?.textContent ?? ''))
+      }
+    }
+    check(seenTexts.size >= 8, `menu rows: only ${seenTexts.size} different status texts were tried`)
+    await page.setViewportSize({ width: 1280, height: 800 })
+    fixtures.tables.member_documents = keepDocs
+    fixtures.tables.club_settings[0].privacy_notice_path = keepNotice
+  }
 
   // The notification panel: fully inside the window, closes on a tap outside, on Escape and after a link, and gives the focus back.
   const bell = async (width, height, label) => {

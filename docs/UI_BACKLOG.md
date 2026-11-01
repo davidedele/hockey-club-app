@@ -4,6 +4,10 @@ Every point Davide raised about the interface, with its status. Newest review fi
 
 Status words: Open, In progress, Done (PR number), Decided (waiting for Davide), Won't do (with the reason).
 
+## Fix brief 3 (1 November 2026, Davide's desktop test). Branch `claude/adoring-noether-k0hbs6`
+
+1. D2 In Dati personali on a computer the status "Certificato da verificare" overlapped the label "Documenti". Status: Done: the status sits under the label in every row of a section menu; `scripts/ui-check.mjs` now fails on overlapping or spilling text in a menu row or table row and tries every certificate and consent status at 320, 375, 768, 1024 and 1280 pixels (before: 33 findings on the old layout, after: none). UI rule 1.10.
+
 ## Polish round 6 (1 November 2026, from QA round 5 item 11, all decided by Davide as proposed). Branch `claude/polish-round-6`
 
 1. Tab strips cut at 375 pixels with no sign that they scroll. Status: Done: a soft fade on the edge with more tabs, the active tab scrolled into view, "Albo d'oro" is now "Albo", a check in the interface checker (this closes item 4 of the follow up run).

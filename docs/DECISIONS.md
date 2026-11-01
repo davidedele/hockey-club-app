@@ -233,4 +233,4 @@ Recorded on 21 October 2026. Read together with `SPEC.md` and `SPORTEASY_NOTES.m
 125. The second step deadline is written as the exact hour and day in Italian time ("prima delle 00:43 del 1 dicembre 2026"), from `club_settings.mfa_required_from`.
 126. "Volte MVP" is the name of the season count of games as MVP (La mia stagione and the Statistiche tables). On the page of one game the column stays "MVP", because there it counts the votes of that game.
 127. Opponent names are compared without case, without outer spaces and with any run of spaces inside counted as one, through `public.team_key` (migration 0052). Stored names are not changed.
-
+128. Menu rows (fix brief 3, D2, Claude's choice, Davide may change it): in the section menus the status text sits under the label and wraps, it is never on the same line. The interface checker measures text overlap in menu and table rows for every certificate and consent status.

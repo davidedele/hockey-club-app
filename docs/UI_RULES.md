@@ -16,6 +16,7 @@ Read this file, and the open items of `docs/UI_BACKLOG.md`, before touching a pa
 8. A wait longer than a second shows a skeleton of what is coming, not a line of text or a spinner; a loading number shows an en dash.
 
 9. A settings page with more than two groups of settings shows them as folded rows (`Fold` in `src/components/Fold.tsx`): a real button with `aria-expanded`, the title and a one line summary of what is set. All are closed on first load, only one is open at a time, and the open one stays open after a save because the page keeps its state and the closed bodies are only hidden.
+10. In a menu row (the profile and settings section lists) and in a table row, no two pieces of text may overlap and no text may leave its row, at any width from 320 to 1280 pixels and with larger text. A status goes under its label, never beside it on the same line. `scripts/ui-check.mjs` measures it and tries every certificate and consent status.
 
 ## 2. Controls
 
