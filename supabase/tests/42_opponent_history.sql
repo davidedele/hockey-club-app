@@ -3,6 +3,7 @@ insert into auth.users (id, email, email_confirmed_at) values
   ('00000000-0000-0000-0000-000000000001', 'p1@example.test', now()),
   ('00000000-0000-0000-0000-000000000009', 'u9@example.test', now());
 insert into public.profiles (id, first_name, last_name) values ('00000000-0000-0000-0000-000000000001', 'Pia', 'One');
+insert into public.group_members (group_id, user_id) select id, '00000000-0000-0000-0000-000000000001' from public.groups where code = 'A';
 create function pg_temp.u(p text) returns uuid language sql as $$ select ('00000000-0000-0000-0000-' || lpad(p, 12, '0'))::uuid $$;
 grant usage on schema test to authenticated;
 update public.groups set league_team = 'HC SGULARAT' where code = 'A';
