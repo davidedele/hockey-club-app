@@ -160,12 +160,11 @@ export default function Plan({ embedded = false }: { embedded?: boolean }) {
       ) : (
         <>
           {plan?.notes && <p className="ann-body">{plan.notes}</p>}
-          {loaded && !plan && rows.length === 0 && <p className="hint">{t('plan.empty')}</p>}
         </>
       )}
 
       <h2>{t('plan.drills')}{total > 0 ? ` (${t('plan.minutes', { n: String(total) })})` : ''}</h2>
-      {rows.length === 0 && <p className="hint">{isStaff ? t('plan.noneYet') : t('plan.empty')}</p>}
+      {rows.length === 0 && (isStaff || (loaded && !plan?.notes)) && <p className="hint">{isStaff ? t('plan.noneYet') : t('plan.empty')}</p>}
       <ol className="plan-list">
         {rows.map((r, i) => {
           const drill = r.drills
