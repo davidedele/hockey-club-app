@@ -383,7 +383,7 @@ export default function EventDetail() {
       <ConfirmDialog
         open={cancelling}
         title={t('event.cancelTitle')}
-        body={t('event.cancelBody', { title: event.title, date: dayLabel })}
+        body={`${t('event.cancelBody', { title: event.title, date: dayLabel })} ${t('event.cancelHint')}`}
         choices={[{ label: t('event.cancelGo'), onChoose: () => void setCancelled(true) }]}
         busy={busy}
         onClose={() => setCancelling(false)}
@@ -467,7 +467,6 @@ export default function EventDetail() {
               {!over && !cancelled && <a className="button secondary small" href={whatsappLink(shareText)} target="_blank" rel="noopener noreferrer">{t('share.whatsapp')}</a>}
               {hasScore && <a className="button secondary small" href={whatsappLink(resultText)} target="_blank" rel="noopener noreferrer">{t('share.result')}</a>}
             </div>
-            {!cancelled && !over && isStaff && <p className="hint">{t('event.cancelHint')}</p>}
             {game && !cancelled && profile && (inMyGroups || started) && (
               <Predictions eventId={id} myId={profile.id} started={started} canGuess={!isStaff && inMyGroups} inGroups={inMyGroups} />
             )}
