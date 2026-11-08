@@ -66,7 +66,7 @@ export default function ConfirmAction(props: {
   const [open, setOpen] = useState(false)
   return (
     <>
-      <button type="button" className="link" disabled={disabled} onClick={() => setOpen(true)}>{label}</button>
+      <button type="button" className="link" disabled={disabled} onClick={(e) => { e.currentTarget.focus(); setOpen(true) }}>{label}</button>
       <ConfirmDialog open={open} title={title} body={body} choices={[{ label: confirm, onChoose: onConfirm }]} onClose={() => setOpen(false)} />
     </>
   )

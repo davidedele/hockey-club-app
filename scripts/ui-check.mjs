@@ -11,6 +11,7 @@
 //   UI_CHECK_WEBKIT=1   use WebKit (the iPhone engine) instead of Chromium. Needs: npx playwright install webkit
 //   UI_CHECK_DARK=1     dark colour scheme
 //   UI_CHECK_LARGE=1    larger text size (the root font size is raised by a third)
+//   UI_CHECK_OUT=/tmp/hockey-review  separate output folder for parallel checks
 //   UI_CHECK_WIDTHS=375,1280   other window widths (default 320, 375, 390, 430, 768, 1280)
 
 import { execSync } from 'node:child_process'
@@ -31,7 +32,7 @@ const contextOptions = { serviceWorkers: 'block', locale: 'it-IT', timezoneId: '
 const largeText = (large) => { if (large) document.addEventListener('DOMContentLoaded', () => { document.documentElement.style.fontSize = '133%' }) }
 
 const root = resolve(fileURLToPath(import.meta.url), '../..')
-const out = join(root, 'ui-check')
+const out = resolve(process.env.UI_CHECK_OUT ?? join(root, 'ui-check'))
 const tag = `${process.env.UI_CHECK_WEBKIT ? '-webkit' : ''}${DARK ? '-dark' : ''}${LARGE ? '-large' : ''}`
 const dist = join(out, 'dist')
 const API = 'http://mock.supabase.test'
@@ -127,6 +128,7 @@ function embed(rows, table, select) {
   })
 }
 
+const eventRequests = []
 let apiDown = false
 // A page of kind "nogames" is opened with groups that have no game coming up (Fantahockey says so and offers no form).
 let noGames = false
@@ -134,7 +136,7 @@ async function answer(route) {
   if (apiDown) return route.abort('failed')
   const req = route.request()
   const url = new URL(req.url())
-  const json = (body, status = 200, headers = {}) => route.fulfill({ status, contentType: 'application/json', headers: { 'access-control-allow-origin': '*', 'access-control-allow-headers': '*', 'access-control-expose-headers': 'content-range', ...headers }, body: JSON.stringify(body) })
+  const json = (body, status = 200, headers = {}) => route.fulfill({ status, contentType: 'application/json', headers: { 'access-control-allow-origin': '*', 'access-control-allow-headers': req.headers()['access-control-request-headers'] ?? 'authorization, apikey, content-type, x-client-info, prefer, accept, range, x-supabase-api-version, accept-profile, content-profile', 'access-control-allow-methods': 'GET, HEAD, POST, PATCH, PUT, DELETE, OPTIONS', 'access-control-expose-headers': 'content-range', ...headers }, body: JSON.stringify(body) })
   if (req.method() === 'OPTIONS') return json({})
   const p = url.pathname
   if (p.startsWith('/auth/v1/user')) return json({ id: ME, email: fixtures.me.email, aud: 'authenticated', role: 'authenticated', factors: fixtures.mockFactors ?? [] })
@@ -148,6 +150,14 @@ async function answer(route) {
   if (p.startsWith('/storage/')) return route.fulfill({ status: 404, body: '' })
   if (p.startsWith('/rest/v1/rpc/')) {
     const name = p.split('/').pop()
+    const body = JSON.parse(req.postData() || '{}')
+    if (['save_event','manage_events','event_scope'].includes(name)) eventRequests.push({ name, body })
+    if (name === 'event_scope') {
+      const event = fixtures.tables.events.find((e) => e.id === body.p_event_id)
+      return json(fixtures.tables.events.filter((e) => body.p_scope === 'one' ? e.id === event?.id : event?.series_id && e.series_id === event.series_id && Date.parse(e.starts_at) > Date.now() && (body.p_scope === 'future' || e.starts_at >= event.starts_at)).sort((a,b) => a.starts_at.localeCompare(b.starts_at)))
+    }
+    if (name === 'save_event') return json(body.p_event_id ?? fixtures.ids.training)
+    if (name === 'manage_events') return json(body.p_expected_count)
     if (noGames && (name === 'fanta_next_round' || name === 'fanta_candidates')) return json([])
     return json(fixtures.rpc[name] ?? [])
   }
@@ -171,6 +181,14 @@ const ROUTES = [
   ['home', '/'], ['events', '/events'], ['members', '/members'], ['championship', '/campionato'], ['championship-assists', '/campionato?stats=assists'], ['championship-penalties', '/campionato?stats=penalties'], ['league-match', '/campionato/partita/501', 'sub'], ['stats', '/stats'], ['stats-players', '/stats?tab=players'], ['stats-predictions', '/stats?tab=predictions'], ['stats-hall', '/stats?tab=hall'], ['stats-fanta', '/stats?tab=fanta'], ['stats-fanta-player', '/stats?tab=fanta', 'player'], ['stats-fanta-nogames', '/stats?tab=fanta', 'nogames'],
   ['attendance', '/attendance'], ['attendance-events', '/attendance?tab=events'],
   ['event-training', `/events/${training}`, 'sub'], ['event-game', `/events/${game}`, 'sub'], ['event-game-last-tab', `/events/${game}?tab=lineup`, 'sub'], ['event-training-last-tab', `/events/${training}?tab=plan`, 'sub'], ['event-future-game', `/events/${futureGame}`, 'sub'],
+  ['events-list', '/events'], ['events-list-player', '/events', 'player'], ['events-month-player', '/events', 'player'],
+  ['event-consultation', `/events/${fixtures.ids.consultation}`, 'player'],
+  ['event-consultation-shared', `/events/${fixtures.ids.shared}`, 'player'],
+  ['event-consultation-discussion', `/events/${fixtures.ids.shared}?tab=discussion`, 'player'],
+  ['event-unassigned', `/events/${fixtures.ids.unassigned}`, 'player'],
+  ['event-hidden-details', `/events/${fixtures.ids.hidden}`, 'player'],
+  ['event-edit-series', `/events/${training}/edit`, 'sub'],
+  ['event-new-visibility', '/events/new', 'sub'], ['event-new-pending', '/events/new', 'sub'],
   ['event-new', '/events/new', 'sub'], ['attendance-missing', '/attendance?tab=missing'],
   ['announcements', '/announcements', 'sub'], ['drills', '/drills'],
   ['certificate-review', '/members/certificates', 'sub'], ['member-edit', `/members/${member}`, 'sub'], ['member-documents', `/members/${member}/documents`, 'sub'],
@@ -316,11 +334,15 @@ for (const width of WIDTHS) {
     page.on('pageerror', (e) => errors.push(String(e.stack || e.message).split('\n').slice(0, 3).join(' | ')))
     page.on('console', (m) => { if (m.type() === 'error' && !/Failed to load resource|status of 40[46]/.test(m.text())) errors.push(m.text()) })
     // A "player" page is opened in the Giocatore view; the choice is taken out again afterwards, as the storage is shared.
-    if (kind === 'player' || kind === 'nogames') { await page.goto(origin + '/'); await page.evaluate(() => localStorage.setItem('view-as', 'player')) }
+    if (kind === 'player' || kind === 'nogames') await page.addInitScript(() => localStorage.setItem('view-as', 'player'))
     noGames = kind === 'nogames'
     await page.goto(origin + path)
     await page.waitForLoadState('networkidle').catch(() => {})
     await page.waitForTimeout(400)
+    if (name.includes('events-list') && width >= 1000) await page.getByRole('button', {name: 'Elenco', exact:true}).click()
+    if (name === 'events-month-player' && width >= 1000) await page.getByRole('button', {name:'Mese', exact:true}).click()
+    if (name === 'event-new-visibility') await page.locator('.visibility-settings .fold-head').click()
+    if (name === 'event-new-pending') { await page.getByLabel('Assegna i gruppi in seguito', {exact:true}).check(); await page.getByLabel('Ripeti ogni settimana', {exact:true}).check() }
     const m = await page.evaluate(measure)
     if (kind === 'player' || kind === 'nogames') await page.evaluate(() => localStorage.removeItem('view-as'))
     if (kind === 'nogames') {
@@ -357,7 +379,7 @@ for (const width of WIDTHS) {
   const problems = []
   const check = (ok, text) => { if (!ok) problems.push(text) }
   const settle = async (path) => { await page.goto(origin + path); await page.waitForLoadState('networkidle').catch(() => {}); await page.waitForTimeout(300) }
-  const asViewEarly = async (view, path) => { await page.goto(origin + '/'); await page.evaluate((v) => localStorage.setItem('view-as', v), view); await settle(path) }
+  const asViewEarly = async (view, path) => { await page.evaluate((v) => localStorage.setItem('view-as', v), view); await settle(path) }
   const active = () => page.evaluate(() => ({ role: document.activeElement?.getAttribute('role'), checked: document.activeElement?.getAttribute('aria-checked'), text: document.activeElement?.textContent?.trim(), cls: document.activeElement?.className }))
 
   // The group menu opens on the chosen item, moves with the arrows and gives the focus back on Escape.
@@ -553,39 +575,49 @@ for (const width of WIDTHS) {
   // Offline use (decision 137): with the database unreachable the app opens on the saved copy, read only, says that the data is
   // not up to date, keeps no contact or rating, and signing out deletes the copy.
   {
-    await settle('/')
-    await page.waitForTimeout(800)
-    const kept = await page.evaluate(async () => (await caches.has('offline-data-v1')) ? await (await (await caches.open('offline-data-v1')).match('/offline-copy.json')).text() : null)
+    // A fresh session keeps this test independent of the preceding account setup cases.
+    const offlineContext = await browser.newContext({ viewport: { width: 1280, height: 800 }, ...contextOptions })
+    await offlineContext.route(`${API}/**`, answer)
+    await offlineContext.addInitScript(([me,email]) => {
+      const session = { access_token:'sample', refresh_token:'sample', token_type:'bearer', expires_in:3600, expires_at:Math.floor(Date.now()/1000)+36000, user:{id:me,email,aud:'authenticated',role:'authenticated',app_metadata:{},user_metadata:{}} }
+      localStorage.setItem('sb-mock-auth-token', JSON.stringify(session))
+    }, [ME,fixtures.me.email])
+    const offlinePage = await offlineContext.newPage()
+    const offlineSettle = async (path) => { await offlinePage.goto(origin + path); await offlinePage.waitForLoadState('networkidle').catch(() => {}); await offlinePage.waitForTimeout(300) }
+    await offlineSettle('/')
+    await offlinePage.waitForFunction(async () => Boolean(await (await caches.open('offline-data-v1')).match('/offline-copy.json')), null, { timeout: 10000 }).catch(() => {})
+    const kept = await offlinePage.evaluate(async () => { const copy = await (await caches.open('offline-data-v1')).match('/offline-copy.json'); return copy ? await copy.text() : null })
     check(kept !== null && kept.includes('"events"'), 'offline: no saved copy was made after opening the app online')
     check(kept === null || !/@example\.test|phone|rating|email/.test(kept), 'offline: the saved copy holds a contact or a rating')
     apiDown = true
     // A phone with no signal says so: the page is opened with navigator.onLine false.
-    await page.addInitScript(() => { if (localStorage.getItem('fake-offline')) Object.defineProperty(navigator, 'onLine', { get: () => false }) })
-    await page.evaluate(() => localStorage.setItem('fake-offline', '1'))
-    await settle('/')
-    const text = await page.locator('body').innerText()
+    await offlinePage.addInitScript(() => { if (localStorage.getItem('fake-offline')) Object.defineProperty(navigator, 'onLine', { get: () => false }) })
+    await offlinePage.evaluate(() => localStorage.setItem('fake-offline', '1'))
+    await offlineSettle('/')
+    const text = await offlinePage.locator('body').innerText()
     check(text.includes('Dati non aggiornati'), 'offline: the saved copy is shown without the note "Dati non aggiornati"')
-    check(!(await page.locator('main button:text-is("Presente"), main button:text-is("Assente")').count()), 'offline: the saved copy offers answer buttons')
-    check(!(await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth + 1)), 'offline: the saved copy scrolls sideways')
-    await page.screenshot({ path: join(out, 'offline-1280.png'), fullPage: true })
-    await page.setViewportSize({ width: 375, height: 812 })
-    await page.locator('.fold-head').first().click().catch(() => {})
-    await page.screenshot({ path: join(out, 'offline-375.png'), fullPage: true })
-    await page.setViewportSize({ width: 1280, height: 800 })
+    check(!(await offlinePage.locator('main button:text-is("Presente"), main button:text-is("Assente")').count()), 'offline: the saved copy offers answer buttons')
+    check(!(await offlinePage.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth + 1)), 'offline: the saved copy scrolls sideways')
+    await offlinePage.screenshot({ path: join(out, 'offline-1280.png'), fullPage: true })
+    await offlinePage.setViewportSize({ width: 375, height: 812 })
+    await offlinePage.locator('.fold-head').first().click().catch(() => {})
+    await offlinePage.screenshot({ path: join(out, 'offline-375.png'), fullPage: true })
+    await offlinePage.setViewportSize({ width: 1280, height: 800 })
     apiDown = false
-    await page.evaluate(() => localStorage.removeItem('fake-offline'))
-    await settle('/profile')
-    await page.locator('button.shell-signout').first().click()
-    await page.waitForTimeout(600)
-    check(await page.evaluate(async () => !(await caches.has('offline-data-v1'))), 'offline: signing out left the saved copy on the phone')
+    await offlinePage.evaluate(() => localStorage.removeItem('fake-offline'))
+    await offlineSettle('/profile')
+    await offlinePage.locator('button.shell-signout').first().click()
+    await offlinePage.waitForTimeout(600)
+    check(await offlinePage.evaluate(async () => !(await caches.has('offline-data-v1'))), 'offline: signing out left the saved copy on the phone')
+    await offlineContext.close()
   }
 
-  // The Giocatore view shows only the person's own groups (decision 131). The sample person belongs to A and B; the training of
-  // C1 must not appear anywhere, the selector lists A and B with "I miei gruppi", and the staff views stay unlimited.
+  // Outside the Events calendar, Player view keeps the own group scope. The sample person belongs to A and B.
+  // The calendar separately offers consultation of C1, while staff keep all groups.
   {
     const SEEN = 'Allenamento C1 riservato'
     const where = []
-    for (const path of ['/events', '/', '/stats', '/stats?tab=players', '/campionato', '/members']) {
+    for (const path of ['/', '/stats', '/stats?tab=players', '/campionato', '/members']) {
       await asViewEarly('player', path)
       const body = await page.locator('body').innerText()
       if (body.includes(SEEN)) where.push(path)
@@ -595,7 +627,7 @@ for (const width of WIDTHS) {
     await asViewEarly('player', '/events')
     await page.click('.side-switch .ms-button')
     const items = (await page.locator('.side-switch [role=menuitemradio]').allInnerTexts()).map((x) => x.trim())
-    check(items.join('|') === 'I miei gruppi|A|B', `groups: the selector of the Giocatore view lists "${items.join('|')}" instead of I miei gruppi, A, B`)
+    check(items.join('|') === 'Tutti i gruppi|A|B|C1|C2|Start', `groups: the selector of the Giocatore view lists "${items.join('|')}" instead of every calendar group`)
     await page.keyboard.press('Escape')
     await asViewEarly('board', '/events')
     check((await page.locator('body').innerText()).includes(SEEN), 'groups: the board view no longer shows the events of every group')
@@ -603,6 +635,73 @@ for (const width of WIDTHS) {
     const staffItems = (await page.locator('.side-switch [role=menuitemradio]').allInnerTexts()).map((x) => x.trim())
     check(staffItems[0] === 'Tutti i gruppi' && staffItems.length === 6, `groups: the staff view selector lists "${staffItems.join('|')}"`)
     await page.keyboard.press('Escape')
+    await page.goto(origin + '/')
+    await page.evaluate(() => localStorage.removeItem('view-as'))
+  }
+
+  // Consultation never supplies answers, staff controls or a discussion composer.
+  {
+    await asViewEarly('player', '/events')
+    const next = await page.locator('main .next').innerText()
+    check(next.includes('Allenamento di prova') || !next.includes('C1'), 'events: an observer event replaced the next eligible event')
+    check((await page.locator('main .consultation').count()) > 0, 'events: no consultation treatment for another group')
+    await settle(`/events/${fixtures.ids.consultation}`)
+    check((await page.locator('main').innerText()).includes('Solo consultazione'), 'events: consultation event has no explicit label')
+    check((await page.locator('main .answers button, main .event-actions, main .compose').count()) === 0, 'events: consultation offers interaction')
+    const hiddenTabs = await page.locator('main .ev-tabs a').allInnerTexts()
+    check(!hiddenTabs.some((x) => /Discussione|Formazione|Piano/.test(x)), 'events: hidden detail tabs are offered')
+    await settle(`/events/${fixtures.ids.shared}?tab=discussion`)
+    check((await page.locator('main .compose').count()) === 0, 'events: shared discussion offers a composer')
+    await settle(`/events/${fixtures.ids.unassigned}`)
+    check((await page.locator('main').innerText()).includes('Gruppi da assegnare'), 'events: unassigned training is not labelled')
+    check((await page.locator('main .answers button').count()) === 0, 'events: unassigned training can be answered')
+    for (const view of ['board','coach']) {
+      await asViewEarly(view, '/events')
+      await page.getByRole('button', {name:'Elenco', exact:true}).click()
+      const text = await page.locator('main').innerText()
+      check(!text.includes('La tua risposta') && !text.includes('Le mie presenze'), 'events: staff list shows personal attendance')
+      check((await page.locator('.list-table .event-title-link').count()) > 0, 'events: titles are not links')
+      const lastMenu = page.locator('.list-table .event-actions summary').last()
+      await lastMenu.scrollIntoViewIfNeeded(); await lastMenu.click()
+      const popup = page.locator('.event-actions-list')
+      await popup.waitFor({ state: 'visible' })
+      if (view === 'board') await page.screenshot({ path: join(out, 'event-list-actions.png') })
+      check(await popup.isVisible(), 'events: list action menu is clipped or absent')
+      await page.keyboard.press('ArrowDown')
+      check(/Annulla evento|Ripristina/.test((await active()).text), 'events: action menu does not support arrow keys')
+      await popup.getByRole('menuitem', {name:'Elimina evento', exact:true}).click()
+      await page.waitForTimeout(100)
+      check(await page.locator('dialog[open]').isVisible(), 'events: deleting from list has no confirmation')
+      check((await active()).text === 'Annulla', 'events: list deletion does not focus cancel')
+      await page.keyboard.press('Escape')
+    }
+    await asViewEarly('board', `/events/${training}/edit`)
+    await page.locator('select').filter({has: page.locator('option[value="following"]')}).selectOption('following')
+    const before = eventRequests.filter((x) => x.name === 'save_event').length
+    await page.locator('form button[type=submit]').click()
+    await page.waitForTimeout(100)
+    check(await page.locator('dialog[open]').isVisible(), 'series: editing following occurrences skips confirmation')
+    check(eventRequests.filter((x) => x.name === 'save_event').length === before, 'series: values saved before confirmation')
+    check(/eventi, dal/.test(await page.locator('dialog[open]').innerText()), 'series: confirmation has no count or dates')
+    await page.screenshot({ path: join(out, 'series-confirmation.png') })
+    await page.getByRole('button', {name:'Salva le modifiche', exact:true}).click()
+    await page.waitForTimeout(200)
+    const request = eventRequests.filter((x) => x.name === 'save_event').at(-1)
+    check(request?.body.p_scope === 'following' && request.body.p_expected_count > 0 && request.body.p_changes.participant_details.length === 5, 'series: save does not contain scope, preview count and visibility together')
+    await settle('/events/new')
+    await page.getByLabel('Assegna i gruppi in seguito', {exact:true}).check()
+    check((await page.locator('main').innerText()).includes('Nessuno riceverà richieste di presenza'), 'events: pending training does not explain attendance')
+    await page.locator('input[type=date]').fill(fixtures.tables.events.find((e) => e.id === training).starts_at.slice(0,10))
+    await page.getByLabel('Inizio', {exact:true}).fill('22:30')
+    await page.getByLabel('Ripeti ogni settimana', {exact:true}).check()
+    await page.locator('.visibility-settings .fold-head').click()
+    await page.locator('.visibility-audiences fieldset').nth(1).getByLabel('Formazione', {exact:true}).check()
+    await page.locator('form button[type=submit]').click()
+    await page.waitForTimeout(200)
+    const creation = eventRequests.filter((x) => x.name === 'save_event').at(-1)?.body
+    check(creation?.p_event_id === null && creation.p_repeat_weeks === 11 && creation.p_changes.groups_pending && creation.p_changes.group_ids.length === 0, 'events: creating a pending weekly series does not save its assignment and repeat together')
+    check(creation?.p_changes.observer_details.join('|') === 'lineup', 'events: observer visibility choice is missing from creation')
+    check(creation && Date.parse(creation.p_changes.ends_at) - Date.parse(creation.p_changes.starts_at) === 90 * 60000, 'events: overnight training end is wrong')
     await page.goto(origin + '/')
     await page.evaluate(() => localStorage.removeItem('view-as'))
   }

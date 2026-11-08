@@ -56,13 +56,16 @@ const events = [
   ev(10, { starts_at: at(22, 20), ends_at: at(22, 21, 30), series_id: week }),
   ev(11, { starts_at: at(2, 19), ends_at: at(2, 20), title: 'Allenamento B' }),
   // A training of C1, a group the sample person (A and B) does not belong to: the Giocatore view must never show it.
+  ev(14, { title: 'Allenamento da assegnare', groups_pending: true, starts_at: at(2, 21), ends_at: at(2, 22, 30) }),
+  ev(15, { title: 'Allenamento C1 aperto', observer_details: ['presence','lineup','plan','discussion','game'], starts_at: at(4, 21), ends_at: at(4, 22, 30) }),
+  ev(16, { title: 'Allenamento dettagli riservati', participant_details: [], starts_at: at(5, 21), ends_at: at(5, 22, 30) }),
   ev(13, { title: 'Allenamento C1 riservato', starts_at: new Date(Date.now() + 30 * 60000).toISOString(), ends_at: new Date(Date.now() + 90 * 60000).toISOString(), rink_id: null }),
   // Starts in ten minutes, so there is always one event without an answer inside the week (the window ends at Monday 00:00).
   ev(12, { title: 'Allenamento di prova', starts_at: new Date(Date.now() + 10 * 60000).toISOString(), ends_at: new Date(Date.now() + 100 * 60000).toISOString(), rink_id: null }),
 ]
-const ids = { training: eid(5), game: eid(2), member, futureGame: eid(6) }
+const ids = { consultation: eid(13), shared: eid(15), unassigned: eid(14), hidden: eid(16), training: eid(5), game: eid(2), member, futureGame: eid(6) }
 
-const eventGroups = events.flatMap((e) => (e.id === eid(13) ? [{ event_id: e.id, group_id: 3 }] : e.id === eid(11) ? [{ event_id: e.id, group_id: 2 }] : [{ event_id: e.id, group_id: 1 }, ...(e.id === eid(5) ? [{ event_id: e.id, group_id: 2 }] : [])])).map((r) => ({ ...r, created_at: at(-40, 9) }))
+const eventGroups = events.flatMap((e) => (e.id === eid(14) ? [] : [eid(13),eid(15)].includes(e.id) ? [{ event_id: e.id, group_id: 3 }] : e.id === eid(11) ? [{ event_id: e.id, group_id: 2 }] : [{ event_id: e.id, group_id: 1 }, ...(e.id === eid(5) ? [{ event_id: e.id, group_id: 2 }] : [])])).map((r) => ({ ...r, created_at: at(-40, 9) }))
 
 const groupMembers = people.flatMap((p) => p.groups.map((g) => ({ group_id: g, user_id: p.id, joined_at: at(-90, 9) })))
 
