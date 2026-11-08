@@ -85,6 +85,8 @@ Read this file, and the open items of `docs/UI_BACKLOG.md`, before touching a pa
 23. Trainings use the selected rink's saved address when available. The event cannot specify another address in that case. Display and Maps use the same source, including offline display. Games retain their explicit event location.
 24. Password fields offer an accessible visibility toggle with a 44 pixel target. Showing a password must retain its value, autocomplete purpose and password validation.
 
+25. Overlap notices belong only to Staff Events, collapsed by default and using the existing Fold control. They link to future events sharing an assigned group, with no popup or blocking. Staff decide whether the overlap is intentional. Cancelled and past events, unassigned groups and different group sessions do not trigger it.
+26. The desktop calendar remembers Week, Month or List in this browser. Invalid or unavailable storage falls back to Week; phone layout remains responsive.
 
 ## 6. How to check
 

@@ -1,3 +1,4 @@
+import { savedCalendarView, rememberCalendarView, type CalendarView } from '../lib/calendarview'
 import { unassignedTraining } from '../lib/eventaccess'
 import EventActions from './EventActions'
 import TableScroll from './TableScroll'
@@ -12,7 +13,7 @@ import SortHeader from './SortHeader'
 import OutputAction from './OutputAction'
 import TablePager from './TablePager'
 
-type View = 'week' | 'month' | 'list'
+type View = CalendarView
 type Cat = 'training' | 'friendly' | 'league'
 type ListKey = 'date' | 'event' | 'place' | 'answer'
 type Scope = 'upcoming' | 'past' | 'all'
@@ -42,7 +43,8 @@ export default function CalendarPanel(props: {
   const today = dayKey(new Date().toISOString())
   const currentSeason = seasonOf(new Date().toISOString())
   const seasons = Array.from({ length: Math.max(1, currentSeason - FIRST_SEASON + 1) }, (_, i) => currentSeason - i)
-  const [view, setView] = useState<View>('week')
+  const [view, setView] = useState<View>(savedCalendarView)
+  useEffect(() => { rememberCalendarView(view) }, [view])
   const [month, setMonth] = useState(today.slice(0, 7))
   const [season, setSeason] = useState(currentSeason)
   const [types, setTypes] = useState<Set<Cat>>(new Set(CATS))
@@ -152,7 +154,7 @@ export default function CalendarPanel(props: {
   )
 
   const viewButton = (v: View, label: string) => (
-    <button className={view === v ? 'chip on' : 'chip'} aria-pressed={view === v} onClick={() => setView(v)}>{label}</button>
+    <button className={view === v ? 'chip on' : 'chip'} aria-pressed={view === v} aria-label={label} onClick={() => setView(v)}>{label}</button>
   )
 
   return (

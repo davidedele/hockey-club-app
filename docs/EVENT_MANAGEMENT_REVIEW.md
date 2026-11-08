@@ -45,13 +45,15 @@ The pictures use invented sample data.
 4. [Series confirmation before saving](ui-review/event-management/series-confirmation-1280.png).
 5. [Compact next event panel on a computer](ui-review/event-management/home-compact-1280.png).
 6. [Password visibility on a phone](ui-review/event-management/password-375.png).
+7. [Quiet staff overlap notice on a phone](ui-review/event-management/staff-overlap-375.png).
+8. [Affected events expanded on a computer](ui-review/event-management/staff-overlap-1280.png).
 
 ## Validation
 
-1. Type check and production build pass. Unit tests: 220 in 36 files.
+1. Type check and production build pass. Unit tests: 224 in 37 files.
 2. Local database: 1704 checks pass, including a mid-series rollback, assignment changes, observers, hidden sections and daylight saving changes. Five deliberate breaks were all caught in disposable copies.
 3. Guarded apply files: 81 checks pass, including applying 0061, refusing a second run and refusing a project missing its prerequisites.
-4. Browser checks: standard page review covers 119 views at 375 and 1280 pixels with no page findings. Final calendar passes in dark mode with larger text and WebKit each cover 11 views including interactions, with no findings. Checks include own group choices and persistence, unassigned filters, locked rink addresses, password visibility, series confirmation and saving, keyboard focus, hidden tabs, observer discussions, pending creation and overnight end times. Earlier event review also covered 320 pixels. All automated browser data is invented.
+4. Browser checks: standard page review covers 119 views at 375 and 1280 pixels with no page findings. Final calendar passes in standard mode, dark mode with larger text and WebKit each cover 11 views including interactions, with no findings. Checks include the quiet staff overlap notice, remembered Week/Month/List layout, own group choices and persistence, unassigned filters, locked rink addresses, password visibility, series confirmation and saving, keyboard focus, hidden tabs, observer discussions, pending creation and overnight end times. Earlier event review also covered 320 pixels. All automated browser data is invented.
 5. Hosted migration application and a real phone check of the new version remain outstanding. No real data was changed during verification.
 
 ## Local review follow up
@@ -62,5 +64,12 @@ The pictures use invented sample data.
 4. Select an addressed rink on a training form: its address is visible and locked. Select a rink without an address or Nessuna: event location is editable again. Save disposable data and confirm the saved event, Maps, export and offline copy agree.
 5. Login, registration and password reset have Mostra password and Nascondi password. Check the value stays intact and validation still treats the visible field as a password.
 6. Open site checked in both Player and Board view at 375 and 1280 pixels without saving or deleting data. An unassigned event no longer describes the viewer as belonging to the wrong group, and Staff view no longer shows the personal no response message. Unassigned event sharing opens the event without asking for an attendance answer.
-7. Data finding for review: Thursday 12 November has a 22:30 match against HC Black Angels and a 22:30 training, both visible in group A. No event data was changed. Consider a later overlap warning during creation and series editing; it should warn rather than block because parallel events for different groups can be intentional.
-8. The exact downloadable 0062 package was checked on temporary PostgreSQL: READY FOR 0062, apply, both verification rows PASS, then ALREADY APPLIED. It contains before and after checks and the guarded update, which does not bulk rewrite existing events.
+7. Staff Events now has a collapsed Eventi sovrapposti notice, linking to upcoming events sharing an assigned group. It is advisory only, with no popup, blocking or notification. Staff manage any corrections themselves. Cancelled and historical events, unassigned groups and parallel sessions for different groups are ignored. The open site confirmed the 12 November overlap and another on 25 March. No event data was changed.
+8. Week, Month and List choices now survive refresh and navigation in this browser, with an explicit accessible name on the selected control. The phone calendar remains responsive.
+9. The exact downloadable 0062 package was checked on temporary PostgreSQL: READY FOR 0062, apply, both verification rows PASS, then ALREADY APPLIED. It contains before and after checks and the guarded update, which does not bulk rewrite existing events.
+
+## Release tracking
+
+1. All implemented upgrades from this review are on `codex/event-management` in PR 50, with decisions in `docs/DECISIONS.md` and completed interface items in `docs/UI_BACKLOG.md`.
+2. The pending hosted steps are listed together in `docs/DEPLOY.md`, section Pending event update, PR 50. No new SQL is needed for the overlap notice or remembered layout.
+3. The local site was checked read only: the staff notice starts collapsed, affected events open directly, and List remains selected after refresh. The calendar data and attendance answers were not changed.

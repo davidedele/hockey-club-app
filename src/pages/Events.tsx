@@ -1,3 +1,5 @@
+import EventOverlapNotice from '../components/EventOverlapNotice'
+import { eventOverlaps } from '../lib/eventoverlap'
 import { eventLocation } from '../lib/maps'
 import { useRinks } from '../lib/rinks'
 import { readableInk } from '../lib/colour'
@@ -90,6 +92,7 @@ export default function Events() {
     void refreshLeague().then((changed) => { if (changed) void load() })
   }, [load])
 
+  const overlaps = useMemo(() => isStaff ? eventOverlaps(events) : [], [events, isStaff])
   const groupName = useMemo(() => new Map(groups.map((g) => [g.id, g.name])), [groups])
   const now = Date.now()
   const upcoming = useMemo(() => events.filter((e) => new Date(e.ends_at).getTime() >= now), [events, now])
@@ -287,6 +290,7 @@ export default function Events() {
         </section>
       )}
 
+      {isStaff && <EventOverlapNotice overlaps={overlaps} groupName={(id) => groupName.get(id) ?? String(id)} />}
       {error && <p className="error" role="alert">{error}</p>}
       {!picked && (<>
       {loaded && view === 'upcoming' && upcoming.length === 0 && <p className="hint">{t('events.empty')}</p>}

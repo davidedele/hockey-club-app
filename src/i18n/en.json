@@ -1301,5 +1301,10 @@
   "thread.emptyReadOnly": "No messages yet.",
   "form.rinkAddressUsed": "This training uses the address saved for the selected rink.",
   "password.show": "Show password",
-  "password.hide": "Hide password"
+  "password.hide": "Hide password",
+  "overlap.title": "Overlapping events",
+  "overlap.one": "One overlap",
+  "overlap.many": "{n} overlaps",
+  "overlap.help": "These events involve the same groups at overlapping times. You can keep them if intentional, or open them to make changes.",
+  "overlap.more": "Show 5 more"
 }

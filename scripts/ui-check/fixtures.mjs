@@ -44,6 +44,7 @@ const ev = (n, o) => ({
 })
 const week = '20000000-0000-4000-8000-000000000001'
 const events = [
+  ev(17, { title: 'Allenamento sovrapposto', starts_at: at(1, 20, 30), ends_at: at(1, 22) }),
   ev(1, { starts_at: at(-30, 20), ends_at: at(-30, 21, 30), series_id: week }),
   ev(2, { type: 'game', title: 'Partita', opponent: 'HC Esempio', home_away: 'home', starts_at: at(-12, 18), ends_at: at(-12, 19, 30), meetup_at: at(-12, 17), score_for: 5, score_against: 3, rink_id: null, video_url: 'https://example.test/video-partita' }),
   ev(3, { type: 'game', title: 'Partita', opponent: 'HC Prova Uno', home_away: 'away', starts_at: at(-6, 21), ends_at: at(-6, 22, 30), score_for: 2, score_against: 4, rink_id: null }),

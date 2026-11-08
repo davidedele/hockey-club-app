@@ -649,6 +649,26 @@ for (const width of WIDTHS) {
     await page.evaluate(() => localStorage.removeItem('view-as'))
   }
 
+  // Layout persists on this browser; overlaps stay a quiet staff notice.
+  {
+    await asViewEarly('board', '/events')
+    const notice = page.locator('.overlap-notice .fold-head')
+    check(await notice.getAttribute('aria-expanded') === 'false', 'overlap: warning opened without staff choosing it')
+    await notice.click()
+    check((await page.locator('.overlap-notice a').count()) >= 2, 'overlap: the affected events have no direct links')
+    check((await page.locator('dialog[open], [role=alert]').count()) === 0, 'overlap: notice interrupts staff with a dialog or alert')
+    await page.screenshot({path:join(out,'staff-overlap-1280.png'),fullPage:true})
+    await notice.click()
+    for (const name of ['Elenco','Mese']) {
+      await page.getByRole('button',{name,exact:true}).click()
+      await page.reload(); await page.waitForLoadState('networkidle')
+      check(await page.getByRole('button',{name,exact:true}).getAttribute('aria-pressed') === 'true', `calendar: ${name} did not survive reload`)
+    }
+    await page.getByRole('button',{name:'Settimana',exact:true}).click()
+    await asViewEarly('player','/events')
+    check((await page.locator('.overlap-notice').count()) === 0, 'overlap: staff notice appears in Player view')
+  }
+
   // Consultation never supplies answers, staff controls or a discussion composer.
   {
     await asViewEarly('player', '/events')

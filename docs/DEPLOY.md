@@ -23,3 +23,12 @@ The settings are in `netlify.toml`: build command, the redirect that makes direc
 1. A Netlify build that fails leaves the online version as it was.
 2. A pull request gets its own preview address from Netlify. That preview also talks to the test project.
 3. A Content Security Policy is not set yet. It is worth adding before the real version, once the app is stable.
+
+## Pending event update, PR 50
+
+1. Review [PR 50](https://github.com/davidedele/hockey-club-app/pull/50) and `docs/EVENT_MANAGEMENT_REVIEW.md`. The branch contains all event upgrades from 8 November, including the local review follow ups. A local preview is not a hosted deployment.
+2. Confirm migration 0061 is already applied to the test project, or apply its guarded script once after migrations through 0060. Do not repeat it if already applied.
+3. Apply the guarded 0062 script once and verify its address trigger. No further migration is needed for the overlap notice or remembered calendar layout.
+4. Update the `calendar-feed` function for canonical training addresses in subscriptions.
+5. Complete the player and staff review, including a real phone, then merge PR 50 when approved. Confirm the hosted build succeeds.
+6. Review existing scheduling data separately: the older Tuesday series and the 12 November overlap have not been edited or deleted by this update. Notification setup remains deferred.

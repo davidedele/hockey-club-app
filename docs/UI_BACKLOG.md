@@ -14,9 +14,9 @@ Status words: Open, In progress, Done (PR number), Decided (waiting for Davide),
 6. Add a password visibility eye to sign in and registration. Status: Done (PR 50), also on password reset. Toggling retains the value and password validation.
 7. Look for similar usability problems and report them. Status: Done (PR 50). Related fixes and checks cover saved group choices, detail navigation, map destinations, offline location, larger text and phone Safari.
 
-8. A match and training can overlap for the same group without a warning. Status: Open. Seen on the open test site for group A, 12 November at 22:30. Propose a warning when saving an event or series, with intentional overlaps allowed. No data changed.
+8. A match and training can overlap for the same group without a warning. Status: Done (PR 50). Davide approved a discreet warning on 8 November. Staff Events shows a collapsed notice with links to affected future events sharing a group. No popup or blocking; staff manage changes themselves. Cancelled, historical, unassigned and different group events are excluded.
 
-9. The desktop calendar returns to Settimana after a full refresh, even when Elenco or Mese was chosen. Status: Open. Consider remembering the chosen calendar layout in this browser.
+9. The desktop calendar returns to Settimana after a full refresh, even when Elenco or Mese was chosen. Status: Done (PR 50). Davide approved remembering the calendar layout on 8 November. Week, Month or List survives refresh and navigation in this browser.
 
 ## Event management review (8 November 2026)
 

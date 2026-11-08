@@ -1301,5 +1301,10 @@
   "thread.emptyReadOnly": "Nessun messaggio.",
   "form.rinkAddressUsed": "Per questo allenamento viene usato l’indirizzo salvato per la pista selezionata.",
   "password.show": "Mostra password",
-  "password.hide": "Nascondi password"
+  "password.hide": "Nascondi password",
+  "overlap.title": "Eventi sovrapposti",
+  "overlap.one": "Una sovrapposizione",
+  "overlap.many": "{n} sovrapposizioni",
+  "overlap.help": "Questi eventi coinvolgono gli stessi gruppi in orari sovrapposti. Puoi lasciarli così se previsto, oppure aprirli per modificarli.",
+  "overlap.more": "Mostra altre 5"
 }
