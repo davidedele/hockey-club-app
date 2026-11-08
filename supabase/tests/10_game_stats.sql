@@ -77,7 +77,7 @@ select test.fails('the numbers must be a list', $$select public.save_game_stats(
 select test.fails('a coach cannot change numbers directly', $$update public.game_stats set goals = 9$$, 'permission denied');
 select test.logout();
 select test.login(pg_temp.u('4'));
-select test.rows('the whole club sees the game numbers', $$select * from public.game_stats$$, 3);
+select test.rows('other groups do not read private game numbers by default', $$select * from public.game_stats$$, 0);
 select test.logout();
 select test.login(pg_temp.u('9'));
 select test.rows('someone without a profile sees no game numbers', $$select * from public.game_stats$$, 0);

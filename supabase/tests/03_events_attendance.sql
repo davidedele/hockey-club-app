@@ -63,16 +63,16 @@ select test.logout();
 
 \echo == who sees which event
 select test.login('00000000-0000-0000-0000-000000000001');
-select test.rows('player in A sees the A events once', $$select * from public.events$$, 9);
-select test.rows('player in A does not see the C1 training', $$select * from public.events where title = 'Allenamento C1'$$, 0);
+select test.rows('player in A sees the club calendar once per event', $$select * from public.events$$, 10);
+select test.rows('player in A can consult the C1 training', $$select * from public.events where title = 'Allenamento C1'$$, 1);
 select test.rows('player in A sees the groups of an event', $$select * from public.event_groups eg join public.events e on e.id = eg.event_id where e.title = 'Partita'$$, 2);
 select test.logout();
 select test.login('00000000-0000-0000-0000-000000000002');
 select test.rows('player in A and B sees an event for both groups once', $$select * from public.events where title = 'Partita'$$, 1);
 select test.logout();
 select test.login('00000000-0000-0000-0000-000000000003');
-select test.rows('player in C1 sees only the C1 training', $$select * from public.events$$, 1);
-select test.rows('player in C1 sees no A event groups', $$select * from public.event_groups eg join public.events e on e.id = eg.event_id where e.title = 'Partita'$$, 0);
+select test.rows('player in C1 can consult the club calendar', $$select * from public.events$$, 10);
+select test.rows('player in C1 can see the invited groups', $$select * from public.event_groups eg join public.events e on e.id = eg.event_id where e.title = 'Partita'$$, 2);
 select test.affected('player cannot change an event', $$update public.events set venue = 'X'$$, 0);
 select test.affected('player cannot delete an event', $$delete from public.events$$, 0);
 select test.fails('player cannot add a group to an event', $$insert into public.event_groups select id, 1 from public.events$$, 'row-level security');
@@ -92,7 +92,7 @@ select test.affected('coach removes one of two groups', $$delete from public.eve
 select test.fails('the last group still cannot be removed', $$delete from public.event_groups where event_id = (select id from public.events where title = 'Allenamento C1')$$, 'event_needs_group');
 select test.logout();
 select test.login('00000000-0000-0000-0000-000000000003');
-select test.rows('player in C1 no longer sees the event', 'select * from public.events', 0);
+select test.rows('removing a group leaves calendar consultation available', 'select * from public.events', 10);
 select test.logout();
 
 \echo == answering
