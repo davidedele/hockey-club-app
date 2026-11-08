@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { canAnswerEvent, detailAllowed, EVENT_DETAILS, invitedTo } from './eventaccess'
+import { canAnswerEvent, detailAllowed, EVENT_DETAILS, invitedTo, unassignedTraining } from './eventaccess'
 import type { EventRow } from './types'
 const now = Date.parse('2026-11-08T15:00:00Z')
 const event = { event_groups: [{ group_id: 1 }], cancelled_at: null, ends_at: '2026-11-09T20:00:00Z' } as EventRow
@@ -27,4 +27,10 @@ describe('calendar consultation and participation', () => {
       expect(detailAllowed({ ...event, participant_details: [], observer_details: [] }, section, true, false)).toBe(true)
     }
   })
+})
+
+it('identifies legacy unassigned trainings independently of the pending flag', () => {
+  expect(unassignedTraining({...event,type:'training',event_groups:[]})).toBe(true)
+  expect(unassignedTraining({...event,type:'training'})).toBe(false)
+  expect(unassignedTraining({...event,type:'game',event_groups:[]})).toBe(false)
 })

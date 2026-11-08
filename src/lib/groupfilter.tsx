@@ -7,7 +7,9 @@ import type { Group } from './types'
 interface GroupFilter {
   // The groups the person can choose: every group in the staff views, only their own in the Giocatore view.
   groups: Group[]
-  // null means all the groups in `groups` ("Tutti i gruppi" in the staff views, "I miei gruppi" in the player view).
+  playerCalendar: boolean
+  // In the calendar, null means all club events and MY_GROUPS means the own groups.
+  // Outside the calendar, null means all permitted groups in the current view.
   groupId: number | null
   setGroupId: (id: number | null) => void
   // The person's own group ids in the Giocatore view, null in the staff views (no limit).
@@ -16,24 +18,26 @@ interface GroupFilter {
   inView: (groupIds: readonly number[]) => boolean
 }
 
+export const MY_GROUPS = -1
+
 const KEY = 'group-filter'
-const Ctx = createContext<GroupFilter>({ groups: [], groupId: null, setGroupId: () => undefined, scope: null, inView: () => true })
+const Ctx = createContext<GroupFilter>({ groups: [], playerCalendar: false, groupId: null, setGroupId: () => undefined, scope: null, inView: () => true })
 
 function saved(): number | null {
   try {
     const value = localStorage.getItem(KEY)
-    return value && /^\d+$/.test(value) ? Number(value) : null
+    return value && /^(?:-1|\d+)$/.test(value) ? Number(value) : null
   } catch {
     return null
   }
 }
 
-// In the Giocatore view (the chosen view, or a person with no staff role) everything is limited to the groups the
-// person belongs to (decision 131). A board member there sees what a plain player of the same groups sees. The
-// staff views are not limited. The view only hides: the database still answers by the real roles.
+// Outside the calendar, Player view stays within actual memberships (decision 131).
+// The calendar can also consult every club event (decision 143). Staff views are not limited.
+// The view only hides: the database still answers by the real roles.
 // Does a thing of these groups show, with the chosen group (or null) and the person's own groups (or null for no limit)?
 export const visibleIn = (ids: readonly number[], groupId: number | null, scope: readonly number[] | null) =>
-  groupId !== null ? ids.includes(groupId) : scope === null || ids.some((id) => scope.includes(id))
+  groupId !== null && groupId !== MY_GROUPS ? ids.includes(groupId) : scope === null || ids.some((id) => scope.includes(id))
 
 export function useScopeGroups(): number[] | null {
   return useContext(Ctx).scope
@@ -59,14 +63,15 @@ export function GroupFilterProvider({ children }: { children: ReactNode }) {
       setAll(rows)
       setOwn(((m.data ?? []) as { group_id: number }[]).map((x) => x.group_id))
       // A group that no longer exists is dropped.
-      setStored((current) => (current !== null && !rows.some((x) => x.id === current) ? null : current))
+      setStored((current) => (current !== null && current !== MY_GROUPS && !rows.some((x) => x.id === current) ? null : current))
     })
   }, [profile])
 
-  const scope = useMemo(() => (view === 'player' && !calendar ? own ?? [] : null), [view, own, calendar])
-  const groups = useMemo(() => (scope ? all.filter((g) => scope.includes(g.id)) : all), [all, scope])
-  // A saved choice that is not one of the person's groups is ignored in the Giocatore view and comes back in a staff view.
-  const groupId = stored !== null && groups.some((g) => g.id === stored) ? stored : null
+  const playerCalendar = view === 'player' && calendar
+  const groups = useMemo(() => view === 'player' ? all.filter((g) => (own ?? []).includes(g.id)) : all, [all, own, view])
+  const groupId = stored === MY_GROUPS && playerCalendar && groups.length > 1 ? MY_GROUPS
+    : stored !== null && groups.some((g) => g.id === stored) ? stored : null
+  const scope = useMemo(() => view === 'player' && (!calendar || groupId === MY_GROUPS) ? own ?? [] : null, [view, own, calendar, groupId])
 
   function setGroupId(id: number | null) {
     setStored(id)
@@ -80,7 +85,7 @@ export function GroupFilterProvider({ children }: { children: ReactNode }) {
 
   const inView = useCallback((ids: readonly number[]) => visibleIn(ids, groupId, scope), [groupId, scope])
 
-  return <Ctx.Provider value={{ groups, groupId, setGroupId, scope, inView }}>{children}</Ctx.Provider>
+  return <Ctx.Provider value={{ groups, playerCalendar, groupId, setGroupId, scope, inView }}>{children}</Ctx.Provider>
 }
 
 export const useGroupFilter = () => useContext(Ctx)

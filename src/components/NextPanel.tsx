@@ -2,7 +2,7 @@ import type { CSSProperties } from 'react'
 import { Link } from 'react-router-dom'
 import { t } from '../i18n'
 import { jerseyName, useClub } from '../lib/club'
-import { placeLabel } from '../lib/maps'
+import { eventLocation } from '../lib/maps'
 import { useRinks } from '../lib/rinks'
 import MapsButton from './MapsButton'
 import { formatDay, formatTime } from '../lib/time'
@@ -14,6 +14,7 @@ export default function NextPanel(props: { club: string; colours: CSSProperties 
   const { event: e, mine } = props
   const club = useClub()
   const rink = useRinks().find((r) => r.id === e.rink_id) ?? null
+  const location = eventLocation(e, rink)
   const game = e.type === 'game'
   const started = new Date(e.starts_at).getTime() <= Date.now()
   const label = started ? t('events.now') : t(game ? 'events.nextGame' : 'events.nextTraining')
@@ -25,12 +26,14 @@ export default function NextPanel(props: { club: string; colours: CSSProperties 
           <strong>{label}</strong>
           <span>{props.groups}</span>
         </div>
+        <div className="next-content"><div className="next-schedule">
         {game && e.opponent && <div className="vs">{t('events.vs', { club: props.club, opponent: e.opponent })}</div>}
         <div className="day-line">{formatDay(e.starts_at)}</div>
         <div className="time">
           <span className="big">{formatTime(e.starts_at)}</span>{' '}
           <span className="until">{t('events.until', { time: formatTime(e.ends_at) })}</span>
         </div>
+        </div><div className="next-location">
         <dl className="pair">
           <div>
             <dt>{t('event.meetup')}</dt>
@@ -38,7 +41,7 @@ export default function NextPanel(props: { club: string; colours: CSSProperties 
           </div>
           <div>
             <dt>{t('event.venue')}</dt>
-            <dd>{placeLabel({ venue: e.venue, rink: rink?.name }) || t('common.none')}</dd>
+            <dd>{location.label || t('common.none')}</dd>
           </div>
           {game && e.jersey && (
             <div>
@@ -47,17 +50,18 @@ export default function NextPanel(props: { club: string; colours: CSSProperties 
             </div>
           )}
         </dl>
-        <MapsButton rink={rink} venue={e.venue} />
+        <MapsButton rink={rink} venue={e.venue} eventType={e.type} />
+        </div></div>
         {props.canAnswer && (
           <div className="answers">
             <button className={mine === 'present' ? 'answer on present' : 'answer'} aria-pressed={mine === 'present'} disabled={props.busy} onClick={() => props.onAnswer('present')}>{t('answer.present')}</button>
             <button className={mine === 'absent' ? 'answer on absent' : 'answer'} aria-pressed={mine === 'absent'} disabled={props.busy} onClick={() => props.onAnswer('absent')}>{t('answer.absent')}</button>
           </div>
         )}
-        <div className="foot">
-          <span role="status">{props.canAnswer ? t(mine ? 'events.saved' : 'events.notYet') : ''}</span>
+        {(props.canAnswer || props.count !== undefined) && <div className="foot">
+          {props.canAnswer && <span role="status">{t(mine ? 'events.saved' : 'events.notYet')}</span>}
           {props.count !== undefined && <span className="count">{t(props.count === 1 ? 'events.presentOne' : 'events.presentMany', { n: String(props.count) })}</span>}
-        </div>
+        </div>}
         <Link className="open" to={`/events/${e.id}`}>{t('events.details')}</Link>
       </div>
     </section>

@@ -1,10 +1,11 @@
+import { eventLocation } from '../lib/maps'
 import { ChipsSkeleton } from '../components/Skeleton'
 import { useEffect, useState, type FormEvent } from 'react'
 import { ConfirmDialog } from '../components/ConfirmAction'
 import EventVisibility from '../components/EventVisibility'
 import EventScopeSelect from '../components/EventScopeSelect'
 import { scopeSummary, type ScopedEvent } from '../components/EventActions'
-import { EVENT_DETAILS } from '../lib/eventaccess'
+import { EVENT_DETAILS, unassignedTraining } from '../lib/eventaccess'
 import PageHeader from '../components/PageHeader'
 import { Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { errorText, t } from '../i18n'
@@ -64,7 +65,7 @@ export default function EventForm() {
 
   useEffect(() => {
     void (async () => {
-      const [g, r] = await Promise.all([supabase.from('groups').select('*').order('id'), supabase.from('rinks').select('id, name').order('name')])
+      const [g, r] = await Promise.all([supabase.from('groups').select('*').order('id'), supabase.from('rinks').select('id, name, address, note').order('name')])
       setGroups((g.data ?? []) as Group[])
       setRinks((r.data ?? []) as Rink[])
       setListsReady(true)
@@ -94,7 +95,7 @@ export default function EventForm() {
         setRinkId(e.rink_id)
         const ids = e.event_groups.map((x) => x.group_id)
         setGroupIds(ids)
-        setGroupsPending(e.groups_pending ?? false)
+        setGroupsPending(unassignedTraining(e))
         setParticipant(e.participant_details ?? EVENT_DETAILS)
         setObserver(e.observer_details ?? [])
         setInSeries(Boolean(e.series_id))
@@ -111,6 +112,9 @@ export default function EventForm() {
   const shownTitle = titleTouched ? title : t(type === 'game' ? 'form.titleGame' : 'form.titleTraining')
   const shownEnd = endTouched ? endTime : startTime ? shiftClock(startTime, 90) : ''
   const shownMeetup = meetupTouched ? meetupTime : startTime ? shiftClock(startTime, -60) : ''
+
+  const selectedRink = rinks.find((r) => r.id === rinkId) ?? null
+  const location = eventLocation({ type, venue }, selectedRink)
 
   function toggleGroup(groupId: number) {
     setGroupIds((current) => (current.includes(groupId) ? current.filter((x) => x !== groupId) : [...current, groupId]))
@@ -139,7 +143,7 @@ export default function EventForm() {
     const values = {
       type, title: shownTitle.trim(), starts_at: startsAt, ends_at: endsAt,
       meetup_at: shownMeetup ? meetupIso(date, startTime, shownMeetup) : null,
-      venue: venue.trim() || null, rink_id: rinkId,
+      venue: location.locked ? null : venue.trim() || null, rink_id: rinkId,
       opponent: isGame ? opponent.trim() || null : null,
       home_away: isGame ? homeAway : null, jersey: isGame ? jersey || null : null,
       video_url: isGame ? video.trim() || null : null,
@@ -195,10 +199,6 @@ export default function EventForm() {
             <input type="time" value={shownMeetup} onChange={(e) => { setMeetupTime(e.target.value); setMeetupTouched(true) }} />
           </label>
         </div>
-        <label>
-          {t('form.venue')}
-          <input maxLength={120} value={venue} onChange={(e) => setVenue(e.target.value)} />
-        </label>
         {!listsReady && (
           <div className="field">
             <span className="label">{t('form.rink')}</span>
@@ -218,6 +218,11 @@ export default function EventForm() {
             <span className="hint">{t('form.rinkHint')}</span>
           </div>
         )}
+        <label>
+          {t('form.venue')}
+          <input name="venue" maxLength={120} value={location.locked ? location.venue : venue} disabled={location.locked} onChange={(e) => setVenue(e.target.value)} aria-describedby={location.locked ? 'rink-address-note' : undefined} />
+          {location.locked && <span id="rink-address-note" className="hint">{t('form.rinkAddressUsed')}</span>}
+        </label>
         {type === 'game' && (
           <>
             <label>

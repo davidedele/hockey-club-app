@@ -5,9 +5,9 @@
 ## Changes
 
 1. Staff list rows and phone event rows have an actions menu. Titles in the computer list also open the event. Board and Coach views show neither the own answer column nor own attendance.
-2. Player view can consult the club calendar. Other groups' events use the existing neutral colours and "Solo consultazione". Attendance, messages, predictions and votes retain their participation checks. The next panel selects an eligible event, including an event already answered, so the answer can still be changed.
+2. Player view can consult the club calendar. Other groups' events use the existing neutral colours and "Non convocato". Attendance, messages, predictions and votes retain their participation checks. The next panel selects an eligible event, including an event already answered, so the answer can still be changed.
 3. A folded detail visibility panel has separate choices for invited groups and other groups. Main schedule information stays visible. Staff retain access. Defaults preserve the invited groups' existing sections and show other groups only main information. A training does not offer the game statistics checkbox.
-4. "Assegna i gruppi in seguito" creates a training without teams, including a weekly series. It shows "Gruppi da assegnare" and requests no attendance answers until teams are assigned. Booked rink hours still count.
+4. "Assegna i gruppi in seguito" creates a training without teams, including a weekly series. It shows "Gruppo non assegnato" and requests no attendance answers until teams are assigned. Booked rink hours still count.
 5. Series actions cover one event, the selected event and following future events, or every future event in the series. Confirmation shows the count and date range. A series edit saves every field in one transaction. Historical occurrences are excluded from bulk changes. Repetition and bulk time changes keep Italian clock times through daylight saving changes.
 6. Consultation never permits discussion posts or read receipts. Hidden sections are removed from the event tabs and their direct pages respect the chosen audience. The database enforces the same optional detail access for members without staff privileges. Staff switching to Player view get the corresponding interface, while the database still recognises their real staff privileges.
 7. Small answer icons stay where labels would not fit. Wide rows can show Presente and Assente. Tables wrap longer names and keep actions visible. Month cards have larger targets and two lines for titles, with the full title in the accessible text and hover description.
@@ -15,7 +15,7 @@
 ## Test project update
 
 1. Apply previous migrations through 0060 to the separate test project first. This branch adds `supabase/apply/apply_0061_event_management.sql`, a guarded transaction for the SQL Editor. Run the complete file once. It stops on a repeat and on a database missing its prerequisites.
-2. Apply 0061 before deploying this app version to the test site. The new app uses `save_event`, `event_scope` and `manage_events` rather than separate writes for event fields and groups. No server function deployment is needed for this change.
+2. Apply 0061 before deploying this app version to the test site. The new app uses `save_event`, `event_scope` and `manage_events` rather than separate writes for event fields and groups. After 0061, apply `supabase/apply/apply_0062_training_rink_address.sql` once. For a hosted release also redeploy `calendar-feed` so subscriptions omit legacy duplicate training addresses. Local screen review does not require deploying the function.
 3. Use an ordinary player account from only one group and a separate staff account. A role switch on a staff account is useful for checking the interface but is not a substitute for testing database restrictions as a real player.
 4. No hosted database changes, event deletions, emails, push notifications or changes to the older Tuesday series were made during development.
 
@@ -43,11 +43,24 @@ The pictures use invented sample data.
 2. [Detail visibility on a computer](ui-review/event-management/detail-visibility-1280.png).
 3. [Staff actions at the bottom of the event list](ui-review/event-management/staff-list-actions-1280.png).
 4. [Series confirmation before saving](ui-review/event-management/series-confirmation-1280.png).
+5. [Compact next event panel on a computer](ui-review/event-management/home-compact-1280.png).
+6. [Password visibility on a phone](ui-review/event-management/password-375.png).
 
 ## Validation
 
-1. Type check and production build pass. Unit tests: 213 in 36 files.
-2. Local database: 1689 checks pass, including a mid-series rollback, assignment changes, observers, hidden sections and daylight saving changes. Five deliberate breaks were all caught in disposable copies.
-3. Guarded apply files: 78 checks pass, including applying 0061, refusing a second run and refusing a project missing its prerequisites.
-4. Browser checks: the full standard pass covers 119 page checks at 375 and 1280 pixels. Event checks also cover 320 pixels, dark mode, larger text and WebKit. Save, deletion confirmation, keyboard focus, hidden tabs, observer discussions, pending series creation and overnight end times are checked with invented data. Final checked cases have no reported findings.
+1. Type check and production build pass. Unit tests: 220 in 36 files.
+2. Local database: 1704 checks pass, including a mid-series rollback, assignment changes, observers, hidden sections and daylight saving changes. Five deliberate breaks were all caught in disposable copies.
+3. Guarded apply files: 81 checks pass, including applying 0061, refusing a second run and refusing a project missing its prerequisites.
+4. Browser checks: standard page review covers 119 views at 375 and 1280 pixels with no page findings. Final calendar passes in dark mode with larger text and WebKit each cover 11 views including interactions, with no findings. Checks include own group choices and persistence, unassigned filters, locked rink addresses, password visibility, series confirmation and saving, keyboard focus, hidden tabs, observer discussions, pending creation and overnight end times. Earlier event review also covered 320 pixels. All automated browser data is invented.
 5. Hosted migration application and a real phone check of the new version remain outstanding. No real data was changed during verification.
+
+## Local review follow up
+
+1. In Player view, the calendar menu lists only memberships, I miei gruppi for multiple memberships, and Tutti i gruppi. Check single membership and multiple memberships, choose I miei gruppi and refresh. Other sections keep their existing group limits.
+2. Unassigned trainings remain in individual group and I miei gruppi calendar views, say Gruppo non assegnato and offer no attendance controls. Other groups' assigned events say Non convocato.
+3. The next event card keeps its schedule together, uses its natural height, and has no red desktop divider. On phones the divider has no Adesso label.
+4. Select an addressed rink on a training form: its address is visible and locked. Select a rink without an address or Nessuna: event location is editable again. Save disposable data and confirm the saved event, Maps, export and offline copy agree.
+5. Login, registration and password reset have Mostra password and Nascondi password. Check the value stays intact and validation still treats the visible field as a password.
+6. Open site checked in both Player and Board view at 375 and 1280 pixels without saving or deleting data. An unassigned event no longer describes the viewer as belonging to the wrong group, and Staff view no longer shows the personal no response message. Unassigned event sharing opens the event without asking for an attendance answer.
+7. Data finding for review: Thursday 12 November has a 22:30 match against HC Black Angels and a 22:30 training, both visible in group A. No event data was changed. Consider a later overlap warning during creation and series editing; it should warn rather than block because parallel events for different groups can be intentional.
+8. The exact downloadable 0062 package was checked on temporary PostgreSQL: READY FOR 0062, apply, both verification rows PASS, then ALREADY APPLIED. It contains before and after checks and the guarded update, which does not bulk rewrite existing events.

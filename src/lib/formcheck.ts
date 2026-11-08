@@ -47,7 +47,7 @@ export function problemOf(f: FieldFacts): { key: MessageKey; values?: Record<str
 function factsOf(el: HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement): FieldFacts {
   const input = el as HTMLInputElement
   return {
-    type: el.tagName === 'INPUT' ? input.type : '',
+    type: input.dataset?.passwordField ? 'password' : el.tagName === 'INPUT' ? input.type : '',
     tag: el.tagName.toLowerCase(),
     required: el.required,
     value: el.value,
@@ -103,7 +103,7 @@ export function checkForm(form: HTMLFormElement): boolean {
     message.className = 'field-error'
     message.textContent = t(problem.key, problem.values)
     // After the label that wraps the field, or after the field itself when it has no wrapping label.
-    const anchor = el.closest('label') ?? el
+    const anchor = el.closest('label, .password-control') ?? el
     anchor.after(message)
     el.setAttribute('aria-invalid', 'true')
     el.setAttribute('aria-describedby', [el.getAttribute('aria-describedby'), id].filter(Boolean).join(' '))

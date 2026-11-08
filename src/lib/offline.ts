@@ -1,5 +1,6 @@
 import { supabase } from './supabase'
-import type { LineupSlot } from './types'
+import { eventLocation } from './maps'
+import type { Rink, LineupSlot } from './types'
 
 // Offline use (V11, decision 137). The rule of what is kept on the phone:
 //   1. Only what the signed in person may read through the database rules, and only this: the events that start in the
@@ -63,7 +64,7 @@ type Row = Record<string, unknown>
 
 // The copy from what the database answered. Pure, so the rule can be tested: it keeps only the listed fields, orders
 // the events by start and drops lines and plans of events that are not in the copy.
-export function buildCopy(userId: string, now: Date, raw: { events: Row[]; groups: Row[]; answers: Row[]; lineups: Row[]; plans: Row[]; planDrills: Row[] }): OfflineCopy {
+export function buildCopy(userId: string, now: Date, raw: { events: Row[]; groups: Row[]; answers: Row[]; lineups: Row[]; plans: Row[]; planDrills: Row[]; rinks?: Rink[] }): OfflineCopy {
   const from = now.getTime() - PAST_HOURS * 3600_000
   const to = now.getTime() + WINDOW_DAYS * 86_400_000
   const events = raw.events
@@ -82,7 +83,7 @@ export function buildCopy(userId: string, now: Date, raw: { events: Row[]; group
       starts_at: e.starts_at as string,
       ends_at: e.ends_at as string,
       meetup_at: (e.meetup_at as string | null) ?? null,
-      venue: (e.venue as string | null) ?? null,
+      venue: eventLocation({ type: e.type as 'training' | 'game', venue: (e.venue as string | null) ?? null }, raw.rinks?.find((r) => r.id === e.rink_id)).label || null,
       opponent: (e.opponent as string | null) ?? null,
       home_away: (e.home_away as 'home' | 'away' | null) ?? null,
       cancelled: e.cancelled_at != null,
@@ -170,7 +171,7 @@ export async function renewOfflineCopy(userId: string, force = false): Promise<v
     const to = new Date(now.getTime() + WINDOW_DAYS * 86_400_000).toISOString()
     const e = await supabase
       .from('events')
-      .select('id, type, title, starts_at, ends_at, meetup_at, venue, opponent, home_away, cancelled_at')
+      .select('id, type, title, starts_at, ends_at, meetup_at, venue, rink_id, opponent, home_away, cancelled_at')
       .gte('starts_at', from).lte('starts_at', to).order('starts_at').limit(MAX_EVENTS)
     if (e.error) return
     const events = (e.data ?? []) as Row[]
@@ -179,17 +180,18 @@ export async function renewOfflineCopy(userId: string, force = false): Promise<v
       await writeCopy(buildCopy(userId, now, { events: [], groups: [], answers: [], lineups: [], plans: [], planDrills: [] }))
       return
     }
-    const [g, a, l, p, d] = await Promise.all([
+    const [g, a, l, p, d, r] = await Promise.all([
       supabase.from('event_groups').select('event_id, group_id').in('event_id', ids),
       supabase.from('attendance_answers').select('event_id, answer').eq('user_id', userId).in('event_id', ids),
       supabase.from('event_lineup').select('event_id, slot, unit, profiles:user_id(first_name, last_name, jersey_number)').in('event_id', ids),
       supabase.from('event_plan').select('event_id, notes').in('event_id', ids),
       supabase.from('event_plan_drills').select('event_id, step, minutes, drills:drill_id(title)').in('event_id', ids),
+      supabase.from('rinks').select('id, name, address, note'),
     ])
-    if (g.error || a.error || l.error || p.error || d.error) return
+    if (g.error || a.error || l.error || p.error || d.error || r.error) return
     await writeCopy(buildCopy(userId, now, {
       events, groups: (g.data ?? []) as Row[], answers: (a.data ?? []) as Row[], lineups: (l.data ?? []) as Row[],
-      plans: (p.data ?? []) as Row[], planDrills: (d.data ?? []) as Row[],
+      plans: (p.data ?? []) as Row[], planDrills: (d.data ?? []) as Row[], rinks: (r.data ?? []) as Rink[],
     }))
   } catch {
     // Offline or refused: the old copy stays until it is too old.

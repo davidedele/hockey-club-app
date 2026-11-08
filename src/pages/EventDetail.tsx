@@ -12,11 +12,11 @@ import EventThread from '../components/EventThread'
 import Lineup from './Lineup'
 import Plan from './Plan'
 import EventActions from '../components/EventActions'
-import { detailAllowed } from '../lib/eventaccess'
+import { detailAllowed, unassignedTraining } from '../lib/eventaccess'
 import { jerseyName, useClub } from '../lib/club'
 import { useCrumb } from '../lib/crumb'
 import MapsButton from '../components/MapsButton'
-import { placeLabel } from '../lib/maps'
+import { eventLocation } from '../lib/maps'
 import { useSession } from '../lib/session'
 import type { CSSProperties } from 'react'
 import { whatsappLink } from '../lib/whatsapp'
@@ -55,7 +55,7 @@ export default function EventDetail() {
   const [dragging, setDragging] = useState<string | null>(null)
   const [hoverState, setHoverState] = useState<State | null>(null)
   const [params] = useSearchParams()
-  const { groupId: chosenGroup } = useGroupFilter()
+  const { inView } = useGroupFilter()
 
   const refresh = useCallback(async () => {
     if (!profile) return
@@ -69,7 +69,7 @@ export default function EventDetail() {
       supabase.from('attendance_records').select('status').eq('event_id', id).eq('user_id', profile.id).maybeSingle(),
     ])
     // The strip follows the group chosen in the selector; the event being looked at is always in it.
-    setNear(((nb.data ?? []) as NearEvent[]).filter((x) => x.id === id || chosenGroup === null || x.event_groups.some((g) => g.group_id === chosenGroup)).reverse())
+    setNear(((nb.data ?? []) as NearEvent[]).filter((x) => x.id === id || unassignedTraining(x) || inView(x.event_groups.map((g) => g.group_id))).reverse())
     const row = (e.data as EventRow | null) ?? null
     setEvent(row)
     setGroups((g.data ?? []) as Group[])
@@ -93,7 +93,7 @@ export default function EventDetail() {
       setRecordedByDb(rec.data === true)
     }
     setLoaded(true)
-  }, [id, profile, isStaff, chosenGroup])
+  }, [id, profile, isStaff, inView])
 
   useEffect(() => {
     void refresh()
@@ -108,6 +108,7 @@ export default function EventDetail() {
   const over = new Date(event.ends_at).getTime() < now
   const cancelled = event.cancelled_at !== null
   const rink = rinks.find((r) => r.id === event.rink_id) ?? null
+  const location = eventLocation(event, rink)
   const rinkName = rink?.name ?? ''
   const started = new Date(event.starts_at).getTime() <= now
   const inMyGroups = event.event_groups.some((x) => myGroupIds.includes(x.group_id))
@@ -125,9 +126,9 @@ export default function EventDetail() {
   const shareText = [
     t('share.eventText', { title: matchName, day: dayLabel, time: formatTime(event.starts_at) }),
     event.meetup_at ? t('share.meetupText', { time: formatTime(event.meetup_at) }) : '',
-    event.venue ? t('share.venueText', { venue: event.venue }) : '',
+    location.label ? t('share.venueText', { venue: location.label }) : '',
     jerseyLabel ? t('share.jerseyText', { jersey: jerseyLabel.toLowerCase() }) : '',
-    t('share.answerText', { url: link }),
+    t(unassignedTraining(event) ? 'share.viewText' : 'share.answerText', { url: link }),
   ].filter(Boolean).join(' ')
 
   // A change that a rule silently refuses must not look like it worked.
@@ -342,10 +343,10 @@ export default function EventDetail() {
             </div>
           </div>
         )}
-        {placeLabel({ venue: event.venue, rink: rinkName }) && <p className="ev-venue">{placeLabel({ venue: event.venue, rink: rinkName })}</p>}
+        {location.label && <p className="ev-venue">{location.label}</p>}
       </header>
 
-      {readOnly && <p className="consultation-note"><strong>{event.groups_pending ? t('events.unassigned') : t('events.readOnly')}</strong> {t('visibility.readOnlyHelp')}</p>}
+      {readOnly && <p className="consultation-note"><strong>{unassignedTraining(event) ? t('events.unassigned') : t('events.readOnly')}</strong> {t(unassignedTraining(event) ? 'visibility.unassignedHelp' : 'visibility.readOnlyHelp')}</p>}
       {error && <p className="error" role="alert">{error}</p>}
       {cancelled && <p className="box cancelled-note" role="status">{t('event.cancelledBanner')}{isStaff && ` ${t('event.restoreHint')}`}</p>}
       <TabStrip label={t('event.tabs')}>
@@ -377,7 +378,6 @@ export default function EventDetail() {
               </section>
             )}
             {!isStaff && personNotCalled && <p className="hint">{t('status.not_called_up')}</p>}
-            {!inMyGroups && isStaff && <p className="hint">{t('event.notYours')}</p>}
             {allowed('presence') && <section className="card">
               <h2>{t('event.attendance')}</h2>
               <ul className="counters">
@@ -401,9 +401,9 @@ export default function EventDetail() {
           <div className="ev-main">
             <dl className="facts">
               {event.meetup_at && (<><dt>{t('event.meetup')}</dt><dd>{formatTime(event.meetup_at)}</dd></>)}
-              {event.venue && (<><dt>{t('event.venue')}</dt><dd>{event.venue}</dd></>)}
+              {location.venue && (<><dt>{t('event.venue')}</dt><dd>{location.venue}</dd></>)}
               {rinkName && (<><dt>{t('event.rink')}</dt><dd>{rinkName}</dd></>)}
-              {rink?.address && (<><dt>{t('event.address')}</dt><dd>{rink.address}</dd></>)}
+              {rink?.address && !location.locked && (<><dt>{t('event.address')}</dt><dd>{rink.address}</dd></>)}
               {rink?.note && (<><dt>{t('event.rinkNote')}</dt><dd>{rink.note}</dd></>)}
               {event.opponent && (<><dt>{t('event.opponent')}</dt><dd>{event.opponent}{event.home_away ? ` · ${t(event.home_away === 'home' ? 'event.home' : 'event.away')}` : ''}</dd></>)}
               {event.jersey && (<><dt>{t('event.jersey')}</dt><dd>{jerseyLabel}</dd></>)}
@@ -411,7 +411,7 @@ export default function EventDetail() {
                 <><dt>{t('event.scoreTitle')}</dt><dd>{t('event.scoreValue', { us: String(event.score_for), them: String(event.score_against) })}</dd></>
               )}
             </dl>
-            <p className="button-row"><MapsButton rink={rink} venue={event.venue} />{game && event.video_url && <a className="button secondary" href={event.video_url} target="_blank" rel="noopener noreferrer">{t('event.videoOpen')}</a>}</p>
+            <p className="button-row"><MapsButton rink={rink} venue={event.venue} eventType={event.type} />{game && event.video_url && <a className="button secondary" href={event.video_url} target="_blank" rel="noopener noreferrer">{t('event.videoOpen')}</a>}</p>
             <div className="actions share-row">
               {!readOnly && !over && !cancelled && <a className="button secondary small" href={whatsappLink(shareText)} target="_blank" rel="noopener noreferrer">{t('share.whatsapp')}</a>}
               {!readOnly && hasScore && <a className="button secondary small" href={whatsappLink(resultText)} target="_blank" rel="noopener noreferrer">{t('share.result')}</a>}

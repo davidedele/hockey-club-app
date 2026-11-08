@@ -83,6 +83,10 @@ describe('calendar feed text', () => {
     expect(location(base)).toBe('')
   })
 
+  it('omits a legacy duplicate address from training calendar subscriptions', () => {
+    expect(location({...base,rink:'Grande',address:'Via Roma 1',venue:'Wrong address'})).toBe('Grande, Via Roma 1')
+  })
+
   it('shows nothing about people', () => {
     const text = buildFeed([base], now)
     expect(text).not.toMatch(/ATTENDEE|ORGANIZER/)

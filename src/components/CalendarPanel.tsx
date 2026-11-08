@@ -1,3 +1,4 @@
+import { unassignedTraining } from '../lib/eventaccess'
 import EventActions from './EventActions'
 import TableScroll from './TableScroll'
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
@@ -31,12 +32,13 @@ export default function CalendarPanel(props: {
   onChanged: () => void
   clubName: string
   groupName: (e: EventRow) => string
+  placeName: (e: EventRow) => string
   weekShift: number
   weekLabel: string
   onWeekShift: (shift: number) => void
   renderWeek: (query: string, keep: (e: EventRow) => boolean) => ReactNode
 }) {
-  const { events, answers, isStaff, isObserver, onChanged, clubName, groupName, weekShift, onWeekShift } = props
+  const { events, answers, isStaff, isObserver, onChanged, clubName, groupName, placeName, weekShift, onWeekShift } = props
   const today = dayKey(new Date().toISOString())
   const currentSeason = seasonOf(new Date().toISOString())
   const seasons = Array.from({ length: Math.max(1, currentSeason - FIRST_SEASON + 1) }, (_, i) => currentSeason - i)
@@ -57,7 +59,7 @@ export default function CalendarPanel(props: {
   const title = (e: EventRow) => (e.type === 'game' && e.opponent ? t('events.vs', { club: clubName, opponent: e.opponent }) : e.title)
   const typeName = (c: Cat) => t(`cal.${c}` as MessageKey)
   const text = query.trim().toLowerCase()
-  const keep = (e: EventRow) => types.has(catOf(e)) && (text === '' || [title(e), e.venue ?? '', e.opponent ?? ''].some((x) => x.toLowerCase().includes(text)))
+  const keep = (e: EventRow) => types.has(catOf(e)) && (text === '' || [title(e), placeName(e), e.opponent ?? ''].some((x) => x.toLowerCase().includes(text)))
 
   const inSeason = useMemo(() => events.filter((e) => seasonOf(e.starts_at) === season), [events, season])
   const counts = useMemo(() => {
@@ -120,22 +122,22 @@ export default function CalendarPanel(props: {
     }
     return map
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [events, types, text])
+  }, [events, types, text, placeName])
 
   // The list: the events of the season, sorted and in pages.
   const answerText = (e: EventRow) => (answers.has(e.id) ? t(`answer.${answers.get(e.id)}` as MessageKey) : '')
   const listRows = useMemo(() => {
-    const get = (e: EventRow): Cell => (sort.key === 'date' ? e.starts_at : sort.key === 'event' ? title(e) : sort.key === 'place' ? e.venue : answerText(e))
+    const get = (e: EventRow): Cell => (sort.key === 'date' ? e.starts_at : sort.key === 'event' ? title(e) : sort.key === 'place' ? placeName(e) : answerText(e))
     const inScope = (e: EventRow) => scope === 'all' || (scope === 'upcoming' ? dayKey(e.starts_at) >= today : dayKey(e.starts_at) < today)
     return sortRows(inSeason.filter(keep).filter(inScope), get, sort.dir)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [inSeason, types, text, sort.key, sort.dir, answers, scope])
+  }, [inSeason, types, text, sort.key, sort.dir, answers, scope, placeName])
   const pages = pageOf(listRows, page, size)
 
   function exportList() {
     downloadCsv(`eventi-${seasonLabel(season).replace('/', '-')}`, [
       [t('cal.colDate'), t('cal.colTime'), t('cal.colType'), t('cal.colEvent'), t('cal.colPlace'), t('cal.colGroups')],
-      ...listRows.map((e) => [dayKey(e.starts_at), formatTime(e.starts_at), typeName(catOf(e)), title(e), e.venue, groupName(e)]),
+      ...listRows.map((e) => [dayKey(e.starts_at), formatTime(e.starts_at), typeName(catOf(e)), title(e), placeName(e), groupName(e)]),
     ])
   }
 
@@ -230,8 +232,8 @@ export default function CalendarPanel(props: {
                       {isStaff && inMonth && <Link className="mday-add" to={`/events/new?date=${d}`} aria-label={t('cal.newOn', { day: formatDay(`${d}T12:00:00Z`) })}>+</Link>}
                     </div>
                     {list.slice(0, MAX_PER_DAY).map((e) => (
-                      <Link key={e.id} to={`/events/${e.id}`} className={`mev ${catOf(e)}${e.cancelled_at ? ' cancelled' : ''}${isObserver(e) ? ' consultation' : ''}`} title={`${formatTime(e.starts_at)} ${title(e)}${isObserver(e) ? ' · ' + t('events.readOnly') : ''}`}>
-                        <span className="t">{formatTime(e.starts_at)}</span><span className="mev-title">{title(e)}</span>{(e.groups_pending || isObserver(e)) && <span className="consultation-label">{e.groups_pending ? t('events.unassigned') : t('events.readOnly')}</span>}
+                      <Link key={e.id} to={`/events/${e.id}`} className={`mev ${catOf(e)}${e.cancelled_at ? ' cancelled' : ''}${isObserver(e) ? ' consultation' : ''}`} title={`${formatTime(e.starts_at)} ${title(e)}${isObserver(e) ? ' · ' + t(unassignedTraining(e) ? 'events.unassigned' : 'events.readOnly') : ''}`}>
+                        <span className="t">{formatTime(e.starts_at)}</span><span className="mev-title">{title(e)}</span>{(unassignedTraining(e) || isObserver(e)) && <span className="consultation-label">{unassignedTraining(e) ? t('events.unassigned') : t('events.readOnly')}</span>}
                       </Link>
                     ))}
                     {list.length > MAX_PER_DAY && <button className="link mday-more" onClick={() => weekOfDate(d)}>{t('cal.more', { n: String(list.length - MAX_PER_DAY) })}</button>}
@@ -267,9 +269,9 @@ export default function CalendarPanel(props: {
                       <td><Link to={`/events/${e.id}`}>{formatShortDay(e.starts_at)}</Link> <span className="hint">{formatTime(e.starts_at)}</span></td>
                       <td><span className={`cat ${catOf(e)}`}><span className="dot" aria-hidden="true" />{typeName(catOf(e))}</span></td>
                       <td><Link className="event-title-link" to={`/events/${e.id}`}>{title(e)}</Link>{e.cancelled_at && <span className="tag"> {t('events.cancelled')}</span>}</td>
-                      <td>{e.venue}</td>
+                      <td>{placeName(e)}</td>
                       <td>{groupName(e)}</td>
-                      <td>{isStaff ? <EventActions event={e} onChanged={onChanged} /> : isObserver(e) ? <span className="consultation-label">{t('events.readOnly')}</span> : answerText(e)}</td>
+                      <td>{isStaff ? <EventActions event={e} onChanged={onChanged} /> : (unassignedTraining(e) || isObserver(e)) ? <span className="consultation-label">{t(unassignedTraining(e) ? 'events.unassigned' : 'events.readOnly')}</span> : answerText(e)}</td>
                     </tr>
                   ))}
                   {pages.length === 0 && <tr><td colSpan={6} className="hint">{t('cal.none')}</td></tr>}

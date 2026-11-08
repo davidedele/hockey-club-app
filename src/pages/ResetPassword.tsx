@@ -1,3 +1,4 @@
+import PasswordField from '../components/PasswordField'
 import { useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { errorText, t } from '../i18n'
@@ -25,10 +26,7 @@ export default function ResetPassword() {
         <p>{t('reset.done')} <Link to="/">{t('nav.home')}</Link></p>
       ) : (
         <form {...checked(submit)}>
-          <label>
-            {t('common.password')}
-            <input type="password" autoComplete="new-password" minLength={8} required value={password} onChange={(e) => setPassword(e.target.value)} />
-          </label>
+          <PasswordField autoComplete="new-password" minLength={8} required value={password} onChange={(e) => setPassword(e.target.value)} />
           {error && <p className="error">{error}</p>}
           <button type="submit">{t('reset.newSubmit')}</button>
         </form>

@@ -1,11 +1,11 @@
 import { t } from '../i18n'
-import { mapsUrl, placeQuery } from '../lib/maps'
-import type { Rink } from '../lib/types'
+import { eventLocation, mapsUrl } from '../lib/maps'
+import type { EventType, Rink } from '../lib/types'
 
 // "Apri in Mappe": opens the venue in Apple Maps on an iPhone and in Google Maps elsewhere.
 // Shows nothing for an event with no place at all.
-export default function MapsButton({ rink, venue }: { rink?: Rink | null; venue?: string | null }) {
-  const query = placeQuery({ address: rink?.address, rink: rink?.name, venue })
+export default function MapsButton({ rink, venue, eventType = 'game' }: { rink?: Rink | null; venue?: string | null; eventType?: EventType }) {
+  const query = eventLocation({ type: eventType, venue: venue ?? null }, rink).query
   if (!query) return null
   return (
     <a className="button secondary maps-button" href={mapsUrl(query)} target="_blank" rel="noopener noreferrer">

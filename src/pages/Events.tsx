@@ -1,3 +1,5 @@
+import { eventLocation } from '../lib/maps'
+import { useRinks } from '../lib/rinks'
 import { readableInk } from '../lib/colour'
 import { useCallback, useEffect, useMemo, useState, type CSSProperties } from 'react'
 import { Link } from 'react-router-dom'
@@ -6,7 +8,7 @@ import AnnouncementsLink from '../components/AnnouncementsLink'
 import CalendarPanel from '../components/CalendarPanel'
 import NextPanel from '../components/NextPanel'
 import EventActions from '../components/EventActions'
-import { canAnswerEvent, detailAllowed, invitedTo } from '../lib/eventaccess'
+import { canAnswerEvent, detailAllowed, invitedTo, unassignedTraining } from '../lib/eventaccess'
 import Crest from '../components/Crest'
 import { useClub } from '../lib/club'
 import { refreshLeague } from '../lib/league'
@@ -29,10 +31,12 @@ export default function Events() {
   // Being present at an event is a player thing: the answer buttons and the unanswered list show in the Giocatore view only (decision 93).
   const asPlayer = !isStaff
   const club = useClub()
+  const rinks = useRinks()
+  const placeOf = (event: EventRow) => eventLocation(event, rinks.find((r) => r.id === event.rink_id)).label
   const [allEvents, setEvents] = useState<EventRow[]>([])
   const { inView } = useGroupFilter()
   // The group chosen in the switcher narrows the events shown.
-  const events = useMemo(() => allEvents.filter((e) => inView(e.event_groups.map((x) => x.group_id))), [allEvents, inView])
+  const events = useMemo(() => allEvents.filter((e) => unassignedTraining(e) || inView(e.event_groups.map((x) => x.group_id))), [allEvents, inView])
   const [groups, setGroups] = useState<Group[]>([])
   const [myGroups, setMyGroups] = useState<number[]>([])
   const [answers, setAnswers] = useState<Map<string, Answer>>(new Map())
@@ -158,7 +162,7 @@ export default function Events() {
     const mine = answers.get(e.id)
     const over = new Date(e.ends_at).getTime() < now
     const title = e.type === 'game' && e.opponent ? t('events.vs', { club: club.name || t('app.name'), opponent: e.opponent }) : e.title
-    const meta = [e.venue, e.meetup_at ? t('events.meetup', { time: formatTime(e.meetup_at) }) : null].filter(Boolean).join(', ')
+    const meta = [placeOf(e), e.meetup_at ? t('events.meetup', { time: formatTime(e.meetup_at) }) : null].filter(Boolean).join(', ')
     return (
       <li key={e.id} className={`${e.type === 'game' ? 'evrow game' : 'evrow'}${e.cancelled_at ? ' cancelled' : ''}${asPlayer && !invitedTo(e, myGroups) ? ' consultation' : ''}`}>
         <Link className="evlink" to={`/events/${e.id}`}>
@@ -167,7 +171,7 @@ export default function Events() {
             <div className="t">{formatTime(e.starts_at)}</div>
           </div>
           <div>
-            <div className="ti">{title}</div>{(e.groups_pending || (asPlayer && !invitedTo(e, myGroups))) && <span className="consultation-label">{e.groups_pending ? t('events.unassigned') : t('events.readOnly')}</span>}
+            <div className="ti">{title}</div>{(unassignedTraining(e) || (asPlayer && !invitedTo(e, myGroups))) && <span className="consultation-label">{unassignedTraining(e) ? t('events.unassigned') : t('events.readOnly')}</span>}
             <div className="m">{e.cancelled_at && <span className="tag">{t('events.cancelled')} </span>}{meta || groupsOf(e)}{savedFor === e.id && <span className="tag todo" role="status"> · {t('events.savedShort')}</span>}</div>
           </div>
         </Link>
@@ -192,8 +196,8 @@ export default function Events() {
       <article key={e.id} className={`${e.type === 'game' ? 'cal-ev game' : 'cal-ev'}${e.cancelled_at ? ' cancelled' : ''}${asPlayer && !invitedTo(e, myGroups) ? ' consultation' : ''}`} style={e.type === 'game' ? teamColours(e) : undefined}>
         <Link to={`/events/${e.id}`}>
           <span className="t">{formatTime(e.starts_at)}</span>
-          <span className="ti">{title}</span>{(e.groups_pending || (asPlayer && !invitedTo(e, myGroups))) && <span className="consultation-label">{e.groups_pending ? t('events.unassigned') : t('events.readOnly')}</span>}
-          {e.cancelled_at ? <span className="m">{t('events.cancelled')}</span> : e.venue && <span className="m">{e.venue}</span>}
+          <span className="ti">{title}</span>{(unassignedTraining(e) || (asPlayer && !invitedTo(e, myGroups))) && <span className="consultation-label">{unassignedTraining(e) ? t('events.unassigned') : t('events.readOnly')}</span>}
+          {e.cancelled_at ? <span className="m">{t('events.cancelled')}</span> : placeOf(e) && <span className="m">{placeOf(e)}</span>}
         </Link>
         {!over && canAnswer(e) ? (
           <div className="quick" role="group" aria-label={t('events.answerFor', { day: formatDay(e.starts_at) })}>
@@ -328,6 +332,7 @@ export default function Events() {
           onChanged={() => void load()}
           clubName={club.name || t('app.name')}
           groupName={groupsOf}
+          placeName={placeOf}
           weekShift={weekShift}
           weekLabel={weekRange(week[0].date, week[6].date)}
           onWeekShift={goWeek}

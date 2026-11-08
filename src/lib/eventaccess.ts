@@ -5,3 +5,5 @@ export const detailAllowed = (event: EventRow, detail: EventDetailKey, staff: bo
   staff || (invited ? event.participant_details ?? EVENT_DETAILS : event.observer_details ?? []).includes(detail)
 export const canAnswerEvent = (event: EventRow, groups: readonly number[], notCalled: boolean, now = Date.now()) =>
   !event.cancelled_at && !notCalled && new Date(event.ends_at).getTime() > now && invitedTo(event, groups)
+
+export const unassignedTraining = (event: Pick<EventRow, 'type' | 'event_groups'>) => event.type === 'training' && event.event_groups.length === 0

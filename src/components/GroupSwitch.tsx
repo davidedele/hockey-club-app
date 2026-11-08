@@ -1,16 +1,20 @@
 import { t } from '../i18n'
-import { useGroupFilter } from '../lib/groupfilter'
+import { MY_GROUPS, useGroupFilter } from '../lib/groupfilter'
 import MenuSelect from './MenuSelect'
 
 // Picks the group the whole app looks at. It stays chosen until it is changed.
 // A button shows the group in use and opens the list; on phones it is shortened to fit the header.
 export default function GroupSwitch({ className, short = false }: { className?: string; short?: boolean }) {
-  const { groups, groupId, setGroupId, scope } = useGroupFilter()
-  if (groups.length < 2) return null
-  const options = [
-    { value: null as number | null, label: t(scope ? (short ? 'group.mineShort' : 'group.mine') : short ? 'group.allShort' : 'group.all') },
+  const { groups, groupId, setGroupId, scope, playerCalendar } = useGroupFilter()
+  const options = playerCalendar ? [
+    ...groups.map((g) => ({ value: g.id as number | null, label: g.name })),
+    ...(groups.length > 1 ? [{ value: MY_GROUPS as number | null, label: t('group.mine') }] : []),
+    { value: null as number | null, label: t('group.all') },
+  ] : [
+    { value: null as number | null, label: t(scope ? 'group.mine' : 'group.all') },
     ...groups.map((g) => ({ value: g.id as number | null, label: g.name })),
   ]
+  if (options.length < 2 || (!playerCalendar && groups.length < 2)) return null
   // In the phone top bar the selector is a round 44 pixel button like the others: the group code in a
   // circle, or an icon for all the groups. The list that opens is the same.
   const chosen = groups.find((g) => g.id === groupId)

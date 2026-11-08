@@ -4,6 +4,20 @@ Every point Davide raised about the interface, with its status. Newest review fi
 
 Status words: Open, In progress, Done (PR number), Decided (waiting for Davide), Won't do (with the reason).
 
+## Local review follow up (8 November 2026)
+
+1. Reduce the empty space in the next event panel. Status: Done (PR 50). Date and time stay together; location and Maps form one block, adapting to the card's width.
+2. In the player calendar offer only the person's own individual groups, I miei gruppi when there is more than one, and Tutti i gruppi. Status: Done (PR 50). Staff choices and the existing own group limits of other sections stay intact.
+3. A training with a selected rink and a saved rink address cannot have a second event address. Status: Done (PR 50), including database enforcement in migration 0062. Display, Maps and the offline copy use the same location.
+4. Remove the red now divider on computer screens and remove Adesso from the phone divider. Status: Done (PR 50).
+5. Rename Solo consultazione to Non convocato. Trainings with no groups say Gruppo non assegnato and remain visible under individual group and I miei gruppi filters. Status: Done (PR 50), including older unassigned trainings without the pending flag.
+6. Add a password visibility eye to sign in and registration. Status: Done (PR 50), also on password reset. Toggling retains the value and password validation.
+7. Look for similar usability problems and report them. Status: Done (PR 50). Related fixes and checks cover saved group choices, detail navigation, map destinations, offline location, larger text and phone Safari.
+
+8. A match and training can overlap for the same group without a warning. Status: Open. Seen on the open test site for group A, 12 November at 22:30. Propose a warning when saving an event or series, with intentional overlaps allowed. No data changed.
+
+9. The desktop calendar returns to Settimana after a full refresh, even when Elenco or Mese was chosen. Status: Open. Consider remembering the chosen calendar layout in this browser.
+
 ## Event management review (8 November 2026)
 
 1. Staff need to edit, cancel and delete from event rows, including weekly series. Status: Done (PR 50). A shared actions menu offers a scoped confirmation and stays visible at table edges.

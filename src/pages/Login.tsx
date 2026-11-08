@@ -1,3 +1,4 @@
+import PasswordField from '../components/PasswordField'
 import { useState, type FormEvent } from 'react'
 import { Navigate } from 'react-router-dom'
 import { Link } from 'react-router-dom'
@@ -37,10 +38,7 @@ export default function Login() {
           {t('common.email')}
           <input type="email" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
         </label>
-        <label>
-          {t('common.password')}
-          <input type="password" autoComplete="current-password" required value={password} onChange={(e) => setPassword(e.target.value)} />
-        </label>
+        <PasswordField autoComplete="current-password" required value={password} onChange={(e) => setPassword(e.target.value)} />
         {error && <p className="error">{error}</p>}
         <button type="submit" disabled={busy}>{t('login.submit')}</button>
       </form>
