@@ -1289,3 +1289,55 @@ button.fold-head { display: flex; align-items: center; justify-content: space-be
 .off-lines dt { color: var(--muted); }
 .off-lines dd { margin: 0; overflow-wrap: anywhere; }
 .offline-note + button { margin-bottom: 1rem; }
+
+/* Club calendar consultation and staff event actions. */
+.consultation:not(.cancelled), .mev.consultation:not(.cancelled) { background: var(--surface-2); color: var(--ink); border-color: var(--line-strong); }
+.consultation .t, .consultation .ev-time strong { color: var(--muted); }
+.consultation-label { display: block; font-size: .875rem; font-weight: 500; color: var(--muted); line-height: 1.4; text-decoration: none; }
+.consultation-note { padding: .75rem 1rem; border: 1px solid var(--line); border-radius: var(--radius-control); background: var(--surface-2); }
+.ev-band.consultation { --band-ink: var(--ink); background: var(--surface-2); color: var(--ink); }
+.event-actions summary { background: var(--surface-2); color: var(--ink); }
+.ev-band .event-actions summary { background: rgba(255,255,255,.16); color: inherit; }
+.event-actions-list { z-index: 30; }
+.visibility-settings { margin: 1rem 0; }
+.visibility-settings .fold-summary { white-space: normal; }
+.visibility-audiences { display: grid; gap: 1rem; }
+.visibility-audiences fieldset { min-width: 0; padding: 0; margin: 0; border: 0; }
+.visibility-audiences legend { font-weight: 600; margin-bottom: .5rem; }
+.quick-word { display: none; }
+.evrow { container-type: inline-size; }
+@container (min-width: 620px) { .quick button { width: auto; padding: 0 .75rem; display: inline-flex; gap: .375rem; align-items: center; } .quick-word { display: inline; } }
+@media (min-width: 600px) { .visibility-audiences { grid-template-columns: repeat(2,minmax(0,1fr)); } }
+.list-table { table-layout: fixed; min-width: 42rem; }
+.list-table th { white-space: normal; overflow-wrap: anywhere; }
+.list-table th:nth-child(1) { width: 17%; }
+.list-table th:nth-child(2) { width: 16%; }
+.list-table th:nth-child(3) { width: 27%; }
+.list-table th:nth-child(4) { width: 18%; }
+.list-table th:nth-child(5) { width: 13%; }
+.list-table th:nth-child(6) { width: 9%; }
+.list-table.player th:nth-child(1) { width: 16%; }
+.list-table.player th:nth-child(2) { width: 15%; }
+.list-table.player th:nth-child(3) { width: 25%; }
+.list-table.player th:nth-child(4) { width: 15%; }
+.list-table.player th:nth-child(5) { width: 11%; }
+.list-table.player th:nth-child(6) { width: 18%; }
+.list-table td { font-size: .9375rem; overflow-wrap: anywhere; white-space: normal; }
+.list-table td:first-child { position: static; background: inherit; }
+.list-table td:last-child { min-width: 0; }
+.list-table .event-actions { margin: 0; }
+.list-table .cat { white-space: normal; }
+.list-table .tag { display: block; }
+.event-title-link { display: inline-flex; align-items: center; min-height: 44px; max-width: 100%; white-space: normal; color: inherit; font-weight: 500; text-underline-offset: .2em; }
+.mev { font-size: .8125rem; min-height: 44px; white-space: normal; }
+.mev > .t { display: block; }
+.mev-title { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; line-height: 1.4; }
+.mev .consultation-label { white-space: normal; overflow-wrap: anywhere; font-size: .8125rem; }
+/* Larger text can wrap without forcing narrow cards wider. */
+.ev-band-top { flex-wrap: wrap; }
+.ev-band-top p { overflow-wrap: anywhere; max-width: 100%; }
+.ev-sub { flex-basis: 10rem; }
+.answers { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.answer { min-width: 0; }
+.next, .ev-aside > .card { container-type: inline-size; }
+@container (max-width: 17rem) { .answers { grid-template-columns: 1fr; } }

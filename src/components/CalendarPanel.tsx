@@ -1,3 +1,4 @@
+import EventActions from './EventActions'
 import TableScroll from './TableScroll'
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
@@ -26,6 +27,8 @@ export default function CalendarPanel(props: {
   events: EventRow[]
   answers: Map<string, Answer>
   isStaff: boolean
+  isObserver: (event: EventRow) => boolean
+  onChanged: () => void
   clubName: string
   groupName: (e: EventRow) => string
   weekShift: number
@@ -33,7 +36,7 @@ export default function CalendarPanel(props: {
   onWeekShift: (shift: number) => void
   renderWeek: (query: string, keep: (e: EventRow) => boolean) => ReactNode
 }) {
-  const { events, answers, isStaff, clubName, groupName, weekShift, onWeekShift } = props
+  const { events, answers, isStaff, isObserver, onChanged, clubName, groupName, weekShift, onWeekShift } = props
   const today = dayKey(new Date().toISOString())
   const currentSeason = seasonOf(new Date().toISOString())
   const seasons = Array.from({ length: Math.max(1, currentSeason - FIRST_SEASON + 1) }, (_, i) => currentSeason - i)
@@ -227,8 +230,8 @@ export default function CalendarPanel(props: {
                       {isStaff && inMonth && <Link className="mday-add" to={`/events/new?date=${d}`} aria-label={t('cal.newOn', { day: formatDay(`${d}T12:00:00Z`) })}>+</Link>}
                     </div>
                     {list.slice(0, MAX_PER_DAY).map((e) => (
-                      <Link key={e.id} to={`/events/${e.id}`} className={`mev ${catOf(e)}${e.cancelled_at ? ' cancelled' : ''}`} title={`${formatTime(e.starts_at)} ${title(e)}`}>
-                        <span className="t">{formatTime(e.starts_at)}</span> <span>{title(e)}</span>
+                      <Link key={e.id} to={`/events/${e.id}`} className={`mev ${catOf(e)}${e.cancelled_at ? ' cancelled' : ''}${isObserver(e) ? ' consultation' : ''}`} title={`${formatTime(e.starts_at)} ${title(e)}${isObserver(e) ? ' · ' + t('events.readOnly') : ''}`}>
+                        <span className="t">{formatTime(e.starts_at)}</span><span className="mev-title">{title(e)}</span>{(e.groups_pending || isObserver(e)) && <span className="consultation-label">{e.groups_pending ? t('events.unassigned') : t('events.readOnly')}</span>}
                       </Link>
                     ))}
                     {list.length > MAX_PER_DAY && <button className="link mday-more" onClick={() => weekOfDate(d)}>{t('cal.more', { n: String(list.length - MAX_PER_DAY) })}</button>}
@@ -247,7 +250,7 @@ export default function CalendarPanel(props: {
               {scopeButton('all', t('cal.scopeAll'))}
             </div>
             <TableScroll variant="table-wrap">
-              <table className="list-table">
+              <table className={isStaff ? 'list-table' : 'list-table player'}>
                 <thead>
                   <tr>
                     <SortHeader label={t('cal.colDate')} active={sort.key === 'date'} dir={sort.dir} onSort={() => { sort.toggle('date'); setPage(1) }} />
@@ -255,18 +258,18 @@ export default function CalendarPanel(props: {
                     <SortHeader label={t('cal.colEvent')} active={sort.key === 'event'} dir={sort.dir} onSort={() => { sort.toggle('event'); setPage(1) }} />
                     <SortHeader label={t('cal.colPlace')} active={sort.key === 'place'} dir={sort.dir} onSort={() => { sort.toggle('place'); setPage(1) }} />
                     <th scope="col">{t('cal.colGroups')}</th>
-                    <SortHeader label={t('cal.colAnswer')} active={sort.key === 'answer'} dir={sort.dir} onSort={() => { sort.toggle('answer'); setPage(1) }} />
+                    {isStaff ? <th scope="col">{t('event.actionsColumn')}</th> : <SortHeader label={t('cal.colAnswer')} active={sort.key === 'answer'} dir={sort.dir} onSort={() => { sort.toggle('answer'); setPage(1) }} />}
                   </tr>
                 </thead>
                 <tbody>
                   {pages.map((e) => (
-                    <tr key={e.id} className={`${new Date(e.ends_at).getTime() < Date.now() ? 'past' : ''}${e.cancelled_at ? ' cancelled' : ''}`}>
+                    <tr key={e.id} className={`${new Date(e.ends_at).getTime() < Date.now() ? 'past' : ''}${e.cancelled_at ? ' cancelled' : ''}${isObserver(e) ? ' consultation' : ''}`}>
                       <td><Link to={`/events/${e.id}`}>{formatShortDay(e.starts_at)}</Link> <span className="hint">{formatTime(e.starts_at)}</span></td>
                       <td><span className={`cat ${catOf(e)}`}><span className="dot" aria-hidden="true" />{typeName(catOf(e))}</span></td>
-                      <td>{title(e)}{e.cancelled_at && <span className="tag"> {t('events.cancelled')}</span>}</td>
+                      <td><Link className="event-title-link" to={`/events/${e.id}`}>{title(e)}</Link>{e.cancelled_at && <span className="tag"> {t('events.cancelled')}</span>}</td>
                       <td>{e.venue}</td>
                       <td>{groupName(e)}</td>
-                      <td>{answerText(e)}</td>
+                      <td>{isStaff ? <EventActions event={e} onChanged={onChanged} /> : isObserver(e) ? <span className="consultation-label">{t('events.readOnly')}</span> : answerText(e)}</td>
                     </tr>
                   ))}
                   {pages.length === 0 && <tr><td colSpan={6} className="hint">{t('cal.none')}</td></tr>}

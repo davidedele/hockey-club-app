@@ -23,7 +23,7 @@ const ARCHIVE_DAYS = 15
 const REFRESH_MS = 20000
 
 // The discussion of one event: the messages, who has read them, and a box to write.
-export default function EventThread({ eventId }: { eventId: string }) {
+export default function EventThread({ eventId, readOnly = false }: { eventId: string; readOnly?: boolean }) {
   const { profile, isStaff } = useSession()
   const [messages, setMessages] = useState<Message[]>([])
   const [seen, setSeen] = useState<Seen[]>([])
@@ -46,12 +46,12 @@ export default function EventThread({ eventId }: { eventId: string }) {
     setLoaded(true)
     // Opening the thread reads it, and so does a new message that arrives while it is open.
     const latest = rows.length ? rows[rows.length - 1].created_at : ''
-    if (marked.current !== latest) {
+    if (!readOnly && marked.current !== latest) {
       marked.current = latest
       await supabase.rpc('mark_event_seen', { p_event_id: eventId })
       window.dispatchEvent(new Event('discussion-changed'))
     }
-  }, [eventId])
+  }, [eventId, readOnly])
 
   useEffect(() => {
     void load()
@@ -96,7 +96,7 @@ export default function EventThread({ eventId }: { eventId: string }) {
     <section className="card thread" aria-label={t('event.tabDiscussion')}>
       <h2>{t('event.tabDiscussion')}</h2>
       {archived && <p className="hint">{t('thread.archived', { days: String(ARCHIVE_DAYS) })}</p>}
-      {loaded && messages.length === 0 && <p className="hint">{t('thread.empty')}</p>}
+      {loaded && messages.length === 0 && <p className="hint">{t(readOnly ? 'thread.emptyReadOnly' : 'thread.empty')}</p>}
       <ol className="messages">
         {messages.map((m) => {
           const mine = m.user_id === profile?.id
@@ -113,7 +113,7 @@ export default function EventThread({ eventId }: { eventId: string }) {
                   <summary>{readers.length > 0 ? t('thread.readBy', { n: String(readers.length) }) : t('thread.nobody')}</summary>
                   {readers.length > 0 && <p className="hint">{readers.map((r) => name(r.profiles)).join(', ')}</p>}
                 </details>
-                {(mine || isStaff) && (
+                {!readOnly && (mine || isStaff) && (
                   removing === m.id ? (
                     <span className="actions">
                       <button className="danger small" disabled={busy} onClick={() => void remove(m.id)}>{t('thread.deleteConfirm')}</button>
@@ -130,14 +130,14 @@ export default function EventThread({ eventId }: { eventId: string }) {
       </ol>
       <div ref={end} />
       {error && <p className="error" role="alert">{error}</p>}
-      <form {...checked(send)} className="compose">
+      {!readOnly && <form {...checked(send)} className="compose">
         <label htmlFor="thread-text">{t('thread.label')}</label>
         <textarea id="thread-text" rows={3} maxLength={1000} value={text} onChange={(e) => setText(e.target.value)} />
         <div className="row">
           <span className="hint">{text.length}/1000</span>
           <button type="submit" disabled={busy || text.trim() === ''}>{t('thread.send')}</button>
         </div>
-      </form>
+      </form>}
     </section>
   )
 }

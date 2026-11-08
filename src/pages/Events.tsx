@@ -5,6 +5,8 @@ import { errorText, t } from '../i18n'
 import AnnouncementsLink from '../components/AnnouncementsLink'
 import CalendarPanel from '../components/CalendarPanel'
 import NextPanel from '../components/NextPanel'
+import EventActions from '../components/EventActions'
+import { canAnswerEvent, detailAllowed, invitedTo } from '../lib/eventaccess'
 import Crest from '../components/Crest'
 import { useClub } from '../lib/club'
 import { refreshLeague } from '../lib/league'
@@ -107,13 +109,13 @@ export default function Events() {
     return { came, total: mine.length }
   }, [events, myGroups, records, answers])
 
-  const canAnswer = (e: EventRow) => asPlayer && e.cancelled_at === null && e.event_groups.some((x) => myGroups.includes(x.group_id))
+  const canAnswer = (e: EventRow) => asPlayer && canAnswerEvent(e, myGroups, records.get(e.id) === 'not_called_up')
   // A game uses the colours of its first group that has its own; otherwise the club colours.
   const teamColours = (e: EventRow): CSSProperties | undefined => {
     const g = e.event_groups.map((x) => groups.find((y) => y.id === x.group_id)).find((y) => y?.game_dark && y?.game_light)
     return g ? ({ '--team-dark': g.game_dark, '--team-light': g.game_light, '--band-ink': readableInk(g.game_dark) } as CSSProperties) : undefined
   }
-  const groupsOf = (e: EventRow) => e.event_groups.map((x) => groupName.get(x.group_id)).filter(Boolean).join(', ')
+  const groupsOf = (e: EventRow) => e.event_groups.map((x) => groupName.get(x.group_id)).filter(Boolean).join(', ') || t('events.unassigned')
 
   async function answer(e: EventRow, value: Answer) {
     setBusy(e.id)
@@ -134,7 +136,7 @@ export default function Events() {
   const live = upcoming.filter((e) => !e.cancelled_at)
   // The phone home shows one week at a time: this week by default, other weeks with the arrows.
   const inWeek = (e: EventRow) => { const k = dayKey(e.starts_at); return k >= week[0].date && k <= week[6].date }
-  const next = view === 'upcoming' && weekShift === 0 ? live[0] : undefined
+  const next = view === 'upcoming' && weekShift === 0 ? live.find((e) => isStaff || canAnswer(e)) : undefined
   // Every event of this week still waiting for the person's answer, from the one helper that the banner,
   // the bell and the Home tile use too (decision 92). The later ones are kept apart under "Più avanti".
   // The heading counts all of them whatever group is chosen in the selector, so it matches the bell.
@@ -158,25 +160,26 @@ export default function Events() {
     const title = e.type === 'game' && e.opponent ? t('events.vs', { club: club.name || t('app.name'), opponent: e.opponent }) : e.title
     const meta = [e.venue, e.meetup_at ? t('events.meetup', { time: formatTime(e.meetup_at) }) : null].filter(Boolean).join(', ')
     return (
-      <li key={e.id} className={`${e.type === 'game' ? 'evrow game' : 'evrow'}${e.cancelled_at ? ' cancelled' : ''}`}>
+      <li key={e.id} className={`${e.type === 'game' ? 'evrow game' : 'evrow'}${e.cancelled_at ? ' cancelled' : ''}${asPlayer && !invitedTo(e, myGroups) ? ' consultation' : ''}`}>
         <Link className="evlink" to={`/events/${e.id}`}>
           <div>
             <div className="d">{formatShortDay(e.starts_at)}</div>
             <div className="t">{formatTime(e.starts_at)}</div>
           </div>
           <div>
-            <div className="ti">{title}</div>
+            <div className="ti">{title}</div>{(e.groups_pending || (asPlayer && !invitedTo(e, myGroups))) && <span className="consultation-label">{e.groups_pending ? t('events.unassigned') : t('events.readOnly')}</span>}
             <div className="m">{e.cancelled_at && <span className="tag">{t('events.cancelled')} </span>}{meta || groupsOf(e)}{savedFor === e.id && <span className="tag todo" role="status"> · {t('events.savedShort')}</span>}</div>
           </div>
         </Link>
         {!over && canAnswer(e) ? (
           <div className="quick" role="group" aria-label={t('events.answerFor', { day: formatDay(e.starts_at) })}>
-            <button className={mine === 'present' ? 'on present' : ''} aria-pressed={mine === 'present'} aria-label={t('answer.present')} disabled={busy === e.id} onClick={() => void answer(e, 'present')}><Tick /></button>
-            <button className={mine === 'absent' ? 'on absent' : ''} aria-pressed={mine === 'absent'} aria-label={t('answer.absent')} disabled={busy === e.id} onClick={() => void answer(e, 'absent')}><Cross /></button>
+            <button className={mine === 'present' ? 'on present' : ''} aria-pressed={mine === 'present'} title={t('answer.present')} aria-label={t('answer.present')} disabled={busy === e.id} onClick={() => void answer(e, 'present')}><Tick /><span className="quick-word">{t('answer.present')}</span></button>
+            <button className={mine === 'absent' ? 'on absent' : ''} aria-pressed={mine === 'absent'} title={t('answer.absent')} aria-label={t('answer.absent')} disabled={busy === e.id} onClick={() => void answer(e, 'absent')}><Cross /><span className="quick-word">{t('answer.absent')}</span></button>
           </div>
         ) : asPlayer && over && mine ? (
           <span className="state">{t(mine === 'present' ? 'answer.present' : 'answer.absent')}</span>
         ) : null}
+        {isStaff && <EventActions event={e} onChanged={() => void load()} />}
       </li>
     )
   }
@@ -186,16 +189,16 @@ export default function Events() {
     const over = new Date(e.ends_at).getTime() < now
     const title = e.type === 'game' && e.opponent ? t('events.vs', { club: club.name || t('app.name'), opponent: e.opponent }) : e.title
     return (
-      <article key={e.id} className={`${e.type === 'game' ? 'cal-ev game' : 'cal-ev'}${e.cancelled_at ? ' cancelled' : ''}`} style={e.type === 'game' ? teamColours(e) : undefined}>
+      <article key={e.id} className={`${e.type === 'game' ? 'cal-ev game' : 'cal-ev'}${e.cancelled_at ? ' cancelled' : ''}${asPlayer && !invitedTo(e, myGroups) ? ' consultation' : ''}`} style={e.type === 'game' ? teamColours(e) : undefined}>
         <Link to={`/events/${e.id}`}>
           <span className="t">{formatTime(e.starts_at)}</span>
-          <span className="ti">{title}</span>
+          <span className="ti">{title}</span>{(e.groups_pending || (asPlayer && !invitedTo(e, myGroups))) && <span className="consultation-label">{e.groups_pending ? t('events.unassigned') : t('events.readOnly')}</span>}
           {e.cancelled_at ? <span className="m">{t('events.cancelled')}</span> : e.venue && <span className="m">{e.venue}</span>}
         </Link>
         {!over && canAnswer(e) ? (
           <div className="quick" role="group" aria-label={t('events.answerFor', { day: formatDay(e.starts_at) })}>
-            <button className={mine === 'present' ? 'on present' : ''} aria-pressed={mine === 'present'} aria-label={t('answer.present')} disabled={busy === e.id} onClick={() => void answer(e, 'present')}><Tick /></button>
-            <button className={mine === 'absent' ? 'on absent' : ''} aria-pressed={mine === 'absent'} aria-label={t('answer.absent')} disabled={busy === e.id} onClick={() => void answer(e, 'absent')}><Cross /></button>
+            <button className={mine === 'present' ? 'on present' : ''} aria-pressed={mine === 'present'} title={t('answer.present')} aria-label={t('answer.present')} disabled={busy === e.id} onClick={() => void answer(e, 'present')}><Tick /><span className="quick-word">{t('answer.present')}</span></button>
+            <button className={mine === 'absent' ? 'on absent' : ''} aria-pressed={mine === 'absent'} title={t('answer.absent')} aria-label={t('answer.absent')} disabled={busy === e.id} onClick={() => void answer(e, 'absent')}><Cross /><span className="quick-word">{t('answer.absent')}</span></button>
           </div>
         ) : asPlayer && mine ? (
           <span className="state">{t(mine === 'present' ? 'answer.present' : 'answer.absent')}</span>
@@ -228,7 +231,7 @@ export default function Events() {
         <dl className="cb-stats">
           <div><dt>{t('dash.members')}</dt><dd>{memberCount ?? ''}</dd></div>
           <div><dt>{t('dash.thisWeek')}</dt><dd>{loaded ? weekCount : '\u2013'}</dd></div>
-          <div><dt>{t('dash.myAttendance')}</dt><dd>{!loaded ? '\u2013' : season.total ? t('dash.ofTotal', { n: String(season.came), total: String(season.total) }) : t('common.none')}</dd></div>
+          <>{asPlayer && <div><dt>{t('dash.myAttendance')}</dt><dd>{!loaded ? '\u2013' : season.total ? t('dash.ofTotal', { n: String(season.came), total: String(season.total) }) : t('common.none')}</dd></div>}</>
         </dl>
         {isStaff && <Link className="button small light" to="/events/new">{t('events.new')}</Link>}
       </section>
@@ -286,7 +289,7 @@ export default function Events() {
       {loaded && view === 'past' && past.length === 0 && <p className="hint">{t('events.emptyPast')}</p>}
 
       <div className="evgrid dash">
-        {next && <NextPanel club={club.name || t('app.name')} colours={teamColours(next)} event={next} groups={groupsOf(next)} mine={answers.get(next.id) ?? null} count={counts.get(next.id)} canAnswer={canAnswer(next)} busy={busy === next.id} onAnswer={(v) => void answer(next, v)} />}
+        {next && <NextPanel club={club.name || t('app.name')} colours={teamColours(next)} event={next} groups={groupsOf(next)} mine={answers.get(next.id) ?? null} count={detailAllowed(next, 'presence', isStaff, invitedTo(next, myGroups)) ? counts.get(next.id) : undefined} canAnswer={canAnswer(next)} busy={busy === next.id} onAnswer={(v) => void answer(next, v)} />}
         {view === 'upcoming' && asPlayer && (
           <section className="todo desk-only" aria-label={t('dash.todo')}>
             <h2>{t('dash.todo')}{pending.length > 0 && <span className="count">{pending.length}</span>}</h2>
@@ -321,6 +324,8 @@ export default function Events() {
           events={events}
           answers={answers}
           isStaff={isStaff}
+          isObserver={(e) => asPlayer && !invitedTo(e, myGroups)}
+          onChanged={() => void load()}
           clubName={club.name || t('app.name')}
           groupName={groupsOf}
           weekShift={weekShift}

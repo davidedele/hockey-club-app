@@ -22,10 +22,11 @@ const count = (v: string) => (v.trim() === '' ? null : Number(v))
 
 // The game part of an event page: the numbers of who played, the vote after the game, and its results.
 // reloadKey changes when staff change the attendance, which decides who played.
-export default function EventGame({ eventId, myId, isStaff, started, over, reloadKey }: {
+export default function EventGame({ eventId, myId, isStaff, canParticipate = !isStaff, started, over, reloadKey }: {
   eventId: string
   myId: string
   isStaff: boolean
+  canParticipate?: boolean
   started: boolean
   over: boolean
   reloadKey: string
@@ -60,7 +61,7 @@ export default function EventGame({ eventId, myId, isStaff, started, over, reloa
   const me = results.find((r) => r.user_id === myId)
   const iPlayed = Boolean(me?.played)
   const teammates = results.filter((r) => r.played && r.user_id !== myId)
-  const canVote = iPlayed && over && myVote === null
+  const canVote = canParticipate && iPlayed && over && myVote === null
   const visible = results.some((r) => r.rating_count !== null)
   const hasNumbers = played.some((r) => r.goals !== null || r.shots_against !== null)
   const hasGoalieNumbers = played.some((r) => r.shots_against !== null)

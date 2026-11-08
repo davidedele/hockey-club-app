@@ -1,4 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
+import { useLocation } from 'react-router-dom'
 import { useSession } from './session'
 import { supabase } from './supabase'
 import type { Group } from './types'
@@ -42,6 +43,8 @@ export function useScopeGroups(): number[] | null {
 // statistics pages follow it. It is only a view: nobody sees more because of it.
 export function GroupFilterProvider({ children }: { children: ReactNode }) {
   const { profile, view } = useSession()
+  const { pathname } = useLocation()
+  const calendar = pathname === '/events' || pathname.startsWith('/events/')
   const [all, setAll] = useState<Group[]>([])
   const [own, setOwn] = useState<number[] | null>(null)
   const [stored, setStored] = useState<number | null>(saved)
@@ -60,7 +63,7 @@ export function GroupFilterProvider({ children }: { children: ReactNode }) {
     })
   }, [profile])
 
-  const scope = useMemo(() => (view === 'player' ? own ?? [] : null), [view, own])
+  const scope = useMemo(() => (view === 'player' && !calendar ? own ?? [] : null), [view, own, calendar])
   const groups = useMemo(() => (scope ? all.filter((g) => scope.includes(g.id)) : all), [all, scope])
   // A saved choice that is not one of the person's groups is ignored in the Giocatore view and comes back in a staff view.
   const groupId = stored !== null && groups.some((g) => g.id === stored) ? stored : null
