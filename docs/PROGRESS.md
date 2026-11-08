@@ -5,7 +5,7 @@ Keep entries short and put the newest first.
 
 ## Current state
 
-8 November 2026: the event management work is on `codex/event-management`, from current main `6e204bd`. Migration 0061 adds club calendar consultation, optional detail visibility, trainings with groups assigned later and atomic series management. The matching screens, Italian and English texts, checks and review pictures are ready for review. Nothing was applied to a hosted database and no hosted events were changed or deleted.
+8 November 2026: the event management work is on `codex/event-management`, from current main `6e204bd`. Migration 0061 adds club calendar consultation, optional detail visibility, trainings with groups assigned later and atomic series management. The matching screens, Italian and English texts, checks and review pictures are in draft PR 50: https://github.com/davidedele/hockey-club-app/pull/50. Nothing was applied to a hosted database and no hosted events were changed or deleted.
 
 Next: apply `supabase/apply/apply_0061_event_management.sql` to the separate test project after the earlier migrations through 0060, then deploy this version there. Follow `docs/EVENT_MANAGEMENT_REVIEW.md` with an ordinary player account and a staff account before rollout. The hosted project's migration history was not inspected or changed in this work. Review cleanup of the older Tuesday 21:30 series separately; 21:15 is the intended schedule. Installation and notification setup remain deferred.
 

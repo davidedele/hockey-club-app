@@ -6,13 +6,13 @@ Status words: Open, In progress, Done (PR number), Decided (waiting for Davide),
 
 ## Event management review (8 November 2026)
 
-1. Staff need to edit, cancel and delete from event rows, including weekly series. Status: Done on `codex/event-management`. A shared actions menu offers a scoped confirmation and stays visible at table edges.
-2. Hide "La tua risposta" and "Le mie presenze" in Board and Coach views. Status: Done on the branch.
-3. All groups can consult all events in Player view, with interaction limited to invited groups. Consultation uses existing neutral colours and an explicit label, distinct from cancellation. The next panel must show an eligible event. Status: Done on the branch with database access tests.
-4. Configure the details visible to invited and other groups during creation and editing, also for a series. Status: Done as a folded panel; attendance lists, lineups, plans, discussions and game statistics have separate choices. Main schedule information is always visible. Staff retain full access.
-5. Create trainings without assigning teams yet, then assign them to one or several occurrences later. Status: Done as "Assegna i gruppi in seguito". Unassigned events are consultable and create no attendance requests.
+1. Staff need to edit, cancel and delete from event rows, including weekly series. Status: Done (PR 50). A shared actions menu offers a scoped confirmation and stays visible at table edges.
+2. Hide "La tua risposta" and "Le mie presenze" in Board and Coach views. Status: Done (PR 50).
+3. All groups can consult all events in Player view, with interaction limited to invited groups. Consultation uses existing neutral colours and an explicit label, distinct from cancellation. The next panel must show an eligible event. Status: Done (PR 50), with database access tests.
+4. Configure the details visible to invited and other groups during creation and editing, also for a series. Status: Done (PR 50), as a folded panel; attendance lists, lineups, plans, discussions and game statistics have separate choices. Main schedule information is always visible. Staff retain full access.
+5. Create trainings without assigning teams yet, then assign them to one or several occurrences later. Status: Done (PR 50), as "Assegna i gruppi in seguito". Unassigned events are consultable and create no attendance requests.
 6. The 21:15 Tuesday series is the intended schedule; the 21:30 series is the older schedule (Davide). Status: Recorded. No hosted records changed or deleted in this work.
-7. Keep compact attendance buttons where words would not fit, make titles clickable in the computer list, and review secondary text and longer titles at phone and computer sizes, including larger text. Status: Done; phone, computer, larger text, dark mode and WebKit checks pass. No extra answer confirmation panel.
+7. Keep compact attendance buttons where words would not fit, make titles clickable in the computer list, and review secondary text and longer titles at phone and computer sizes, including larger text. Status: Done (PR 50); phone, computer, larger text, dark mode and WebKit checks pass. No extra answer confirmation panel.
 8. Installation and notification setup guidance. Status: Deferred by Davide. No change to notification configuration.
 
 ## Fix brief 3 (1 November 2026, Davide's desktop test). Branch `claude/adoring-noether-k0hbs6`
