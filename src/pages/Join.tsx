@@ -1,3 +1,4 @@
+import PasswordField from '../components/PasswordField'
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { errorText, t } from '../i18n'
@@ -150,11 +151,7 @@ export default function Join() {
           {t('common.email')}
           <input type="email" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
         </label>
-        <label>
-          {t('common.password')}
-          <input type="password" autoComplete="new-password" minLength={8} required value={password} onChange={(e) => setPassword(e.target.value)} />
-          <span className="hint">{t('join.passwordHint')}</span>
-        </label>
+        <PasswordField autoComplete="new-password" minLength={8} required value={password} onChange={(e) => setPassword(e.target.value)} hint={t('join.passwordHint')} />
         {error && <p className="error">{error}</p>}
         <button type="submit" disabled={busy}>{t('join.submit')}</button>
       </form>

@@ -39,12 +39,18 @@ export interface Invite {
   use_count: number
 }
 
+export type EventDetailKey = 'presence' | 'lineup' | 'plan' | 'discussion' | 'game'
+export type EventScope = 'one' | 'following' | 'future'
+
 export type EventType = 'training' | 'game'
 export type Answer = 'present' | 'absent'
 export type Status = 'on_time' | 'late' | 'excused' | 'unexcused' | 'injured' | 'not_called_up'
 
 export interface EventRow {
   id: string
+  groups_pending?: boolean
+  participant_details?: EventDetailKey[]
+  observer_details?: EventDetailKey[]
   series_id: string | null
   type: EventType
   title: string

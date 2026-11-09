@@ -66,7 +66,8 @@ export function summary(e: FeedEvent): string {
 }
 
 export function location(e: FeedEvent): string {
-  const parts = [e.rink, e.address, e.venue].filter((p): p is string => !!p && p.trim() !== '')
+  const venue = e.type === 'training' && e.address?.trim() ? null : e.venue
+  const parts = [e.rink, e.address, venue].filter((p): p is string => !!p && p.trim() !== '')
   return [...new Set(parts)].join(', ')
 }
 

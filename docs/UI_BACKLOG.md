@@ -4,6 +4,43 @@ Every point Davide raised about the interface, with its status. Newest review fi
 
 Status words: Open, In progress, Done (PR number), Decided (waiting for Davide), Won't do (with the reason).
 
+## Complete interaction review (8 and 9 November 2026)
+
+1. Davide requested a complete control audit across the app. Status: Done (PR 50). The route and control inventory, exact coverage, fixes and limits are recorded in `docs/INTERACTION_AUDIT.md`.
+2. Respect all declared field validation rules and show inline explanations. Status: Done (PR 50), including patterns, number steps and other type errors.
+3. Distinguish failed reads from empty lists and protect editors from unloaded data. Status: Done (PR 50), with retry actions on the main lists and critical editors. Club settings wait for the stored configuration.
+4. Prevent a failed phone read from clearing the saved number during a profile save. Status: Done (PR 50). Saving waits for contact data and confirms returned rows.
+5. Keep event drafts when the global group filter changes, and prevent stale record controls during navigation. Status: Done (PR 50).
+6. Use the shared keyboard safe confirmation for group and rink deletion. Status: Done (PR 50). Cancel has initial focus, Escape closes it and focus returns.
+7. Refresh changed group metadata in the global selector and invalidate rink cache after add and delete. Status: Done (PR 50).
+8. Make staff contact details tappable in the phone member cards. Status: Open suggestion, not changed during the audit.
+9. Remove the duplicate group choice from club statistics and clarify multiple membership aggregates. Status: Open suggestion, awaiting a product decision.
+
+## Local review follow up (8 November 2026)
+
+1. Reduce the empty space in the next event panel. Status: Done (PR 50). Date and time stay together; location and Maps form one block, adapting to the card's width.
+2. In the player calendar offer only the person's own individual groups, I miei gruppi when there is more than one, and Tutti i gruppi. Status: Done (PR 50). Staff choices and the existing own group limits of other sections stay intact.
+3. A training with a selected rink and a saved rink address cannot have a second event address. Status: Done (PR 50), including database enforcement in migration 0062. Display, Maps and the offline copy use the same location.
+4. Remove the red now divider on computer screens and remove Adesso from the phone divider. Status: Done (PR 50).
+5. Rename Solo consultazione to Non convocato. Trainings with no groups say Gruppo non assegnato and remain visible under individual group and I miei gruppi filters. Status: Done (PR 50), including older unassigned trainings without the pending flag.
+6. Add a password visibility eye to sign in and registration. Status: Done (PR 50), also on password reset. Toggling retains the value and password validation.
+7. Look for similar usability problems and report them. Status: Done (PR 50). Related fixes and checks cover saved group choices, detail navigation, map destinations, offline location, larger text and phone Safari.
+
+8. A match and training can overlap for the same group without a warning. Status: Done (PR 50). Davide approved a discreet warning on 8 November. Staff Events shows a collapsed notice with links to affected future events sharing a group. No popup or blocking; staff manage changes themselves. Cancelled, historical, unassigned and different group events are excluded.
+
+9. The desktop calendar returns to Settimana after a full refresh, even when Elenco or Mese was chosen. Status: Done (PR 50). Davide approved remembering the calendar layout on 8 November. Week, Month or List survives refresh and navigation in this browser.
+
+## Event management review (8 November 2026)
+
+1. Staff need to edit, cancel and delete from event rows, including weekly series. Status: Done (PR 50). A shared actions menu offers a scoped confirmation and stays visible at table edges.
+2. Hide "La tua risposta" and "Le mie presenze" in Board and Coach views. Status: Done (PR 50).
+3. All groups can consult all events in Player view, with interaction limited to invited groups. Consultation uses existing neutral colours and an explicit label, distinct from cancellation. The next panel must show an eligible event. Status: Done (PR 50), with database access tests.
+4. Configure the details visible to invited and other groups during creation and editing, also for a series. Status: Done (PR 50), as a folded panel; attendance lists, lineups, plans, discussions and game statistics have separate choices. Main schedule information is always visible. Staff retain full access.
+5. Create trainings without assigning teams yet, then assign them to one or several occurrences later. Status: Done (PR 50), as "Assegna i gruppi in seguito". Unassigned events are consultable and create no attendance requests.
+6. The 21:15 Tuesday series is the intended schedule; the 21:30 series is the older schedule (Davide). Status: Recorded. No hosted records changed or deleted in this work.
+7. Keep compact attendance buttons where words would not fit, make titles clickable in the computer list, and review secondary text and longer titles at phone and computer sizes, including larger text. Status: Done (PR 50); phone, computer, larger text, dark mode and WebKit checks pass. No extra answer confirmation panel.
+8. Installation and notification setup guidance. Status: Deferred by Davide. No change to notification configuration.
+
 ## Fix brief 3 (1 November 2026, Davide's desktop test). Branch `claude/adoring-noether-k0hbs6`
 
 1. D2 In Dati personali on a computer the status "Certificato da verificare" overlapped the label "Documenti". Status: Done: the status sits under the label in every row of a section menu; `scripts/ui-check.mjs` now fails on overlapping or spilling text in a menu row or table row and tries every certificate and consent status at 320, 375, 768, 1024 and 1280 pixels (before: 33 findings on the old layout, after: none). UI rule 1.10.

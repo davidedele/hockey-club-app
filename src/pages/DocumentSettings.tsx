@@ -1,3 +1,5 @@
+import LoadError from '../components/LoadError'
+import { PageSkeleton } from '../components/Skeleton'
 import { useEffect, useState, type FormEvent } from 'react'
 import { Navigate } from 'react-router-dom'
 import PageHeader from '../components/PageHeader'
@@ -25,6 +27,7 @@ export default function DocumentSettings() {
   }, [club.certificateMonths, club.certificateReview, club.consentMode])
 
   if (!loading && !isBoard) return <Navigate to="/settings" replace />
+  if (!club.ready) return club.loadError ? <LoadError title={t('settings.documents')} back={{to:'/settings',label:t('settings.title')}} message={club.loadError} onRetry={() => void club.reload()} /> : <PageSkeleton />
 
   async function save(e: FormEvent) {
     e.preventDefault()

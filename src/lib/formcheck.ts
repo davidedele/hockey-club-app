@@ -15,6 +15,9 @@ export type FieldFacts = {
   checked?: boolean
   minLength: number
   maxLength: number
+  patternMismatch?: boolean
+  stepMismatch?: boolean
+  badInput?: boolean
   typeMismatch: boolean
   rangeUnderflow: boolean
   rangeOverflow: boolean
@@ -22,6 +25,7 @@ export type FieldFacts = {
 
 // What is wrong with a field, as a message key and values, or null when it is fine.
 export function problemOf(f: FieldFacts): { key: MessageKey; values?: Record<string, string> } | null {
+  if (f.badInput) return { key: 'check.badFormat' }
   const empty = f.type === 'file' ? !f.files : f.type === 'checkbox' || f.type === 'radio' ? !f.checked : f.value.trim() === ''
   if (f.required && empty) {
     if (f.type === 'checkbox') return { key: 'check.requiredCheck' }
@@ -36,6 +40,7 @@ export function problemOf(f: FieldFacts): { key: MessageKey; values?: Record<str
   }
   if (f.value === '' || f.type === 'file') return null
   if (f.type === 'email' && f.typeMismatch) return { key: 'check.badEmail' }
+  if (f.patternMismatch || f.stepMismatch || f.typeMismatch) return { key: 'check.badFormat' }
   if (f.minLength > 0 && f.value.length < f.minLength) {
     return { key: f.type === 'password' ? 'check.passwordShort' : 'check.tooShort', values: { n: String(f.minLength) } }
   }
@@ -47,7 +52,7 @@ export function problemOf(f: FieldFacts): { key: MessageKey; values?: Record<str
 function factsOf(el: HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement): FieldFacts {
   const input = el as HTMLInputElement
   return {
-    type: el.tagName === 'INPUT' ? input.type : '',
+    type: input.dataset?.passwordField ? 'password' : el.tagName === 'INPUT' ? input.type : '',
     tag: el.tagName.toLowerCase(),
     required: el.required,
     value: el.value,
@@ -56,6 +61,9 @@ function factsOf(el: HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement)
     minLength: 'minLength' in el ? (el as HTMLInputElement).minLength : -1,
     maxLength: 'maxLength' in el ? (el as HTMLInputElement).maxLength : -1,
     typeMismatch: el.validity.typeMismatch,
+    patternMismatch: el.validity.patternMismatch,
+    stepMismatch: el.validity.stepMismatch,
+    badInput: el.validity.badInput,
     rangeUnderflow: el.validity.rangeUnderflow,
     rangeOverflow: el.validity.rangeOverflow,
   }
@@ -103,7 +111,7 @@ export function checkForm(form: HTMLFormElement): boolean {
     message.className = 'field-error'
     message.textContent = t(problem.key, problem.values)
     // After the label that wraps the field, or after the field itself when it has no wrapping label.
-    const anchor = el.closest('label') ?? el
+    const anchor = el.closest('label, .password-control') ?? el
     anchor.after(message)
     el.setAttribute('aria-invalid', 'true')
     el.setAttribute('aria-describedby', [el.getAttribute('aria-describedby'), id].filter(Boolean).join(' '))

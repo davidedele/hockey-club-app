@@ -1,3 +1,4 @@
+import { errorText } from '../i18n'
 import { readableInk } from './colour'
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react'
 import { setCertificateReview } from './documents'
@@ -20,6 +21,8 @@ export interface Club {
 }
 
 interface ClubState extends Club {
+  ready: boolean
+  loadError: string
   reload: () => Promise<void>
 }
 
@@ -32,11 +35,15 @@ export function logoUrl(path: string | null): string | null {
 
 export function ClubProvider({ children }: { children: ReactNode }) {
   const [club, setClub] = useState<Club>(DEFAULT)
+  const [ready, setReady] = useState(false)
+  const [loadError, setLoadError] = useState('')
 
   const reload = useCallback(async () => {
-    const { data } = await supabase.from('club_settings').select('name, logo_path, game_dark, game_light, privacy_notice_path, jersey_light_name, jersey_dark_name, certificate_months, certificate_review, consent_mode').maybeSingle()
+    const { data, error } = await supabase.from('club_settings').select('name, logo_path, game_dark, game_light, privacy_notice_path, jersey_light_name, jersey_dark_name, certificate_months, certificate_review, consent_mode').maybeSingle()
     const row = data as { name: string; logo_path: string | null; game_dark: string; game_light: string; privacy_notice_path: string | null; jersey_light_name: string; jersey_dark_name: string; certificate_months: number | null; certificate_review: boolean | null; consent_mode: 'button' | 'tick' | null } | null
-    if (!row) return
+    if (error || !row) { setReady(false); setLoadError(errorText(error)); return }
+    setReady(true)
+    setLoadError('')
     setClub({
       name: row.name, logoPath: row.logo_path, logoUrl: logoUrl(row.logo_path), gameDark: row.game_dark, gameLight: row.game_light,
       privacyNoticePath: row.privacy_notice_path, jerseyLight: row.jersey_light_name, jerseyDark: row.jersey_dark_name,
@@ -51,7 +58,7 @@ export function ClubProvider({ children }: { children: ReactNode }) {
     void reload()
     const { data } = supabase.auth.onAuthStateChange((event) => {
       if (event === 'SIGNED_IN') setTimeout(() => void reload(), 0)
-      if (event === 'SIGNED_OUT') setClub(DEFAULT)
+      if (event === 'SIGNED_OUT') { setClub(DEFAULT); setReady(false); setLoadError('') }
     })
     return () => data.subscription.unsubscribe()
   }, [reload])
@@ -64,7 +71,7 @@ export function ClubProvider({ children }: { children: ReactNode }) {
     if (club.name) document.title = club.name
   }, [club])
 
-  return <Ctx.Provider value={{ ...club, reload }}>{children}</Ctx.Provider>
+  return <Ctx.Provider value={{ ...club, ready, loadError, reload }}>{children}</Ctx.Provider>
 }
 
 export function useClub(): ClubState {

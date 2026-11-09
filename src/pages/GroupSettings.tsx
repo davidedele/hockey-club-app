@@ -1,3 +1,6 @@
+import { ConfirmDialog } from '../components/ConfirmAction'
+import LoadError from '../components/LoadError'
+import { PageSkeleton } from '../components/Skeleton'
 import { useCallback, useEffect, useState, type ChangeEvent, type FormEvent } from 'react'
 import PageHeader from '../components/PageHeader'
 import { Navigate } from 'react-router-dom'
@@ -16,6 +19,8 @@ const MAX_BYTES = 1024 * 1024
 // The board sets up the club's groups: name, short code, colours, picture and weekly training limit.
 export default function GroupSettings() {
   const { isBoard, loading } = useSession()
+  const [loaded, setLoaded] = useState(false)
+  const [loadError, setLoadError] = useState('')
   const [groups, setGroups] = useState<Group[]>([])
   const [members, setMembers] = useState<Map<number, number>>(new Map())
   const [league, setLeague] = useState<{ teams: string[]; champs: LeagueChampionship[] }>({ teams: [], champs: [] })
@@ -32,6 +37,10 @@ export default function GroupSettings() {
       supabase.from('league_championships').select('*').order('position'),
       supabase.from('league_matches').select('home, away'),
     ])
+    const failure = [g,m,c,lm].find(result=>result.error)?.error
+    if (failure) { setLoadError(errorText(failure)); setLoaded(true); return }
+    setLoadError('')
+    setLoaded(true)
     const teams = new Set<string>()
     for (const r of (lm.data ?? []) as { home: string; away: string }[]) { teams.add(r.home); teams.add(r.away) }
     setLeague({ teams: [...teams].sort(), champs: (c.data ?? []) as LeagueChampionship[] })
@@ -39,6 +48,7 @@ export default function GroupSettings() {
     const counts = new Map<number, number>()
     for (const r of (m.data ?? []) as { group_id: number }[]) counts.set(r.group_id, (counts.get(r.group_id) ?? 0) + 1)
     setMembers(counts)
+    window.dispatchEvent(new Event('groups-changed'))
   }, [])
 
   useEffect(() => {
@@ -46,6 +56,8 @@ export default function GroupSettings() {
   }, [load])
 
   if (!loading && !isBoard) return <Navigate to="/settings" replace />
+  if (loadError) return <LoadError title={t('settings.groups')} back={{to:'/settings',label:t('settings.title')}} message={loadError} onRetry={()=>void load()} />
+  if (!loaded) return <PageSkeleton />
 
   async function add(e: FormEvent) {
     e.preventDefault()
@@ -251,18 +263,11 @@ function GroupEditor({ group, count, league, onDone, onChange }: { group: Group;
         {error && <p className="error" role="alert">{error}</p>}
         <div className="actions">
           <button type="submit" disabled={busy}>{t('common.save')}</button>
-          {!confirming && <button type="button" className="link danger-link" disabled={busy} onClick={() => setConfirming(true)}>{t('groups.delete')}</button>}
+          <button type="button" className="link danger-link" disabled={busy} onClick={(e) => { e.currentTarget.focus(); setConfirming(true) }}>{t('groups.delete')}</button>
         </div>
       </form>
-      {confirming && (
-        <div className="box" role="alertdialog" aria-label={t('groups.delete')}>
-          <p>{t('groups.deleteConfirm', { name: group.name, n: String(count) })}</p>
-          <div className="actions">
-            <button className="danger" disabled={busy} onClick={() => void remove()}>{t('groups.deleteNow', { name: group.name })}</button>
-            <button className="link" disabled={busy} onClick={() => setConfirming(false)}>{t('common.cancel')}</button>
-          </div>
-        </div>
-      )}
+      <ConfirmDialog open={confirming} title={t('groups.delete')} body={t('groups.deleteConfirm', {name:group.name,n:String(count)})} busy={busy}
+        choices={[{label:t('groups.deleteNow',{name:group.name}),onChoose:()=>void remove()}]} onClose={()=>setConfirming(false)} />
     </div>
   )
 }

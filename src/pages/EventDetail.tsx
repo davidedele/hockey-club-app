@@ -1,3 +1,4 @@
+import LoadError from '../components/LoadError'
 import { readableInk } from '../lib/colour'
 import { useGroupFilter } from '../lib/groupfilter'
 import { personName } from '../lib/names'
@@ -11,11 +12,12 @@ import EventGame from './EventGame'
 import EventThread from '../components/EventThread'
 import Lineup from './Lineup'
 import Plan from './Plan'
-import { ConfirmDialog } from '../components/ConfirmAction'
+import EventActions from '../components/EventActions'
+import { detailAllowed, unassignedTraining } from '../lib/eventaccess'
 import { jerseyName, useClub } from '../lib/club'
 import { useCrumb } from '../lib/crumb'
 import MapsButton from '../components/MapsButton'
-import { placeLabel } from '../lib/maps'
+import { eventLocation } from '../lib/maps'
 import { useSession } from '../lib/session'
 import type { CSSProperties } from 'react'
 import { whatsappLink } from '../lib/whatsapp'
@@ -40,6 +42,7 @@ export default function EventDetail() {
   const [groups, setGroups] = useState<Group[]>([])
   const [rinks, setRinks] = useState<Rink[]>([])
   const [myGroupIds, setMyGroupIds] = useState<number[]>([])
+  const [personNotCalled, setNotCalled] = useState(false)
   const [mine, setMine] = useState<Answer | null>(null)
   const [rows, setRows] = useState<AttendanceRow[]>([])
   const [going, setGoing] = useState<{ user_id: string; first_name: string; last_name: string }[]>([])
@@ -47,36 +50,41 @@ export default function EventDetail() {
   const [recordedByDb, setRecordedByDb] = useState(false)
   const [scoreUs, setScoreUs] = useState('')
   const [scoreThem, setScoreThem] = useState('')
-  const [confirming, setConfirming] = useState(false)
-  const [cancelling, setCancelling] = useState(false)
-  // The actions menu closes when one of its actions is chosen.
-  const menu = useRef<HTMLDetailsElement>(null)
-  const closeMenu = () => menu.current?.removeAttribute('open')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
+  const [loadError, setLoadError] = useState('')
+  const [loadedFor, setLoadedFor] = useState('')
+  const loadSequence = useRef(0)
   const [near, setNear] = useState<NearEvent[]>([])
   const [dragging, setDragging] = useState<string | null>(null)
   const [hoverState, setHoverState] = useState<State | null>(null)
   const [params] = useSearchParams()
-  const { groupId: chosenGroup } = useGroupFilter()
+  const { inView } = useGroupFilter()
 
   const refresh = useCallback(async () => {
+    const attempt = ++loadSequence.current
     if (!profile) return
-    const [e, g, m, a, rk, nb] = await Promise.all([
+    const [e, g, m, a, rk, nb, ownRecord] = await Promise.all([
       supabase.from('events').select('*, event_groups(group_id)').eq('id', id).maybeSingle(),
       supabase.from('groups').select('*').order('id'),
       supabase.from('group_members').select('group_id').eq('user_id', profile.id),
       supabase.from('attendance_answers').select('answer').eq('event_id', id).eq('user_id', profile.id).maybeSingle(),
       supabase.from('rinks').select('id, name, address, note'),
       supabase.from('events').select('id, type, title, starts_at, opponent, home_away, score_for, score_against, cancelled_at, event_groups(group_id)').order('starts_at', { ascending: false }).limit(1000),
+      supabase.from('attendance_records').select('status').eq('event_id', id).eq('user_id', profile.id).maybeSingle(),
     ])
+    if (attempt !== loadSequence.current) return
+    const failure = [e,g,m,a,rk,nb,ownRecord].find((result) => result.error)?.error
+    if (failure) { setLoadError(errorText(failure)); setLoadedFor(id); setLoaded(true); return }
+    setLoadError('')
     // The strip follows the group chosen in the selector; the event being looked at is always in it.
-    setNear(((nb.data ?? []) as NearEvent[]).filter((x) => x.id === id || chosenGroup === null || x.event_groups.some((g) => g.group_id === chosenGroup)).reverse())
+    setNear(((nb.data ?? []) as NearEvent[]).filter((x) => x.id === id || unassignedTraining(x) || inView(x.event_groups.map((g) => g.group_id))).reverse())
     const row = (e.data as EventRow | null) ?? null
     setEvent(row)
     setGroups((g.data ?? []) as Group[])
     setRinks((rk.data ?? []) as Rink[])
     setMyGroupIds(((m.data ?? []) as { group_id: number }[]).map((x) => x.group_id))
+    setNotCalled((ownRecord.data as { status: string } | null)?.status === 'not_called_up')
     setMine((a.data as { answer: Answer } | null)?.answer ?? null)
     if (row) {
       setScoreUs(row.score_for?.toString() ?? '')
@@ -84,17 +92,21 @@ export default function EventDetail() {
     }
     if (row && isStaff) {
       const r = await supabase.rpc('event_attendance', { p_event_id: id })
+      if (attempt !== loadSequence.current) return
       setRows((r.data ?? []) as AttendanceRow[])
     } else if (row) {
       const [r, rec] = await Promise.all([
         supabase.rpc('event_present_people', { p_event_id: id }),
         supabase.rpc('event_presence_recorded', { p_event_id: id }),
       ])
+      if (attempt !== loadSequence.current) return
       setGoing((r.data ?? []) as { user_id: string; first_name: string; last_name: string }[])
       setRecordedByDb(rec.data === true)
     }
+    if (attempt !== loadSequence.current) return
+    setLoadedFor(id)
     setLoaded(true)
-  }, [id, profile, isStaff, chosenGroup])
+  }, [id, profile, isStaff, inView])
 
   useEffect(() => {
     void refresh()
@@ -102,6 +114,8 @@ export default function EventDetail() {
 
   useCrumb(event?.title ?? '')
 
+  if (loadedFor !== id) return <PageSkeleton />
+  if (loadError) return <LoadError title={t('nav.events')} back={{to:'/events',label:t('nav.events')}} message={loadError} onRetry={() => void refresh()} />
   if (loaded && !event) return <Navigate to="/events" replace />
   if (!event) return <PageSkeleton />
 
@@ -109,13 +123,16 @@ export default function EventDetail() {
   const over = new Date(event.ends_at).getTime() < now
   const cancelled = event.cancelled_at !== null
   const rink = rinks.find((r) => r.id === event.rink_id) ?? null
+  const location = eventLocation(event, rink)
   const rinkName = rink?.name ?? ''
   const started = new Date(event.starts_at).getTime() <= now
   const inMyGroups = event.event_groups.some((x) => myGroupIds.includes(x.group_id))
+  const allowed = (detail: Parameters<typeof detailAllowed>[1]) => detailAllowed(event, detail, isStaff, inMyGroups)
+  const readOnly = !isStaff && !inMyGroups
   const groupNames = event.event_groups
     .map((x) => groups.find((g) => g.id === x.group_id)?.name)
     .filter(Boolean)
-    .join(', ')
+    .join(', ') || t('events.unassigned')
   const dayLabel = formatDay(event.starts_at)
   const link = `${window.location.origin}/events/${id}`
   const matchName = event.type === 'game' && event.opponent ? t('events.vs', { club: club.name || t('app.name'), opponent: event.opponent }) : event.title
@@ -124,9 +141,9 @@ export default function EventDetail() {
   const shareText = [
     t('share.eventText', { title: matchName, day: dayLabel, time: formatTime(event.starts_at) }),
     event.meetup_at ? t('share.meetupText', { time: formatTime(event.meetup_at) }) : '',
-    event.venue ? t('share.venueText', { venue: event.venue }) : '',
+    location.label ? t('share.venueText', { venue: location.label }) : '',
     jerseyLabel ? t('share.jerseyText', { jersey: jerseyLabel.toLowerCase() }) : '',
-    t('share.answerText', { url: link }),
+    t(unassignedTraining(event) ? 'share.viewText' : 'share.answerText', { url: link }),
   ].filter(Boolean).join(' ')
 
   // A change that a rule silently refuses must not look like it worked.
@@ -170,29 +187,6 @@ export default function EventDetail() {
   function moveTo(userId: string, state: State) {
     return guarded(() => supabase.rpc('set_player_state', { p_event_id: id, p_user_id: userId, p_state: state }) as unknown as PromiseLike<{ error: { message?: string; code?: string } | null }>)
   }
-
-  function setCancelled(value: boolean) {
-    return guarded(() => supabase.from('events').update({ cancelled_at: value ? new Date().toISOString() : null }).eq('id', id).select())
-  }
-
-  async function remove(following: boolean) {
-    setBusy(true)
-    setError('')
-    const base = supabase.from('events').delete()
-    const query = following && event!.series_id
-      ? base.eq('series_id', event!.series_id).gte('starts_at', event!.starts_at)
-      : base.eq('id', id)
-    const { error, data } = await query.select()
-    if (error || !data || data.length === 0) {
-      setError(errorText(error ?? { message: 'forbidden' }))
-      setConfirming(false)
-      setBusy(false)
-      return
-    }
-    window.dispatchEvent(new Event('attendance-changed'))
-    navigate('/events', { replace: true })
-  }
-
 
   const called = (r: AttendanceRow) => r.status !== 'not_called_up'
   const present = rows.filter((r) => r.answer === 'present' && called(r))
@@ -257,11 +251,11 @@ export default function EventDetail() {
   // The tabs of the page. A tab that does not apply to this event is not offered.
   const tabs: { key: Tab; label: string }[] = [
     { key: 'info', label: t('event.tabInfo') },
-    { key: 'presence', label: t('event.tabPresence') },
-    ...(game ? [{ key: 'game' as Tab, label: t('event.tabGame') }] : []),
-    { key: 'discussion' as Tab, label: t('event.tabDiscussion') },
-    ...(!cancelled ? [{ key: 'lineup' as Tab, label: t('lineup.open') }] : []),
-    ...(!cancelled && event.type === 'training' ? [{ key: 'plan' as Tab, label: t('plan.open') }] : []),
+    ...(allowed('presence') ? [{ key: 'presence' as Tab, label: t('event.tabPresence') }] : []),
+    ...(game && allowed('game') ? [{ key: 'game' as Tab, label: t('event.tabGame') }] : []),
+    ...(allowed('discussion') ? [{ key: 'discussion' as Tab, label: t('event.tabDiscussion') }] : []),
+    ...(!cancelled && allowed('lineup') ? [{ key: 'lineup' as Tab, label: t('lineup.open') }] : []),
+    ...(!cancelled && event.type === 'training' && allowed('plan') ? [{ key: 'plan' as Tab, label: t('plan.open') }] : []),
   ]
   const asked = params.get('tab')
   const tab: Tab = tabs.some((x) => x.key === asked) ? (asked as Tab) : 'info'
@@ -335,22 +329,11 @@ export default function EventDetail() {
         </nav>
       )}
 
-      <header className={`ev-band ${event.type}${cancelled ? ' cancelled' : ''}`} style={bandStyle}>
+      <header className={`ev-band ${event.type}${cancelled ? ' cancelled' : ''}${readOnly ? ' consultation' : ''}`} style={bandStyle}>
         <div className="ev-band-top">
           <p className="ev-day">{dayLabel}</p>
           <p className="ev-sub">{[typeLabel, groupNames].filter(Boolean).join(' · ')}</p>
-          {isStaff && (
-            <details className="ev-menu" ref={menu}>
-              <summary aria-label={t('event.menu')}>
-                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.8" /><circle cx="12" cy="12" r="1.8" /><circle cx="19" cy="12" r="1.8" /></svg>
-              </summary>
-              <div className="ev-menu-list">
-                <Link to={`/events/${id}/edit`}>{t('event.edit')}</Link>
-                <button disabled={busy} onClick={() => { closeMenu(); if (cancelled) void setCancelled(false); else setCancelling(true) }}>{cancelled ? t('event.restore') : t('event.cancel')}</button>
-                <button className="danger-text" disabled={busy} onClick={() => { closeMenu(); setConfirming(true) }}>{t('event.deleteStart')}</button>
-              </div>
-            </details>
-          )}
+          {isStaff && <EventActions event={event} onChanged={(deleted) => { if (deleted) navigate('/events', { replace: true }); else void refresh() }} />}
         </div>
         {sides ? (
           <>
@@ -375,31 +358,12 @@ export default function EventDetail() {
             </div>
           </div>
         )}
-        {placeLabel({ venue: event.venue, rink: rinkName }) && <p className="ev-venue">{placeLabel({ venue: event.venue, rink: rinkName })}</p>}
+        {location.label && <p className="ev-venue">{location.label}</p>}
       </header>
 
+      {readOnly && <p className="consultation-note"><strong>{unassignedTraining(event) ? t('events.unassigned') : t('events.readOnly')}</strong> {t(unassignedTraining(event) ? 'visibility.unassignedHelp' : 'visibility.readOnlyHelp')}</p>}
       {error && <p className="error" role="alert">{error}</p>}
       {cancelled && <p className="box cancelled-note" role="status">{t('event.cancelledBanner')}{isStaff && ` ${t('event.restoreHint')}`}</p>}
-      <ConfirmDialog
-        open={cancelling}
-        title={t('event.cancelTitle')}
-        body={`${t('event.cancelBody', { title: event.title, date: dayLabel })} ${t('event.cancelHint')}`}
-        choices={[{ label: t('event.cancelGo'), onChoose: () => void setCancelled(true) }]}
-        busy={busy}
-        onClose={() => setCancelling(false)}
-      />
-      <ConfirmDialog
-        open={confirming}
-        title={t('event.deleteTitle')}
-        body={t('event.deleteConfirm', { title: event.title, date: dayLabel })}
-        choices={[
-          { label: event.series_id ? t('event.deleteOne') : t('event.deleteThis'), onChoose: () => void remove(false) },
-          ...(event.series_id ? [{ label: t('event.deleteFollowing'), onChoose: () => void remove(true) }] : []),
-        ]}
-        busy={busy}
-        onClose={() => setConfirming(false)}
-      />
-
       <TabStrip label={t('event.tabs')}>
         {tabs.map((x) => (
           <Link key={x.key} to={{ search: x.key === 'info' ? '' : `?tab=${x.key}` }} replace aria-current={x.key === tab ? 'page' : undefined}>{x.label}</Link>
@@ -409,7 +373,7 @@ export default function EventDetail() {
       {tab === 'info' && (
         <div className="ev-cols">
           <div className="ev-aside">
-            {!isStaff && inMyGroups && !cancelled && (
+            {!isStaff && inMyGroups && !cancelled && !personNotCalled && (
               <section className="card">
                 <h2>{t('event.myAnswer')}</h2>
                 {over ? (
@@ -428,8 +392,8 @@ export default function EventDetail() {
                 )}
               </section>
             )}
-            {!inMyGroups && isStaff && <p className="hint">{t('event.notYours')}</p>}
-            <section className="card">
+            {!isStaff && personNotCalled && <p className="hint">{t('status.not_called_up')}</p>}
+            {allowed('presence') && <section className="card">
               <h2>{t('event.attendance')}</h2>
               <ul className="counters">
                 <li className="ok"><b>{loaded ? presentNames.length : '–'}</b><span>{t('event.countPresent')}</span></li>
@@ -447,14 +411,14 @@ export default function EventDetail() {
                   <ul className="list">{presentNames.map((p) => <li key={p.user_id}>{p.last_name} {p.first_name}</li>)}</ul>
                 )}
               </details>
-            </section>
+            </section>}
           </div>
           <div className="ev-main">
             <dl className="facts">
               {event.meetup_at && (<><dt>{t('event.meetup')}</dt><dd>{formatTime(event.meetup_at)}</dd></>)}
-              {event.venue && (<><dt>{t('event.venue')}</dt><dd>{event.venue}</dd></>)}
+              {location.venue && (<><dt>{t('event.venue')}</dt><dd>{location.venue}</dd></>)}
               {rinkName && (<><dt>{t('event.rink')}</dt><dd>{rinkName}</dd></>)}
-              {rink?.address && (<><dt>{t('event.address')}</dt><dd>{rink.address}</dd></>)}
+              {rink?.address && !location.locked && (<><dt>{t('event.address')}</dt><dd>{rink.address}</dd></>)}
               {rink?.note && (<><dt>{t('event.rinkNote')}</dt><dd>{rink.note}</dd></>)}
               {event.opponent && (<><dt>{t('event.opponent')}</dt><dd>{event.opponent}{event.home_away ? ` · ${t(event.home_away === 'home' ? 'event.home' : 'event.away')}` : ''}</dd></>)}
               {event.jersey && (<><dt>{t('event.jersey')}</dt><dd>{jerseyLabel}</dd></>)}
@@ -462,15 +426,15 @@ export default function EventDetail() {
                 <><dt>{t('event.scoreTitle')}</dt><dd>{t('event.scoreValue', { us: String(event.score_for), them: String(event.score_against) })}</dd></>
               )}
             </dl>
-            <p className="button-row"><MapsButton rink={rink} venue={event.venue} />{game && event.video_url && <a className="button secondary" href={event.video_url} target="_blank" rel="noopener noreferrer">{t('event.videoOpen')}</a>}</p>
+            <p className="button-row"><MapsButton rink={rink} venue={event.venue} eventType={event.type} />{game && event.video_url && <a className="button secondary" href={event.video_url} target="_blank" rel="noopener noreferrer">{t('event.videoOpen')}</a>}</p>
             <div className="actions share-row">
-              {!over && !cancelled && <a className="button secondary small" href={whatsappLink(shareText)} target="_blank" rel="noopener noreferrer">{t('share.whatsapp')}</a>}
-              {hasScore && <a className="button secondary small" href={whatsappLink(resultText)} target="_blank" rel="noopener noreferrer">{t('share.result')}</a>}
+              {!readOnly && !over && !cancelled && <a className="button secondary small" href={whatsappLink(shareText)} target="_blank" rel="noopener noreferrer">{t('share.whatsapp')}</a>}
+              {!readOnly && hasScore && <a className="button secondary small" href={whatsappLink(resultText)} target="_blank" rel="noopener noreferrer">{t('share.result')}</a>}
             </div>
-            {game && !cancelled && profile && (inMyGroups || started) && (
+            {game && !cancelled && profile && (isStaff || inMyGroups) && (
               <Predictions eventId={id} myId={profile.id} started={started} canGuess={!isStaff && inMyGroups} inGroups={inMyGroups} />
             )}
-            {game && event.opponent && <OpponentHistory eventId={id} opponent={event.opponent} />}
+            {game && event.opponent && (isStaff || inMyGroups) && <OpponentHistory eventId={id} opponent={event.opponent} />}
           </div>
         </div>
       )}
@@ -526,6 +490,7 @@ export default function EventDetail() {
             eventId={id}
             myId={profile.id}
             isStaff={isStaff}
+            canParticipate={!isStaff && inMyGroups}
             started={started}
             over={over}
             reloadKey={rows.map((r) => `${r.user_id}:${r.answer}:${r.status}`).join(',')}
@@ -533,7 +498,7 @@ export default function EventDetail() {
         </>
       )}
 
-      {tab === 'discussion' && <EventThread eventId={id} />}
+      {tab === 'discussion' && <EventThread eventId={id} readOnly={readOnly} />}
       {tab === 'lineup' && <Lineup embedded />}
       {tab === 'plan' && <Plan embedded />}
     </div>

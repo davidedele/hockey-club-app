@@ -1,3 +1,5 @@
+import LoadError from '../components/LoadError'
+import { PageSkeleton } from '../components/Skeleton'
 import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react'
 import ConfirmAction from '../components/ConfirmAction'
 import { Navigate } from 'react-router-dom'
@@ -46,6 +48,7 @@ export default function ClubSettings() {
   }, [club.privacyNoticePath])
 
   if (!loading && !isBoard) return <Navigate to="/settings" replace />
+  if (!club.ready) return club.loadError ? <LoadError title={t('settings.club')} back={{to:'/settings',label:t('settings.title')}} message={club.loadError} onRetry={() => void club.reload()} /> : <PageSkeleton />
 
   // An update that row level security silently refuses comes back with no rows.
   async function update(values: Record<string, string | null>) {

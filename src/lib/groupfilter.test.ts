@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import { visibleIn } from './groupfilter'
+import { MY_GROUPS, visibleIn } from './groupfilter'
+
+it('filters the explicit My groups choice by actual membership', () => {
+  expect(visibleIn([2], MY_GROUPS, [1,2])).toBe(true)
+  expect(visibleIn([3], MY_GROUPS, [1,2])).toBe(false)
+  expect(visibleIn([], MY_GROUPS, [1,2])).toBe(false)
+})
 
 describe('what shows with the group choice and the view', () => {
   it('shows everything in a staff view with all groups chosen', () => {

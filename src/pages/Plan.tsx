@@ -1,3 +1,4 @@
+import { detailAllowed, invitedTo } from '../lib/eventaccess'
 import { PageSkeleton } from '../components/Skeleton'
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import { Link, Navigate, useParams } from 'react-router-dom'
@@ -14,7 +15,8 @@ const LINK_SECONDS = 600
 // they go on the ice, and afterwards only if the coach left it up.
 export default function Plan({ embedded = false }: { embedded?: boolean }) {
   const { id = '' } = useParams()
-  const { isStaff } = useSession()
+  const { isStaff, profile } = useSession()
+  const [myGroups, setMyGroups] = useState<number[]>([])
   const [event, setEvent] = useState<EventRow | null>(null)
   const [plan, setPlan] = useState<EventPlan | null>(null)
   const [rows, setRows] = useState<PlanDrill[]>([])
@@ -29,11 +31,13 @@ export default function Plan({ embedded = false }: { embedded?: boolean }) {
   const [error, setError] = useState('')
 
   const load = useCallback(async () => {
-    const [e, p, d] = await Promise.all([
+    const [e, p, d, membership] = await Promise.all([
       supabase.from('events').select('*, event_groups(group_id)').eq('id', id).maybeSingle(),
       supabase.from('event_plan').select('event_id, notes, visible_after').eq('event_id', id).maybeSingle(),
       supabase.from('event_plan_drills').select('*, drills(*)').eq('event_id', id).order('step'),
+      supabase.from('group_members').select('group_id').eq('user_id', profile?.id ?? ''),
     ])
+    setMyGroups(((membership.data ?? []) as { group_id: number }[]).map((g) => g.group_id))
     const planRow = (p.data as EventPlan | null) ?? null
     const list = (d.data ?? []) as unknown as PlanDrill[]
     setEvent((e.data as EventRow | null) ?? null)
@@ -51,7 +55,7 @@ export default function Plan({ embedded = false }: { embedded?: boolean }) {
         .filter((x) => x.path && x.signedUrl).map((x) => [x.path as string, x.signedUrl])))
     }
     setLoaded(true)
-  }, [id, isStaff])
+  }, [id, isStaff, profile?.id])
 
   useEffect(() => {
     void load()
@@ -59,6 +63,7 @@ export default function Plan({ embedded = false }: { embedded?: boolean }) {
 
   if (loaded && !event) return <Navigate to="/events" replace />
   if (!event) return <PageSkeleton />
+  if (!detailAllowed(event, 'plan', isStaff, invitedTo(event, myGroups))) return <Navigate to={`/events/${id}`} replace />
 
   async function write(values: { notes?: string | null; visible_after?: boolean }) {
     setBusy(true)

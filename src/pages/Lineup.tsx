@@ -1,3 +1,4 @@
+import { detailAllowed, invitedTo } from '../lib/eventaccess'
 import ShiftTimer from '../components/ShiftTimer'
 import { PageSkeleton } from '../components/Skeleton'
 import { useCallback, useEffect, useState } from 'react'
@@ -45,7 +46,8 @@ function units(): { key: string; heading: MessageKey; units: Unit[] }[] {
 
 export default function Lineup({ embedded = false }: { embedded?: boolean }) {
   const { id = '' } = useParams()
-  const { isStaff } = useSession()
+  const { isStaff, profile } = useSession()
+  const [myGroups, setMyGroups] = useState<number[]>([])
   const [event, setEvent] = useState<EventRow | null>(null)
   const [loaded, setLoaded] = useState(false)
   const [places, setPlaces] = useState<LineupPlace[]>([])
@@ -55,12 +57,14 @@ export default function Lineup({ embedded = false }: { embedded?: boolean }) {
   const [error, setError] = useState('')
 
   const load = useCallback(async () => {
-    const [e, l] = await Promise.all([
+    const [e, l, membership] = await Promise.all([
       supabase.from('events').select('*, event_groups(group_id)').eq('id', id).maybeSingle(),
       // The table points at profiles twice, through the player and through whoever set the place,
       // so the player has to be named here.
       supabase.from('event_lineup').select('slot, unit, user_id, profiles:user_id(first_name, last_name, jersey_number)').eq('event_id', id),
+      supabase.from('group_members').select('group_id').eq('user_id', profile?.id ?? ''),
     ])
+    setMyGroups(((membership.data ?? []) as { group_id: number }[]).map((g) => g.group_id))
     setEvent((e.data as EventRow | null) ?? null)
     setPlaces((l.data ?? []) as unknown as LineupPlace[])
     if (isStaff) {
@@ -68,7 +72,7 @@ export default function Lineup({ embedded = false }: { embedded?: boolean }) {
       setPeople((c.data ?? []) as LineupCandidate[])
     }
     setLoaded(true)
-  }, [id, isStaff])
+  }, [id, isStaff, profile?.id])
 
   useEffect(() => {
     void load()
@@ -76,6 +80,7 @@ export default function Lineup({ embedded = false }: { embedded?: boolean }) {
 
   if (loaded && !event) return <Navigate to="/events" replace />
   if (!event) return <PageSkeleton />
+  if (!detailAllowed(event, 'lineup', isStaff, invitedTo(event, myGroups))) return <Navigate to={`/events/${id}`} replace />
 
   const over = new Date(event.ends_at).getTime() < Date.now()
   const cancelled = event.cancelled_at !== null

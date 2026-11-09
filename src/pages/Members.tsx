@@ -1,8 +1,10 @@
+import LoadError from '../components/LoadError'
+import { PageSkeleton } from '../components/Skeleton'
 import TableScroll from '../components/TableScroll'
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import PageHeader from '../components/PageHeader'
 import { Link } from 'react-router-dom'
-import { t, type MessageKey } from '../i18n'
+import { errorText, t, type MessageKey } from '../i18n'
 import Avatar from '../components/Avatar'
 import { useAvatarUrls } from '../lib/avatars'
 import { formatPhone, phoneLink } from '../lib/phone'
@@ -21,6 +23,8 @@ type MemberKey = 'name' | 'number' | 'position' | 'groups' | 'email' | 'phone' |
 
 export default function Members() {
   const { isStaff } = useSession()
+  const [loaded, setLoaded] = useState(false)
+  const [loadError, setLoadError] = useState('')
   const [groups, setGroups] = useState<Group[]>([])
   const [profiles, setProfiles] = useState<Profile[]>([])
   const [memberships, setMemberships] = useState<{ group_id: number; user_id: string }[]>([])
@@ -35,22 +39,26 @@ export default function Members() {
   const [size, setSize] = useState(25)
   const sort = useSort<MemberKey>('name')
 
-  useEffect(() => {
-    void (async () => {
+  const load = useCallback(async () => {
+      setLoaded(false)
       const [g, p, m, c, d] = await Promise.all([
         supabase.from('groups').select('*').order('id'),
         supabase.from('profiles').select('*').is('deleted_at', null).order('last_name'),
         supabase.from('group_members').select('group_id, user_id'),
-        isStaff ? supabase.from('profile_contacts').select('*') : Promise.resolve({ data: [] }),
-        isStaff ? supabase.from('member_documents').select('*') : Promise.resolve({ data: [] }),
+        isStaff ? supabase.from('profile_contacts').select('*') : Promise.resolve({ data: [], error: null }),
+        isStaff ? supabase.from('member_documents').select('*') : Promise.resolve({ data: [], error: null }),
       ])
+      const failure = [g,p,m,c,d].find((result) => result.error)?.error
+      if (failure) { setLoadError(errorText(failure)); setLoaded(true); return }
+      setLoadError('')
+      setLoaded(true)
       setDocs((d.data ?? []) as MemberDocument[])
       setGroups((g.data ?? []) as Group[])
       setProfiles((p.data ?? []) as Profile[])
       setMemberships((m.data ?? []) as { group_id: number; user_id: string }[])
       setContacts((c.data ?? []) as Contact[])
-    })()
   }, [isStaff])
+  useEffect(() => { void load() }, [load])
 
   const codeById = useMemo(() => new Map(groups.map((g) => [g.id, g.name])), [groups])
   const contactById = useMemo(() => new Map(contacts.map((c) => [c.user_id, c])), [contacts])
@@ -97,6 +105,9 @@ export default function Members() {
       </Link>
     )
   }
+
+  if (!loaded) return <PageSkeleton band={false} />
+  if (loadError) return <LoadError title={t('members.title')} message={loadError} onRetry={() => void load()} />
 
   return (
     <div className="page wide">

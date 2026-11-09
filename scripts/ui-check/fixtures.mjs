@@ -44,6 +44,7 @@ const ev = (n, o) => ({
 })
 const week = '20000000-0000-4000-8000-000000000001'
 const events = [
+  ev(17, { title: 'Allenamento sovrapposto', starts_at: at(1, 20, 30), ends_at: at(1, 22) }),
   ev(1, { starts_at: at(-30, 20), ends_at: at(-30, 21, 30), series_id: week }),
   ev(2, { type: 'game', title: 'Partita', opponent: 'HC Esempio', home_away: 'home', starts_at: at(-12, 18), ends_at: at(-12, 19, 30), meetup_at: at(-12, 17), score_for: 5, score_against: 3, rink_id: null, video_url: 'https://example.test/video-partita' }),
   ev(3, { type: 'game', title: 'Partita', opponent: 'HC Prova Uno', home_away: 'away', starts_at: at(-6, 21), ends_at: at(-6, 22, 30), score_for: 2, score_against: 4, rink_id: null }),
@@ -56,13 +57,16 @@ const events = [
   ev(10, { starts_at: at(22, 20), ends_at: at(22, 21, 30), series_id: week }),
   ev(11, { starts_at: at(2, 19), ends_at: at(2, 20), title: 'Allenamento B' }),
   // A training of C1, a group the sample person (A and B) does not belong to: the Giocatore view must never show it.
+  ev(14, { title: 'Allenamento da assegnare', groups_pending: true, starts_at: at(2, 21), ends_at: at(2, 22, 30) }),
+  ev(15, { title: 'Allenamento C1 aperto', observer_details: ['presence','lineup','plan','discussion','game'], starts_at: at(4, 21), ends_at: at(4, 22, 30) }),
+  ev(16, { title: 'Allenamento dettagli riservati', participant_details: [], starts_at: at(5, 21), ends_at: at(5, 22, 30) }),
   ev(13, { title: 'Allenamento C1 riservato', starts_at: new Date(Date.now() + 30 * 60000).toISOString(), ends_at: new Date(Date.now() + 90 * 60000).toISOString(), rink_id: null }),
-  // Starts in ten minutes, so there is always one event without an answer inside the week (the window ends at Monday 00:00).
-  ev(12, { title: 'Allenamento di prova', starts_at: new Date(Date.now() + 10 * 60000).toISOString(), ends_at: new Date(Date.now() + 100 * 60000).toISOString(), rink_id: null }),
+  // An ongoing event remains answerable even when the check crosses Monday 00:00.
+  ev(12, { title: 'Allenamento di prova', starts_at: new Date(Date.now() - 60000).toISOString(), ends_at: new Date(Date.now() + 100 * 60000).toISOString(), rink_id: null }),
 ]
-const ids = { training: eid(5), game: eid(2), member, futureGame: eid(6) }
+const ids = { consultation: eid(13), shared: eid(15), unassigned: eid(14), hidden: eid(16), training: eid(5), game: eid(2), member, futureGame: eid(6) }
 
-const eventGroups = events.flatMap((e) => (e.id === eid(13) ? [{ event_id: e.id, group_id: 3 }] : e.id === eid(11) ? [{ event_id: e.id, group_id: 2 }] : [{ event_id: e.id, group_id: 1 }, ...(e.id === eid(5) ? [{ event_id: e.id, group_id: 2 }] : [])])).map((r) => ({ ...r, created_at: at(-40, 9) }))
+const eventGroups = events.flatMap((e) => (e.id === eid(14) ? [] : [eid(13),eid(15)].includes(e.id) ? [{ event_id: e.id, group_id: 3 }] : e.id === eid(11) ? [{ event_id: e.id, group_id: 2 }] : [{ event_id: e.id, group_id: 1 }, ...(e.id === eid(5) ? [{ event_id: e.id, group_id: 2 }] : [])])).map((r) => ({ ...r, created_at: at(-40, 9) }))
 
 const groupMembers = people.flatMap((p) => p.groups.map((g) => ({ group_id: g, user_id: p.id, joined_at: at(-90, 9) })))
 

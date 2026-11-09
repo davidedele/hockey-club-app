@@ -1,7 +1,8 @@
+import LoadError from '../components/LoadError'
 import { ConfirmDialog } from '../components/ConfirmAction'
 import { personName } from '../lib/names'
 import { PageSkeleton } from '../components/Skeleton'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import PageHeader from '../components/PageHeader'
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom'
 import { errorText, t } from '../i18n'
@@ -24,18 +25,28 @@ export default function MemberEdit() {
   const [confirming, setConfirming] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
+  const [loadError, setLoadError] = useState('')
+  const [loadedFor, setLoadedFor] = useState('')
+  const loadSequence = useRef(0)
 
   const refresh = useCallback(async () => {
+    const attempt = ++loadSequence.current
     const [g, p, m, r] = await Promise.all([
       supabase.from('groups').select('*').order('id'),
       supabase.from('profiles').select('*').eq('id', id).maybeSingle(),
       supabase.from('group_members').select('group_id').eq('user_id', id),
       supabase.from('user_roles').select('role').eq('user_id', id),
     ])
+    if (attempt !== loadSequence.current) return
+    const failure = [g,p,m,r].find((result) => result.error)?.error
+    if (failure) { setLoadError(errorText(failure)); setLoadedFor(id); setLoaded(true); return }
+    setLoadError('')
     setGroups((g.data ?? []) as Group[])
     setPerson((p.data as Profile | null) ?? null)
     setMemberOf(((m.data ?? []) as { group_id: number }[]).map((x) => x.group_id))
     setRoles(((r.data ?? []) as { role: Role }[]).map((x) => x.role))
+    if (attempt !== loadSequence.current) return
+    setLoadedFor(id)
     setLoaded(true)
   }, [id])
 
@@ -44,6 +55,8 @@ export default function MemberEdit() {
   }, [refresh])
 
   if (!isStaff) return <Navigate to="/members" replace />
+  if (loadedFor !== id) return <PageSkeleton />
+  if (loadError) return <LoadError title={t('nav.members')} back={{to:'/members',label:t('nav.members')}} message={loadError} onRetry={() => void refresh()} />
   if (loaded && !person) return <Navigate to="/members" replace />
   if (!person) return <PageSkeleton />
 

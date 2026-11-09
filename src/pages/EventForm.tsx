@@ -1,5 +1,13 @@
+import LoadError from '../components/LoadError'
+import { PageSkeleton } from '../components/Skeleton'
+import { eventLocation } from '../lib/maps'
 import { ChipsSkeleton } from '../components/Skeleton'
 import { useEffect, useState, type FormEvent } from 'react'
+import { ConfirmDialog } from '../components/ConfirmAction'
+import EventVisibility from '../components/EventVisibility'
+import EventScopeSelect from '../components/EventScopeSelect'
+import { scopeSummary, type ScopedEvent } from '../components/EventActions'
+import { EVENT_DETAILS, unassignedTraining } from '../lib/eventaccess'
 import PageHeader from '../components/PageHeader'
 import { Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { errorText, t } from '../i18n'
@@ -9,7 +17,7 @@ import { useGroupFilter } from '../lib/groupfilter'
 import { useSession } from '../lib/session'
 import { supabase } from '../lib/supabase'
 import { endIso, isoToItaly, italyToIso, meetupIso, shiftClock } from '../lib/time'
-import type { EventRow, EventType, Group, Rink } from '../lib/types'
+import type { EventRow, EventType, EventScope, EventDetailKey, Group, Rink } from '../lib/types'
 
 // One form for a new event and for changing an existing one.
 // Changing an event can change its groups, for this event or for the later ones of its series. The repeat is set when it is created.
@@ -40,10 +48,14 @@ export default function EventForm() {
   const [meetupTouched, setMeetupTouched] = useState(false)
   const [venue, setVenue] = useState('')
   const [groupIds, setGroupIds] = useState<number[]>([])
-  const [savedGroupIds, setSavedGroupIds] = useState<number[]>([])
+  const [groupsPending, setGroupsPending] = useState(false)
+  const [participant, setParticipant] = useState<EventDetailKey[]>(EVENT_DETAILS)
+  const [observer, setObserver] = useState<EventDetailKey[]>([])
+  const [preview, setPreview] = useState<ScopedEvent[]>([])
+  const [draft, setDraft] = useState<Record<string, unknown> | null>(null)
   const [inSeries, setInSeries] = useState(false)
   const [groupsLocked, setGroupsLocked] = useState<'' | 'league' | 'ended'>('')
-  const [scope, setScope] = useState<'one' | 'following'>('one')
+  const [scope, setScope] = useState<EventScope>('one')
   const [repeat, setRepeat] = useState(false)
   const [weeks, setWeeks] = useState('12')
   const [opponent, setOpponent] = useState('')
@@ -52,19 +64,31 @@ export default function EventForm() {
   const [jersey, setJersey] = useState<'light' | 'dark' | ''>('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
+  const [loadError, setLoadError] = useState('')
+  const [loadedFor, setLoadedFor] = useState('')
+  const [loadAttempt, setLoadAttempt] = useState(0)
+  const [missing, setMissing] = useState(false)
 
   useEffect(() => {
+    let active = true
+    setLoaded(false); setListsReady(false); setLoadError(''); setMissing(false)
     void (async () => {
-      const [g, r] = await Promise.all([supabase.from('groups').select('*').order('id'), supabase.from('rinks').select('id, name').order('name')])
+      const [g, r] = await Promise.all([supabase.from('groups').select('*').order('id'), supabase.from('rinks').select('id, name, address, note').order('name')])
+      if (!active) return
+      const failure = g.error ?? r.error
+      if (failure) { setLoadError(errorText(failure)); setLoadedFor(id ?? 'new'); setLoaded(true); return }
+      setLoadError('')
       setGroups((g.data ?? []) as Group[])
       setRinks((r.data ?? []) as Rink[])
       setListsReady(true)
       if (!id) {
-        // A new event starts on the group chosen in the switcher.
-        if (chosenGroup !== null) setGroupIds((current) => (current.length === 0 ? [chosenGroup] : current))
+        setLoadedFor('new'); setLoaded(true)
         return
       }
-      const { data } = await supabase.from('events').select('*, event_groups(group_id)').eq('id', id).maybeSingle()
+      const { data, error: eventError } = await supabase.from('events').select('*, event_groups(group_id)').eq('id', id).maybeSingle()
+      if (!active) return
+      if (eventError) { setLoadError(errorText(eventError)); setLoadedFor(id); setLoaded(true); return }
+      if (!data) { setMissing(true); setLoadedFor(id); setLoaded(true); return }
       const e = data as EventRow | null
       if (e) {
         const start = isoToItaly(e.starts_at)
@@ -85,115 +109,77 @@ export default function EventForm() {
         setRinkId(e.rink_id)
         const ids = e.event_groups.map((x) => x.group_id)
         setGroupIds(ids)
-        setSavedGroupIds(ids)
+        setGroupsPending(unassignedTraining(e))
+        setParticipant(e.participant_details ?? EVENT_DETAILS)
+        setObserver(e.observer_details ?? [])
         setInSeries(Boolean(e.series_id))
         setGroupsLocked(e.league_match_id !== null ? 'league' : new Date(e.ends_at).getTime() <= Date.now() ? 'ended' : '')
       }
-      setLoaded(true)
+      setLoadedFor(id); setLoaded(true)
     })()
-  }, [id, chosenGroup])
+    return () => { active = false }
+  }, [id, loadAttempt])
+
+  useEffect(() => {
+    if (!editing && chosenGroup !== null && chosenGroup > 0) setGroupIds((current) => current.length ? current : [chosenGroup])
+  }, [editing, chosenGroup])
 
   if (!isStaff) return <Navigate to="/events" replace />
-  if (!loaded) return null
+  if (loadedFor !== (id ?? 'new')) return <PageSkeleton />
+  if (loadError) return <LoadError title={t(editing ? 'form.editTitle' : 'form.newTitle')} back={{to:'/events',label:t('nav.events')}} message={loadError} onRetry={() => setLoadAttempt((n) => n+1)} />
+  if (missing) return <Navigate to="/events" replace />
+  if (!loaded || !listsReady) return <PageSkeleton />
 
   // Sensible defaults that follow the start time until the person types their own.
   const shownTitle = titleTouched ? title : t(type === 'game' ? 'form.titleGame' : 'form.titleTraining')
   const shownEnd = endTouched ? endTime : startTime ? shiftClock(startTime, 90) : ''
   const shownMeetup = meetupTouched ? meetupTime : startTime ? shiftClock(startTime, -60) : ''
 
+  const selectedRink = rinks.find((r) => r.id === rinkId) ?? null
+  const location = eventLocation({ type, venue }, selectedRink)
+
   function toggleGroup(groupId: number) {
     setGroupIds((current) => (current.includes(groupId) ? current.filter((x) => x !== groupId) : [...current, groupId]))
   }
 
+  async function save(values: Record<string, unknown>, count: number | null = null) {
+    setBusy(true); setError('')
+    const total = Math.min(53, Math.max(2, Number(weeks) || 2))
+    const { data, error } = await supabase.rpc('save_event', {
+      p_event_id: id ?? null, p_changes: values, p_scope: editing ? scope : 'one',
+      p_repeat_weeks: !editing && type === 'training' && repeat ? total - 1 : 0,
+      p_expected_count: count,
+    })
+    if (error) setError(errorText(error))
+    else { window.dispatchEvent(new Event('attendance-changed')); navigate(`/events/${data as string}`, { replace: true }) }
+    setBusy(false)
+  }
   async function submit(e: FormEvent) {
-    e.preventDefault()
-    setError('')
-    if (!editing && groupIds.length === 0) {
-      setError(t('form.groupsRequired'))
-      return
-    }
+    e.preventDefault(); setError('')
+    if (!groupsPending && groupIds.length === 0) return setError(t('form.groupsRequired'))
     const startsAt = italyToIso(date, startTime)
     const endsAt = endIso(date, startTime, shownEnd)
-    // An end time earlier than the start means the next day, which is right for a late session but
-    // wrong for a typo, so a very long event is not saved.
-    if (Date.parse(endsAt) - Date.parse(startsAt) > 12 * 3600000) {
-      setError(t('form.tooLong'))
-      return
-    }
+    if (Date.parse(endsAt) - Date.parse(startsAt) > 12 * 3600000) return setError(t('form.tooLong'))
     if (type === 'game' && video.trim() !== '' && !/^https:\/\/\S+$/.test(video.trim())) return setError(t('form.videoInvalid'))
-    setBusy(true)
-    const meetupAt = shownMeetup ? meetupIso(date, startTime, shownMeetup) : null
     const isGame = type === 'game'
-
-    if (editing) {
-      const { data, error } = await supabase
-        .from('events')
-        .update({
-          title: shownTitle.trim(),
-          starts_at: startsAt,
-          ends_at: endsAt,
-          meetup_at: meetupAt,
-          venue: venue.trim() || null,
-          opponent: isGame ? opponent.trim() || null : null,
-          home_away: isGame ? homeAway : null,
-          jersey: isGame ? jersey || null : null,
-          rink_id: rinkId,
-          video_url: isGame ? video.trim() || null : null,
-        })
-        .eq('id', id!)
-        .select()
-      if (error || !data || data.length === 0) {
-        setError(errorText(error ?? { message: 'forbidden' }))
-        setBusy(false)
-        return
-      }
-      const groupsChanged = !groupsLocked && (groupIds.length !== savedGroupIds.length || groupIds.some((g) => !savedGroupIds.includes(g)))
-      if (groupsChanged || (!groupsLocked && inSeries && scope === 'following' && groupIds.length > 0)) {
-        if (groupIds.length === 0) {
-          setError(t('form.groupsRequired'))
-          setBusy(false)
-          return
-        }
-        const res = await supabase.rpc('set_event_groups', { p_event_id: id!, p_group_ids: groupIds, p_scope: scope })
-        if (res.error) {
-          setError(errorText(res.error))
-          setBusy(false)
-          return
-        }
-      }
-      navigate(`/events/${id}`, { replace: true })
-      return
+    const values = {
+      type, title: shownTitle.trim(), starts_at: startsAt, ends_at: endsAt,
+      meetup_at: shownMeetup ? meetupIso(date, startTime, shownMeetup) : null,
+      venue: location.locked ? null : venue.trim() || null, rink_id: rinkId,
+      opponent: isGame ? opponent.trim() || null : null,
+      home_away: isGame ? homeAway : null, jersey: isGame ? jersey || null : null,
+      video_url: isGame ? video.trim() || null : null,
+      group_ids: groupsPending ? [] : groupIds, groups_pending: type === 'training' && groupsPending,
+      participant_details: participant, observer_details: observer,
     }
-
-    const total = Math.min(53, Math.max(2, Number(weeks) || 2))
-    const { data, error } = await supabase.rpc('create_event', {
-      p_type: type,
-      p_title: shownTitle.trim(),
-      p_starts_at: startsAt,
-      p_ends_at: endsAt,
-      p_meetup_at: meetupAt,
-      p_venue: venue.trim() || null,
-      p_group_ids: groupIds,
-      p_opponent: isGame ? opponent.trim() || null : null,
-      p_home_away: isGame ? homeAway : null,
-      p_repeat_weeks: type === 'training' && repeat ? total - 1 : 0,
-      p_rink_id: rinkId,
-    })
-    if (error) {
-      setError(errorText(error))
+    if (editing && scope !== 'one') {
+      setBusy(true)
+      const { data, error } = await supabase.rpc('event_scope', { p_event_id: id, p_scope: scope })
+      if (error) setError(errorText(error))
+      else if (!data?.length) setError(t('error.event_scope_changed'))
+      else { setPreview(data as ScopedEvent[]); setDraft(values) }
       setBusy(false)
-      return
-    }
-    // The jersey is set right after creating, so creating keeps one simple call for both event types.
-    if (isGame && jersey) {
-      const j = await supabase.from('events').update({ jersey }).eq('id', data as string).select()
-      if (j.error || !j.data || j.data.length === 0) {
-        setError(errorText(j.error ?? { message: 'forbidden' }))
-        setBusy(false)
-        return
-      }
-    }
-    navigate(`/events/${data as string}`, { replace: true })
+    } else await save(values)
   }
 
   return (
@@ -205,7 +191,7 @@ export default function EventForm() {
             <span className="label">{t('form.type')}</span>
             <div className="chips">
               {(['training', 'game'] as const).map((x) => (
-                <button type="button" key={x} className={type === x ? 'chip on' : 'chip'} aria-pressed={type === x} onClick={() => setType(x)}>
+                <button type="button" key={x} className={type === x ? 'chip on' : 'chip'} aria-pressed={type === x} onClick={() => { setType(x); if (x === 'game') setGroupsPending(false) }}>
                   {t(x === 'game' ? 'eventType.game' : 'eventType.training')}
                 </button>
               ))}
@@ -235,10 +221,6 @@ export default function EventForm() {
             <input type="time" value={shownMeetup} onChange={(e) => { setMeetupTime(e.target.value); setMeetupTouched(true) }} />
           </label>
         </div>
-        <label>
-          {t('form.venue')}
-          <input maxLength={120} value={venue} onChange={(e) => setVenue(e.target.value)} />
-        </label>
         {!listsReady && (
           <div className="field">
             <span className="label">{t('form.rink')}</span>
@@ -258,6 +240,11 @@ export default function EventForm() {
             <span className="hint">{t('form.rinkHint')}</span>
           </div>
         )}
+        <label>
+          {t('form.venue')}
+          <input name="venue" maxLength={120} value={location.locked ? location.venue : venue} disabled={location.locked} onChange={(e) => setVenue(e.target.value)} aria-describedby={location.locked ? 'rink-address-note' : undefined} />
+          {location.locked && <span id="rink-address-note" className="hint">{t('form.rinkAddressUsed')}</span>}
+        </label>
         {type === 'game' && (
           <>
             <label>
@@ -295,69 +282,33 @@ export default function EventForm() {
             </div>
           </>
         )}
-        {editing && (
-          <div className="field">
-            <span className="label">{t('form.groups')}</span>
-            {groupsLocked ? (
-              <>
-                <p>{groups.filter((g) => groupIds.includes(g.id)).map((g) => g.name).join(', ')}</p>
-                <span className="hint">{t(groupsLocked === 'league' ? 'form.groupsLeague' : 'form.groupsEnded')}</span>
-              </>
-            ) : (
-              <>
-                <div className="chips wrap">
-                  {groups.map((g) => (
-                    <button type="button" key={g.id} className={groupIds.includes(g.id) ? 'chip on' : 'chip'} aria-pressed={groupIds.includes(g.id)} onClick={() => toggleGroup(g.id)}>
-                      {g.name}
-                    </button>
-                  ))}
-                </div>
-                <span className="hint">{t('form.groupsEditHint')}</span>
-                {inSeries && (
-                  <div className="chips wrap">
-                    <button type="button" className={scope === 'one' ? 'chip on' : 'chip'} aria-pressed={scope === 'one'} onClick={() => setScope('one')}>{t('form.scopeOne')}</button>
-                    <button type="button" className={scope === 'following' ? 'chip on' : 'chip'} aria-pressed={scope === 'following'} onClick={() => setScope('following')}>{t('form.scopeFollowing')}</button>
-                  </div>
-                )}
-              </>
-            )}
-          </div>
-        )}
-        {!editing && (
-          <>
-            <div className="field">
-              <span className="label">{t('form.groups')}</span>
-              {listsReady ? (
-                <div className="chips wrap">
-                  {groups.map((g) => (
-                    <button type="button" key={g.id} className={groupIds.includes(g.id) ? 'chip on' : 'chip'} aria-pressed={groupIds.includes(g.id)} onClick={() => toggleGroup(g.id)}>
-                      {g.name}
-                    </button>
-                  ))}
-                </div>
-              ) : <ChipsSkeleton />}
-              <span className="hint">{t('form.groupsHint')}</span>
-            </div>
-            {type === 'training' && (
-              <div className="field">
-                <label className="check">
-                  <input type="checkbox" checked={repeat} onChange={(e) => setRepeat(e.target.checked)} />
-                  {t('form.repeat')}
-                </label>
-                {repeat && (
-                  <label>
-                    {t('form.repeatWeeks')}
-                    <input type="number" inputMode="numeric" min={2} max={53} value={weeks} onChange={(e) => setWeeks(e.target.value)} />
-                    <span className="hint">{t('form.repeatHint')}</span>
-                  </label>
-                )}
-              </div>
-            )}
-          </>
-        )}
+        <div className="field">
+          <span className="label">{t('form.groups')}</span>
+          {groupsLocked ? <>
+            <p>{groups.map((g) => groupIds.includes(g.id) ? g.name : '').filter(Boolean).join(', ') || t('events.unassigned')}</p>
+            <span className="hint">{t(groupsLocked === 'league' ? 'form.groupsLeague' : 'form.groupsEnded')}</span>
+          </> : <>
+            {type === 'training' && <label className="check"><input type="checkbox" checked={groupsPending} onChange={(e) => setGroupsPending(e.target.checked)} />{t('form.assignLater')}</label>}
+            {groupsPending && type === 'training' ? <p className="hint">{t('form.assignLaterHelp')}</p> : <>
+              {listsReady ? <div className="chips wrap">{groups.map((g) => <button type="button" key={g.id} className={groupIds.includes(g.id) ? 'chip on' : 'chip'} aria-pressed={groupIds.includes(g.id)} onClick={() => toggleGroup(g.id)}>{g.name}</button>)}</div> : <ChipsSkeleton />}
+              <span className="hint">{t('form.groupsConsultation')}</span>
+            </>}
+          </>}
+        </div>
+        {!editing && type === 'training' && <div className="field">
+          <label className="check"><input type="checkbox" checked={repeat} onChange={(e) => setRepeat(e.target.checked)} />{t('form.repeat')}</label>
+          {repeat && <label>{t('form.repeatWeeks')}<input type="number" inputMode="numeric" min={2} max={53} value={weeks} onChange={(e) => setWeeks(e.target.value)} /><span className="hint">{t('form.repeatHint')}</span></label>}
+        </div>}
+        <EventVisibility game={type === 'game'} participant={participant} observer={observer} onParticipant={setParticipant} onObserver={setObserver} />
+        {editing && inSeries && <EventScopeSelect value={scope} onChange={setScope} disabled={busy} />}
         {error && <p className="error" role="alert">{error}</p>}
         <button type="submit" disabled={busy}>{editing ? t('common.save') : t('form.create')}</button>
       </form>
+      <ConfirmDialog open={draft !== null} title={t('series.confirmTitle')} body={t('series.changes', { title: shownTitle, summary: scopeSummary(preview) })}
+        busy={busy} closeOnChoose={false} choiceClassName="" onClose={() => { if (!busy) setDraft(null) }}
+        choices={[{ label: t('series.save'), onChoose: () => { if (draft) void save(draft, preview.length) } }]}>
+        {error && <p className="error" role="alert">{error}</p>}
+      </ConfirmDialog>
     </div>
   )
 }

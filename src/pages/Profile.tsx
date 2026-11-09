@@ -1,4 +1,4 @@
-import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react'
+import { useCallback, useEffect, useState, type ChangeEvent, type FormEvent } from 'react'
 import ConfirmAction from '../components/ConfirmAction'
 import { errorText, t, type MessageKey } from '../i18n'
 import { checked } from '../lib/formcheck'
@@ -90,6 +90,9 @@ export function ProfileInfo() {
   const [jersey, setJersey] = useState(profile?.jersey_number?.toString() ?? '')
   const [position, setPosition] = useState<Position | ''>(profile?.position ?? '')
   const [phone, setPhone] = useState('')
+  const [contactReady, setContactReady] = useState(false)
+  const [contactError, setContactError] = useState('')
+  const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState('')
   const [nameError, setNameError] = useState('')
   const [phoneError, setPhoneError] = useState('')
@@ -104,9 +107,6 @@ export function ProfileInfo() {
     setLastName(profile.last_name)
     setJersey(profile.jersey_number?.toString() ?? '')
     setPosition(profile.position ?? '')
-    void supabase.from('profile_contacts').select('phone').eq('user_id', profile.id).maybeSingle().then(({ data }) => {
-      setPhone(formatPhone((data as { phone: string | null } | null)?.phone))
-    })
     // The numbers already worn in the person's teams, as a hint when choosing a number.
     void (async () => {
       const mine = await supabase.from('group_members').select('group_id').eq('user_id', profile.id)
@@ -117,6 +117,17 @@ export function ProfileInfo() {
       setHolders(rows)
     })()
   }, [profile])
+
+  const loadContact = useCallback(async () => {
+    if (!profile) return
+    setContactReady(false)
+    const { data, error } = await supabase.from('profile_contacts').select('phone').eq('user_id', profile.id).maybeSingle()
+    if (error || !data) { setContactError(errorText(error)); return }
+    setPhone(formatPhone((data as { phone: string | null } | null)?.phone))
+    setContactError('')
+    setContactReady(true)
+  }, [profile])
+  useEffect(() => { void loadContact() }, [loadContact])
 
   if (!profile) return null
   async function setPhoto(path: string | null) {
@@ -171,9 +182,11 @@ export function ProfileInfo() {
 
   async function save(e: FormEvent) {
     e.preventDefault()
+    if (!contactReady || saving) return
     setMessage('')
     if (nameHasDigits(firstName) || nameHasDigits(lastName)) return setNameError(t('error.name_digits'))
     if (!isPhoneValid(phone)) return setPhoneError(t('error.phone_invalid'))
+    setSaving(true)
     const a = await supabase
       .from('profiles')
       .update({
@@ -182,14 +195,12 @@ export function ProfileInfo() {
         jersey_number: jersey === '' ? null : Number(jersey),
         position: position === '' ? null : position,
       })
-      .eq('id', profile!.id)
-    const b = await supabase.from('profile_contacts').update({ phone: formatPhone(phone) || null }).eq('user_id', profile!.id)
-    const error = a.error ?? b.error
-    if (error) {
-      setMessage(errorText(error))
-      return
-    }
+      .eq('id', profile!.id).select()
+    if (a.error || !a.data?.length) { setSaving(false); setMessage(errorText(a.error ?? {message:'forbidden'})); return }
+    const b = await supabase.from('profile_contacts').update({ phone: formatPhone(phone) || null }).eq('user_id', profile!.id).select()
+    if (b.error || !b.data?.length) { setSaving(false); setMessage(errorText(b.error ?? {message:'forbidden'})); return }
     await reload()
+    setSaving(false)
     setMessage(t('common.saved'))
   }
 
@@ -210,6 +221,7 @@ export function ProfileInfo() {
           {photoError && <p className="error" role="alert">{photoError}</p>}
         </div>
       </div>
+      {contactError && <div><p className="error" role="alert">{contactError}</p><button type="button" className="secondary" onClick={() => void loadContact()}>{t('common.retry')}</button></div>}
       <form className="form-col" {...checked(save)}>
         <div className="colours">
           <label>{t('common.firstName')}
@@ -243,10 +255,10 @@ export function ProfileInfo() {
           </p>
         )}
         <label>{t('common.phone')}
-          <input type="tel" autoComplete="tel" maxLength={30} placeholder="333 123 4567" value={phone} aria-invalid={Boolean(phoneError)} onChange={(e) => { setPhone(e.target.value); setPhoneError('') }} onBlur={() => { setPhone(formatPhone(phone)); setPhoneError(isPhoneValid(phone) ? '' : t('error.phone_invalid')) }} />
+          <input type="tel" autoComplete="tel" disabled={!contactReady || saving} maxLength={30} placeholder="333 123 4567" value={phone} aria-invalid={Boolean(phoneError)} onChange={(e) => { setPhone(e.target.value); setPhoneError('') }} onBlur={() => { setPhone(formatPhone(phone)); setPhoneError(isPhoneValid(phone) ? '' : t('error.phone_invalid')) }} />
         </label>
         {phoneError && <p className="error" role="alert">{phoneError}</p>}
-        <button type="submit">{t('common.save')}</button>
+        <button type="submit" disabled={!contactReady || saving}>{t('common.save')}</button>
         {message && <p className={message === t('common.saved') ? 'hint' : 'error'} role={message === t('common.saved') ? 'status' : 'alert'}>{message}</p>}
       </form>
     </div>

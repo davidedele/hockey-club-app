@@ -48,6 +48,9 @@ export function t(key: MessageKey, values: Record<string, string> = {}): string 
 }
 
 const CODES = [
+  'event_scope_changed',
+  'event_groups_locked',
+  'event_invalid',
   'invite_invalid',
   'team_invite_invalid',
   'names_required',

@@ -18,17 +18,17 @@ Login: email and password, the same on the phone app and the website. Joining is
 Four groups: A, B, C1, C2. There is no separate "general" group.
 A player can be in any number of groups (many play in two).
 Each group has an invite link that adds a person to that group.
-An event is created once and is shown to the groups chosen for it: one, several, or all.
+An event is created once. Every member can consult its main schedule information. One, several or all groups are invited to participate. A training can explicitly leave groups to be assigned later; until assignment it requests no attendance answers.
 A player in two target groups sees the event once and answers once.
 
 ## 4. Events
 Two types: training and game.
 Fields: title, start time, end time, meetup time (usually an hour before the start), venue, groups.
-Trainings can repeat weekly (the club trains on Tuesday, Thursday and Sunday; the Thursday session runs about 22:30 to 23:55 with meetup at 21:30).
+Staff can edit, cancel, restore or delete one occurrence, that occurrence and following future occurrences, or every future occurrence in a series, with a count and date range before confirmation. Historical occurrences are excluded from series actions. Trainings can repeat weekly (the club trains on Tuesday, Thursday and Sunday; the Thursday session runs about 22:30 to 23:55 with meetup at 21:30).
 Games also have: opponent, home or away, final score.
 
 ## 5. Attendance
-Every player must answer yes or no for each event shown to them.
+Every player must answer yes or no for each event assigned to one of their groups, except when not called up. Events of other groups are consultable only.
 The answer must be hard to ignore:
 1. Automatic request when the event is created, then reminders until answered.
 2. A banner in the app until the answer is given.
@@ -85,7 +85,7 @@ On iPhone, push notifications need the app to be added to the home screen.
 ## 13. Data and privacy
 Keep the minimum: name, email, phone (optional), jersey number, position, group membership, profile picture (optional, added by the person, decided 21 October), game numbers, ratings and MVP votes (decided 21 October), absence periods with an optional reason (22 October), medical certificate expiry and file, privacy consent date (22 October).
 Not needed: date of birth, height, weight, parent fields.
-Row level security in the database: players see their own groups' events, their own answers and who said present for those events (decided 21 October); ratings follow the rule above; only the board sees plans and warnings.
+Row level security in the database: players can consult the club calendar, answer only events of their assigned groups, and read optional event sections according to the visibility settings (8 November, decisions 143 and 144); ratings follow the rule above; only the board sees plans and warnings.
 The club holds members' data, so the board should agree to the move and members should be told what is stored.
 
 ## 14. Technology

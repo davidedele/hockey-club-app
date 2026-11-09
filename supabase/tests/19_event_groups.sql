@@ -78,7 +78,7 @@ select test.rows('the record of the person only in A is gone', $$select 1 from p
 select test.rows('the answer of a person still in a group stays', $$select 1 from public.attendance_answers where event_id = pg_temp.u('e1') and user_id = pg_temp.u('3')$$, 1);
 select test.logout();
 select test.login(pg_temp.u('1'));
-select test.rows('the removed group no longer sees the event', $$select 1 from public.events where id = pg_temp.u('e1')$$, 0);
+select test.rows('the removed group can still consult the calendar event', $$select 1 from public.events where id = pg_temp.u('e1')$$, 1);
 select test.logout();
 
 \echo == the rest of the series

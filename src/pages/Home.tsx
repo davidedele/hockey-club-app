@@ -1,6 +1,7 @@
 import { readableInk } from '../lib/colour'
 import { useCallback, useEffect, useMemo, useState, type CSSProperties } from 'react'
 import { Link } from 'react-router-dom'
+import { canAnswerEvent, detailAllowed, invitedTo, unassignedTraining } from '../lib/eventaccess'
 import NextPanel from '../components/NextPanel'
 import PageHeader from '../components/PageHeader'
 import { errorText, t } from '../i18n'
@@ -88,9 +89,8 @@ export default function Home() {
   }, [load])
 
   const live = useMemo(() => events.filter((e) => !e.cancelled_at), [events])
-  const mineOnly = (e: EventRow) => e.event_groups.some((x) => myGroups.includes(x.group_id))
-  const inView = (e: EventRow) => inGroups(e.event_groups.map((x) => x.group_id))
-  const next = live.find((e) => mineOnly(e) && inView(e)) ?? live.find(inView)
+  const inView = (e: EventRow) => unassignedTraining(e) || inGroups(e.event_groups.map((x) => x.group_id))
+  const next = isStaff ? live.find(inView) : live.find((e) => inView(e) && canAnswerEvent(e, myGroups, notCalled.has(e.id)))
   // The same events as the banner, the bell and the Eventi heading: this week, until Monday 00:00 (decision 92).
   const due = asPlayer ? unanswered({ events, answers, notCalledUp: notCalled, myGroups }) : { inWindow: [] as EventRow[], later: [] as EventRow[] }
   const pending = due.inWindow
@@ -143,9 +143,9 @@ export default function Home() {
 
       <div className="home-grid">
         <div className="home-main">
-          {next && <div className="nowline"><span>{t('home.now')}</span><i aria-hidden="true" /></div>}
+          {next && <div className="nowline" aria-hidden="true"><i /></div>}
           {next ? (
-            <NextPanel club={club.name || t('app.name')} colours={colours(next)} event={next} groups={groupName(next)} mine={answers.get(next.id) ?? null} count={count} canAnswer={asPlayer && mineOnly(next)} busy={busy} onAnswer={(v) => void answer(next, v)} />
+            <NextPanel club={club.name || t('app.name')} colours={colours(next)} event={next} groups={groupName(next)} mine={answers.get(next.id) ?? null} count={detailAllowed(next, 'presence', isStaff, invitedTo(next, myGroups)) ? count : undefined} canAnswer={asPlayer && canAnswerEvent(next, myGroups, notCalled.has(next.id))} busy={busy} onAnswer={(v) => void answer(next, v)} />
           ) : (
             loaded && <section className="card"><h2>{t('home.next')}</h2><p className="hint">{t('events.empty')}</p></section>
           )}

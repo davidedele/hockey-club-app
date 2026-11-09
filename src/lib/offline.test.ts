@@ -37,6 +37,10 @@ describe('buildCopy', () => {
     const text = JSON.stringify(copy)
     for (const word of ['phone', 'email', 'x@y.z', '333', 'file_path', 'f.pdf', 'video_url', 'secret', 'rating']) expect(text).not.toContain(word)
   })
+  it('keeps the rink address offline after a training has no event address', () => {
+    const addressed = buildCopy('me', now, {...raw,events:[ev('a',day(1),{venue:null,rink_id:1})],rinks:[{id:1,name:'Grande',address:'Via Esempio 1',note:null}]})
+    expect(addressed.events[0].venue).toBe('Via Esempio 1 · Grande')
+  })
   it('holds at most 40 events', () => {
     const many = Array.from({ length: 60 }, (_, i) => ev(`e${i}`, new Date(now.getTime() + (i + 1) * 3_600_000).toISOString()))
     expect(buildCopy('me', now, { ...raw, events: many }).events).toHaveLength(40)

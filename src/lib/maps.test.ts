@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { isApple, mapsUrl, placeLabel, placeQuery } from './maps'
+import { eventLocation, isApple, mapsUrl, placeLabel, placeQuery } from './maps'
 
 describe('maps link', () => {
   it('uses Apple Maps on an iPhone and Google Maps elsewhere', () => {
@@ -26,5 +26,20 @@ describe('maps link', () => {
     expect(placeLabel({ venue: null, rink: 'Piccola' })).toBe('Piccola')
     expect(placeLabel({ venue: 'Piccola', rink: 'Piccola' })).toBe('Piccola')
     expect(placeLabel({ venue: ' ', rink: undefined })).toBe('')
+  })
+})
+
+describe('event address consistency', () => {
+  const rink = { id: 1, name: 'Grande', address: ' Via Roma 1 ', note: null }
+  it('uses the saved rink address for training display and map even with a legacy duplicate', () => {
+    expect(eventLocation({type:'training', venue:'Wrong address'}, rink)).toEqual({locked:true, venue:'Via Roma 1', query:'Via Roma 1', label:'Via Roma 1 · Grande'})
+  })
+  it('permits an event address without a saved rink address', () => {
+    expect(eventLocation({type:'training', venue:'Free address'}, {...rink,address:null})).toEqual({locked:false,venue:'Free address',query:'Free address',label:'Free address · Grande'})
+  })
+  it('keeps an explicitly chosen game location consistent with its map', () => {
+    expect(eventLocation({type:'game',venue:'Away arena'},rink).query).toBe('Away arena')
+    expect(eventLocation({type:'game',venue:null},rink).query).toBe('Via Roma 1')
+    expect(eventLocation({type:'training',venue:null}).query).toBe('')
   })
 })
