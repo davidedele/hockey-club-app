@@ -1,3 +1,5 @@
+import LoadError from '../components/LoadError'
+import { PageSkeleton } from '../components/Skeleton'
 import { useGroupFilter } from '../lib/groupfilter'
 import { personName } from '../lib/names'
 import ConfirmAction from '../components/ConfirmAction'
@@ -18,6 +20,7 @@ export default function Announcements() {
   const [groups, setGroups] = useState<Group[]>([])
   const [seenAt, setSeenAt] = useState<string | null>(null)
   const [loaded, setLoaded] = useState(false)
+  const [loadError, setLoadError] = useState('')
   const [title, setTitle] = useState('')
   const [body, setBody] = useState('')
   const { groupId: chosenGroup } = useGroupFilter()
@@ -34,6 +37,9 @@ export default function Announcements() {
       supabase.from('groups').select('*').order('id'),
       supabase.from('announcement_seen').select('seen_at').eq('user_id', profile.id).maybeSingle(),
     ])
+    const failure = [a,g,s].find((result) => result.error)?.error
+    if (failure) { setLoadError(errorText(failure)); setLoaded(true); return }
+    setLoadError('')
     setItems((a.data ?? []) as unknown as Announcement[])
     setGroups((g.data ?? []) as Group[])
     setSeenAt((s.data as { seen_at: string } | null)?.seen_at ?? null)
@@ -90,6 +96,9 @@ export default function Announcements() {
 
   const names = (a: Announcement) =>
     groups.filter((g) => a.announcement_groups.some((x) => x.group_id === g.id)).map((g) => g.name).join(', ')
+
+  if (!loaded) return <PageSkeleton />
+  if (loadError) return <LoadError title={t('ann.title')} back={{to:'/events',label:t('nav.events')}} message={loadError} onRetry={() => void load()} />
 
   return (
     <div className="page narrow two-col">

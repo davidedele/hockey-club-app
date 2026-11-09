@@ -30,6 +30,13 @@ describe('problemOf', () => {
     expect(key({ type: 'email', value: 'x', typeMismatch: true })).toBe('check.badEmail')
     expect(key({ type: 'number', value: '99', rangeOverflow: true })).toBe('check.outOfRange')
   })
+  it('checks declared patterns, number steps and other input formats', () => {
+    expect(key({value:'A!',patternMismatch:true})).toBe('check.badFormat')
+    expect(key({type:'number',value:'1.5',stepMismatch:true})).toBe('check.badFormat')
+    expect(key({type:'url',value:'invalid',typeMismatch:true})).toBe('check.badFormat')
+    expect(key({type:'number',value:'',badInput:true})).toBe('check.badFormat')
+    expect(key({value:'C1',patternMismatch:false})).toBeNull()
+  })
   it('requires a ticked box', () => {
     expect(key({ required: true, type: 'checkbox', checked: false })).toBe('check.requiredCheck')
     expect(key({ required: true, type: 'checkbox', checked: true, value: 'on' })).toBeNull()

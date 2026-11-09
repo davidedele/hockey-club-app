@@ -1306,5 +1306,7 @@
   "overlap.one": "One overlap",
   "overlap.many": "{n} overlaps",
   "overlap.help": "These events involve the same groups at overlapping times. You can keep them if intentional, or open them to make changes.",
-  "overlap.more": "Show 5 more"
+  "overlap.more": "Show 5 more",
+  "common.retry": "Try again",
+  "check.badFormat": "Check the format of this field."
 }

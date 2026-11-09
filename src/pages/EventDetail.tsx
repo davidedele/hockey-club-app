@@ -1,8 +1,9 @@
+import LoadError from '../components/LoadError'
 import { readableInk } from '../lib/colour'
 import { useGroupFilter } from '../lib/groupfilter'
 import { personName } from '../lib/names'
 import { PageSkeleton } from '../components/Skeleton'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { errorText, t, type MessageKey } from '../i18n'
 import Predictions from '../components/Predictions'
@@ -51,6 +52,9 @@ export default function EventDetail() {
   const [scoreThem, setScoreThem] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
+  const [loadError, setLoadError] = useState('')
+  const [loadedFor, setLoadedFor] = useState('')
+  const loadSequence = useRef(0)
   const [near, setNear] = useState<NearEvent[]>([])
   const [dragging, setDragging] = useState<string | null>(null)
   const [hoverState, setHoverState] = useState<State | null>(null)
@@ -58,6 +62,7 @@ export default function EventDetail() {
   const { inView } = useGroupFilter()
 
   const refresh = useCallback(async () => {
+    const attempt = ++loadSequence.current
     if (!profile) return
     const [e, g, m, a, rk, nb, ownRecord] = await Promise.all([
       supabase.from('events').select('*, event_groups(group_id)').eq('id', id).maybeSingle(),
@@ -68,6 +73,10 @@ export default function EventDetail() {
       supabase.from('events').select('id, type, title, starts_at, opponent, home_away, score_for, score_against, cancelled_at, event_groups(group_id)').order('starts_at', { ascending: false }).limit(1000),
       supabase.from('attendance_records').select('status').eq('event_id', id).eq('user_id', profile.id).maybeSingle(),
     ])
+    if (attempt !== loadSequence.current) return
+    const failure = [e,g,m,a,rk,nb,ownRecord].find((result) => result.error)?.error
+    if (failure) { setLoadError(errorText(failure)); setLoadedFor(id); setLoaded(true); return }
+    setLoadError('')
     // The strip follows the group chosen in the selector; the event being looked at is always in it.
     setNear(((nb.data ?? []) as NearEvent[]).filter((x) => x.id === id || unassignedTraining(x) || inView(x.event_groups.map((g) => g.group_id))).reverse())
     const row = (e.data as EventRow | null) ?? null
@@ -83,15 +92,19 @@ export default function EventDetail() {
     }
     if (row && isStaff) {
       const r = await supabase.rpc('event_attendance', { p_event_id: id })
+      if (attempt !== loadSequence.current) return
       setRows((r.data ?? []) as AttendanceRow[])
     } else if (row) {
       const [r, rec] = await Promise.all([
         supabase.rpc('event_present_people', { p_event_id: id }),
         supabase.rpc('event_presence_recorded', { p_event_id: id }),
       ])
+      if (attempt !== loadSequence.current) return
       setGoing((r.data ?? []) as { user_id: string; first_name: string; last_name: string }[])
       setRecordedByDb(rec.data === true)
     }
+    if (attempt !== loadSequence.current) return
+    setLoadedFor(id)
     setLoaded(true)
   }, [id, profile, isStaff, inView])
 
@@ -101,6 +114,8 @@ export default function EventDetail() {
 
   useCrumb(event?.title ?? '')
 
+  if (loadedFor !== id) return <PageSkeleton />
+  if (loadError) return <LoadError title={t('nav.events')} back={{to:'/events',label:t('nav.events')}} message={loadError} onRetry={() => void refresh()} />
   if (loaded && !event) return <Navigate to="/events" replace />
   if (!event) return <PageSkeleton />
 

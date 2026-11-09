@@ -1,7 +1,9 @@
+import LoadError from '../components/LoadError'
+import { PageSkeleton } from '../components/Skeleton'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import PageHeader from '../components/PageHeader'
 import { Link } from 'react-router-dom'
-import { t } from '../i18n'
+import { errorText, t } from '../i18n'
 import SeasonTabs from '../components/SeasonTabs'
 import LeagueLeaders from '../components/LeagueLeaders'
 import { leagueSync, prettyName, refreshLeague } from '../lib/league'
@@ -32,6 +34,7 @@ export default function Championship() {
   const [moreResults, setMoreResults] = useState(0)
   const [refreshing, setRefreshing] = useState(false)
   const [loaded, setLoaded] = useState(false)
+  const [loadError, setLoadError] = useState('')
 
   const load = useCallback(async () => {
     if (!profile) return
@@ -44,6 +47,9 @@ export default function Championship() {
       supabase.from('events').select('id, league_match_id').not('league_match_id', 'is', null),
       leagueSync(),
     ])
+    const failure = [g,m,c,lm,ls,ev].find((result) => result.error)?.error
+    if (failure) { setLoadError(errorText(failure)); setLoaded(true); return false }
+    setLoadError('')
     setGroups((g.data ?? []) as Group[])
     setMine(((m.data ?? []) as { group_id: number }[]).map((x) => x.group_id))
     setChamps((c.data ?? []) as LeagueChampionship[])
@@ -52,13 +58,15 @@ export default function Championship() {
     setEventOf(new Map(((ev.data ?? []) as { id: string; league_match_id: number }[]).map((x) => [x.league_match_id, x.id])))
     setSync(s)
     setLoaded(true)
+    return true
   }, [profile])
 
   // Show what is stored at once, then ask for a fresh reading when it is old.
   useEffect(() => { setCompId(null) }, [groupId])
 
   useEffect(() => {
-    void load().then(async () => {
+    void load().then(async (ok) => {
+      if (!ok) return
       setRefreshing(true)
       if (await refreshLeague()) await load()
       setRefreshing(false)
@@ -132,6 +140,9 @@ export default function Championship() {
       ? t('champ.sourceFailed')
       : t('champ.source', { when: t('champ.when', { day: formatShortDay(sync.finished_at), time: formatTime(sync.finished_at) }) })
     : t('champ.sourceNever')
+
+  if (!loaded) return <PageSkeleton />
+  if (loadError) return <LoadError title={t('champ.title')} message={loadError} onRetry={() => void load()} />
 
   return (
     <div className="page wide">

@@ -1,3 +1,5 @@
+import LoadError from '../components/LoadError'
+import { PageSkeleton } from '../components/Skeleton'
 import { eventLocation } from '../lib/maps'
 import { ChipsSkeleton } from '../components/Skeleton'
 import { useEffect, useState, type FormEvent } from 'react'
@@ -62,19 +64,31 @@ export default function EventForm() {
   const [jersey, setJersey] = useState<'light' | 'dark' | ''>('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
+  const [loadError, setLoadError] = useState('')
+  const [loadedFor, setLoadedFor] = useState('')
+  const [loadAttempt, setLoadAttempt] = useState(0)
+  const [missing, setMissing] = useState(false)
 
   useEffect(() => {
+    let active = true
+    setLoaded(false); setListsReady(false); setLoadError(''); setMissing(false)
     void (async () => {
       const [g, r] = await Promise.all([supabase.from('groups').select('*').order('id'), supabase.from('rinks').select('id, name, address, note').order('name')])
+      if (!active) return
+      const failure = g.error ?? r.error
+      if (failure) { setLoadError(errorText(failure)); setLoadedFor(id ?? 'new'); setLoaded(true); return }
+      setLoadError('')
       setGroups((g.data ?? []) as Group[])
       setRinks((r.data ?? []) as Rink[])
       setListsReady(true)
       if (!id) {
-        // A new event starts on the group chosen in the switcher.
-        if (chosenGroup !== null) setGroupIds((current) => (current.length === 0 ? [chosenGroup] : current))
+        setLoadedFor('new'); setLoaded(true)
         return
       }
-      const { data } = await supabase.from('events').select('*, event_groups(group_id)').eq('id', id).maybeSingle()
+      const { data, error: eventError } = await supabase.from('events').select('*, event_groups(group_id)').eq('id', id).maybeSingle()
+      if (!active) return
+      if (eventError) { setLoadError(errorText(eventError)); setLoadedFor(id); setLoaded(true); return }
+      if (!data) { setMissing(true); setLoadedFor(id); setLoaded(true); return }
       const e = data as EventRow | null
       if (e) {
         const start = isoToItaly(e.starts_at)
@@ -101,12 +115,20 @@ export default function EventForm() {
         setInSeries(Boolean(e.series_id))
         setGroupsLocked(e.league_match_id !== null ? 'league' : new Date(e.ends_at).getTime() <= Date.now() ? 'ended' : '')
       }
-      setLoaded(true)
+      setLoadedFor(id); setLoaded(true)
     })()
-  }, [id, chosenGroup])
+    return () => { active = false }
+  }, [id, loadAttempt])
+
+  useEffect(() => {
+    if (!editing && chosenGroup !== null && chosenGroup > 0) setGroupIds((current) => current.length ? current : [chosenGroup])
+  }, [editing, chosenGroup])
 
   if (!isStaff) return <Navigate to="/events" replace />
-  if (!loaded) return null
+  if (loadedFor !== (id ?? 'new')) return <PageSkeleton />
+  if (loadError) return <LoadError title={t(editing ? 'form.editTitle' : 'form.newTitle')} back={{to:'/events',label:t('nav.events')}} message={loadError} onRetry={() => setLoadAttempt((n) => n+1)} />
+  if (missing) return <Navigate to="/events" replace />
+  if (!loaded || !listsReady) return <PageSkeleton />
 
   // Sensible defaults that follow the start time until the person types their own.
   const shownTitle = titleTouched ? title : t(type === 'game' ? 'form.titleGame' : 'form.titleTraining')

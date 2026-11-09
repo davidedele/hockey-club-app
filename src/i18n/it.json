@@ -1306,5 +1306,7 @@
   "overlap.one": "Una sovrapposizione",
   "overlap.many": "{n} sovrapposizioni",
   "overlap.help": "Questi eventi coinvolgono gli stessi gruppi in orari sovrapposti. Puoi lasciarli così se previsto, oppure aprirli per modificarli.",
-  "overlap.more": "Mostra altre 5"
+  "overlap.more": "Mostra altre 5",
+  "common.retry": "Riprova",
+  "check.badFormat": "Controlla il formato di questo campo."
 }

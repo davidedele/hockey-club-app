@@ -1,3 +1,5 @@
+import LoadError from '../components/LoadError'
+import { PageSkeleton } from '../components/Skeleton'
 import EventOverlapNotice from '../components/EventOverlapNotice'
 import { eventOverlaps } from '../lib/eventoverlap'
 import { eventLocation } from '../lib/maps'
@@ -50,6 +52,7 @@ export default function Events() {
   const [todoExtra, setTodoExtra] = useState(0)
   const [laterOpen, setLaterOpen] = useState(false)
   const [loaded, setLoaded] = useState(false)
+  const [loadError, setLoadError] = useState('')
   const [records, setRecords] = useState<Map<string, string>>(new Map())
   const [memberCount, setMemberCount] = useState<number | null>(null)
   const [busy, setBusy] = useState('')
@@ -66,6 +69,9 @@ export default function Events() {
       supabase.from('attendance_records').select('event_id, status').eq('user_id', profile.id),
       supabase.from('profiles').select('id', { count: 'exact', head: true }).is('deleted_at', null),
     ])
+    const failure = [e,g,m,a,r,n].find((result) => result.error)?.error
+    if (failure) { setLoadError(errorText(failure)); setLoaded(true); return }
+    setLoadError('')
     setRecords(new Map(((r.data ?? []) as { event_id: string; status: string }[]).map((x) => [x.event_id, x.status])))
     setMemberCount(n.count ?? null)
     // The newest events are fetched, so the future is never cut off, and put back in date order.
@@ -220,6 +226,9 @@ export default function Events() {
     setWeekShift(shift)
     setPicked(null)
   }
+
+  if (!loaded) return <PageSkeleton />
+  if (loadError) return <LoadError title={t('nav.events')} message={loadError} onRetry={() => void load()} />
 
   return (
     <div className="page wide events-page">
