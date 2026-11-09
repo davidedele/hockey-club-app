@@ -26,7 +26,7 @@ The settings are in `netlify.toml`: build command, the redirect that makes direc
 
 ## Pending event update, PR 50
 
-1. Review [PR 50](https://github.com/davidedele/hockey-club-app/pull/50) and `docs/EVENT_MANAGEMENT_REVIEW.md`. The branch contains all event upgrades from 8 November, including the local review follow ups. A local preview is not a hosted deployment.
+1. Review [PR 50](https://github.com/davidedele/hockey-club-app/pull/50) and `docs/EVENT_MANAGEMENT_REVIEW.md`. The branch contains all event upgrades from 8 November, including the local review follow ups and the complete audit in `docs/INTERACTION_AUDIT.md`. A local preview is not a hosted deployment.
 2. Confirm migration 0061 is already applied to the test project, or apply its guarded script once after migrations through 0060. Do not repeat it if already applied.
 3. Apply the guarded 0062 script once and verify its address trigger. No further migration is needed for the overlap notice or remembered calendar layout.
 4. Update the `calendar-feed` function for canonical training addresses in subscriptions.

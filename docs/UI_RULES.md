@@ -88,6 +88,10 @@ Read this file, and the open items of `docs/UI_BACKLOG.md`, before touching a pa
 25. Overlap notices belong only to Staff Events, collapsed by default and using the existing Fold control. They link to future events sharing an assigned group, with no popup or blocking. Staff decide whether the overlap is intentional. Cancelled and past events, unassigned groups and different group sessions do not trigger it.
 26. The desktop calendar remembers Week, Month or List in this browser. Invalid or unavailable storage falls back to Week; phone layout remains responsive.
 
+27. A failed read is not an empty list or a missing record. Show an error and retry; keep edit controls unavailable until their stored data is known. In particular, never overwrite a phone or configuration default after its read failed.
+28. The app's form validation must respect declared required, length, range, pattern, step and input type rules when native validation is turned off. Explanations belong beside the field with invalid state and focus.
+29. A global group filter change must not replace an unsaved event draft. Group and rink metadata changes must refresh the choices and location data already cached in the app.
+
 ## 6. How to check
 
 1. Run `node scripts/ui-check.mjs`. It builds its own copy of the app against a fake backend with invented sample data (no account, no network), opens every page at 375 and 1280 pixels, saves screenshots to `ui-check/`, and fails on: sideways scrolling, controls under 44 pixels, a select with the native look, a page frame whose left edge differs from the others, a sub page without a way back, a translation key shown as text, a label ending with a colon, a script error. It also tries the group menu and the view menu by keyboard, the name rule on leaving the field, and a confirmation window (Annulla focused, Escape removes nothing). A new page goes into its route list; a new kind of data goes into `scripts/ui-check/fixtures.mjs`.

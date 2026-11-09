@@ -15,12 +15,14 @@
 //   UI_CHECK_WIDTHS=375,1280   other window widths (default 320, 375, 390, 430, 768, 1280)
 
 import { execSync } from 'node:child_process'
-import { createReadStream, existsSync, mkdirSync, rmSync, statSync, writeFileSync } from 'node:fs'
+import { createReadStream, existsSync, mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs'
 import { createServer } from 'node:http'
 import { createRequire } from 'node:module'
 import { extname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { fixtures, ME } from './ui-check/fixtures.mjs'
+import { createMockBackend } from './ui-check/backend.mjs'
+import { interfaceRoutes } from './ui-check/routes.mjs'
 
 const require = createRequire(import.meta.url)
 const playwright = require('playwright')
@@ -58,147 +60,11 @@ const server = createServer((req, res) => {
 await new Promise((ok) => server.listen(0, '127.0.0.1', ok))
 const origin = `http://127.0.0.1:${server.address().port}`
 
-// 3. The fake backend: tables with simple filters, functions, sign in, storage.
-function filterRows(rows, params, table) {
-  let list = rows.slice()
-  for (const [key, raw] of params) {
-    if (['select', 'order', 'limit', 'offset', 'columns', 'on_conflict'].includes(key) || key.includes('.')) continue
-    const m = raw.match(/^(not\.)?(eq|neq|gt|gte|lt|lte|is|in)\.(.*)$/)
-    if (!m) continue
-    const [, not, op, value] = m
-    const test = (v) => {
-      const s = v === null || v === undefined ? null : String(v)
-      switch (op) {
-        case 'eq': return s === value
-        case 'neq': return s !== value
-        case 'gt': return s !== null && s > value
-        case 'gte': return s !== null && s >= value
-        case 'lt': return s !== null && s < value
-        case 'lte': return s !== null && s <= value
-        case 'is': return value === 'null' ? s === null : String(v) === value
-        case 'in': return value.replace(/^\(|\)$/g, '').split(',').map((x) => x.replace(/^"|"$/g, '')).includes(s)
-      }
-      return true
-    }
-    list = list.filter((r) => (key in r ? test(r[key]) !== Boolean(not) : true))
-  }
-  const order = params.get('order')
-  if (order) {
-    const [col, dir] = order.split(',')[0].split('.')
-    list.sort((a, b) => String(a[col] ?? '').localeCompare(String(b[col] ?? '')) * (dir === 'desc' ? -1 : 1))
-  }
-  const limit = Number(params.get('limit'))
-  if (limit) list = list.slice(0, limit)
-  return embed(list, table, params.get('select') ?? '')
-}
-
-// Embedded rows of a select such as "*, event_groups(group_id)" or "profiles:author_id(first_name)":
-// a child table is found by its "<table>_id" column, a parent table by the named column or "<name>_id".
-const one = (name) => name.replace(/s$/, '')
-function splitTop(text) {
-  const parts = []
-  let depth = 0
-  let current = ''
-  for (const ch of text) {
-    if (ch === '(') depth++
-    if (ch === ')') depth--
-    if (ch === ',' && depth === 0) { parts.push(current.trim()); current = '' } else current += ch
-  }
-  if (current.trim()) parts.push(current.trim())
-  return parts
-}
-function embed(rows, table, select) {
-  const wanted = splitTop(select).map((part) => part.match(/^(?:(\w+):)?(\w+)(?:!\w+)?\((.*)\)$/)).filter(Boolean)
-  if (!wanted.length) return rows
-  const pick = (row, inner) => (row ? Object.fromEntries(inner === '*' ? Object.entries(row) : inner.split(',').map((c) => [c.trim(), row[c.trim()]])) : null)
-  return rows.map((row) => {
-    const copy = { ...row }
-    for (const [, alias, name, inner] of wanted) {
-      if (alias) {
-        // "profiles:author_id(...)": the output name is the table, the part before "(" is the column that points at it.
-        copy[alias] = pick((fixtures.tables[alias] ?? []).find((t) => t.id === row[name]), inner)
-        continue
-      }
-      const target = fixtures.tables[name] ?? []
-      const childColumn = `${one(table)}_id`
-      if (target[0] && childColumn in target[0]) copy[name] = target.filter((t) => t[childColumn] === row.id).map((t) => pick(t, inner))
-      else copy[name] = pick(target.find((t) => t.id === row[name === 'profiles' ? 'user_id' : `${one(name)}_id`]), inner)
-    }
-    return copy
-  })
-}
-
-const eventRequests = []
-let apiDown = false
-// A page of kind "nogames" is opened with groups that have no game coming up (Fantahockey says so and offers no form).
-let noGames = false
-async function answer(route) {
-  if (apiDown) return route.abort('failed')
-  const req = route.request()
-  const url = new URL(req.url())
-  const json = (body, status = 200, headers = {}) => route.fulfill({ status, contentType: 'application/json', headers: { 'access-control-allow-origin': '*', 'access-control-allow-headers': req.headers()['access-control-request-headers'] ?? 'authorization, apikey, content-type, x-client-info, prefer, accept, range, x-supabase-api-version, accept-profile, content-profile', 'access-control-allow-methods': 'GET, HEAD, POST, PATCH, PUT, DELETE, OPTIONS', 'access-control-expose-headers': 'content-range', ...headers }, body: JSON.stringify(body) })
-  if (req.method() === 'OPTIONS') return json({})
-  const p = url.pathname
-  if (p.startsWith('/auth/v1/user')) return json({ id: ME, email: fixtures.me.email, aud: 'authenticated', role: 'authenticated', factors: fixtures.mockFactors ?? [] })
-  if (p.startsWith('/auth/v1/')) return json({})
-  if (p.startsWith('/functions/v1/league-match')) return json(fixtures.match)
-  if (p.startsWith('/functions/v1/')) return json({ changed: false })
-  if (p.startsWith('/storage/v1/object/sign/')) {
-    const body = JSON.parse(req.postData() || '{}')
-    return json((body.paths ?? []).map((path) => ({ path, signedURL: null, error: 'not found' })))
-  }
-  if (p.startsWith('/storage/')) return route.fulfill({ status: 404, body: '' })
-  if (p.startsWith('/rest/v1/rpc/')) {
-    const name = p.split('/').pop()
-    const body = JSON.parse(req.postData() || '{}')
-    if (['save_event','manage_events','event_scope'].includes(name)) eventRequests.push({ name, body })
-    if (name === 'event_scope') {
-      const event = fixtures.tables.events.find((e) => e.id === body.p_event_id)
-      return json(fixtures.tables.events.filter((e) => body.p_scope === 'one' ? e.id === event?.id : event?.series_id && e.series_id === event.series_id && Date.parse(e.starts_at) > Date.now() && (body.p_scope === 'future' || e.starts_at >= event.starts_at)).sort((a,b) => a.starts_at.localeCompare(b.starts_at)))
-    }
-    if (name === 'save_event') return json(body.p_event_id ?? fixtures.ids.training)
-    if (name === 'manage_events') return json(body.p_expected_count)
-    if (noGames && (name === 'fanta_next_round' || name === 'fanta_candidates')) return json([])
-    return json(fixtures.rpc[name] ?? [])
-  }
-  if (p.startsWith('/rest/v1/')) {
-    const table = p.split('/').pop()
-    if (req.method() !== 'GET' && req.method() !== 'HEAD') return json([], req.method() === 'POST' ? 201 : 200)
-    const rows = filterRows(fixtures.tables[table] ?? [], url.searchParams, table)
-    const headers = { 'content-range': `0-${Math.max(rows.length - 1, 0)}/${rows.length}` }
-    if (req.method() === 'HEAD') return route.fulfill({ status: 200, headers: { ...headers, 'access-control-allow-origin': '*', 'access-control-expose-headers': 'content-range' }, body: '' })
-    if ((req.headers()['accept'] ?? '').includes('vnd.pgrst.object')) {
-      return rows.length ? json(rows[0], 200, headers) : json({ code: 'PGRST116', message: 'no rows' }, 406)
-    }
-    return json(rows, 200, headers)
-  }
-  return json([])
-}
+const { answer, eventRequests, requests: backendRequests, state: backendState } = createMockBackend(fixtures, ME)
 
 // 4. The pages. "sub" pages must offer a way back; "auth" pages are outside the app frame.
 const { training, game, member, futureGame } = fixtures.ids
-const ROUTES = [
-  ['home', '/'], ['events', '/events'], ['members', '/members'], ['championship', '/campionato'], ['championship-assists', '/campionato?stats=assists'], ['championship-penalties', '/campionato?stats=penalties'], ['league-match', '/campionato/partita/501', 'sub'], ['stats', '/stats'], ['stats-players', '/stats?tab=players'], ['stats-predictions', '/stats?tab=predictions'], ['stats-hall', '/stats?tab=hall'], ['stats-fanta', '/stats?tab=fanta'], ['stats-fanta-player', '/stats?tab=fanta', 'player'], ['stats-fanta-nogames', '/stats?tab=fanta', 'nogames'],
-  ['attendance', '/attendance'], ['attendance-events', '/attendance?tab=events'],
-  ['event-training', `/events/${training}`, 'sub'], ['event-game', `/events/${game}`, 'sub'], ['event-game-last-tab', `/events/${game}?tab=lineup`, 'sub'], ['event-training-last-tab', `/events/${training}?tab=plan`, 'sub'], ['event-future-game', `/events/${futureGame}`, 'sub'],
-  ['events-list', '/events'], ['events-list-player', '/events', 'player'], ['events-month-player', '/events', 'player'],
-  ['event-consultation', `/events/${fixtures.ids.consultation}`, 'player'],
-  ['event-consultation-shared', `/events/${fixtures.ids.shared}`, 'player'],
-  ['event-consultation-discussion', `/events/${fixtures.ids.shared}?tab=discussion`, 'player'],
-  ['event-unassigned', `/events/${fixtures.ids.unassigned}`, 'player'],
-  ['event-hidden-details', `/events/${fixtures.ids.hidden}`, 'player'],
-  ['event-edit-series', `/events/${training}/edit`, 'sub'],
-  ['event-new-visibility', '/events/new', 'sub'], ['event-new-pending', '/events/new', 'sub'],
-  ['event-new', '/events/new', 'sub'], ['attendance-missing', '/attendance?tab=missing'],
-  ['announcements', '/announcements', 'sub'], ['drills', '/drills'],
-  ['certificate-review', '/members/certificates', 'sub'], ['member-edit', `/members/${member}`, 'sub'], ['member-documents', `/members/${member}/documents`, 'sub'],
-  ['profile', '/profile'], ['profile-info', '/profile/info', 'sub'], ['profile-documents', '/documents', 'sub'],
-  ['profile-absences', '/profile/absences', 'sub'], ['profile-season', '/profile/season', 'sub'], ['profile-club-documents', '/profile/club-documents', 'sub'], ['profile-security', '/profile/security', 'sub'], ['profile-notifications', '/profile/notifications', 'sub'],
-  ['profile-calendar', '/profile/calendar', 'sub'], ['offline', '/offline', 'sub'], ['profile-app', '/profile/app', 'sub'],
-  ['settings', '/settings'], ['settings-club', '/settings/club', 'sub'], ['settings-documents', '/settings/documents', 'sub'], ['settings-groups', '/settings/groups', 'sub'],
-  ['settings-rinks', '/settings/rinks', 'sub'], ['settings-ice', '/settings/ice', 'sub'], ['settings-league', '/settings/league', 'sub'], ['settings-invites', '/settings/invites', 'sub'],
-  ['login', '/login', 'auth'],
-].filter(([name]) => name.includes(only))
+const ROUTES = interfaceRoutes(fixtures.ids).filter(([name]) => name.includes(only))
 
 // 5. What is measured on every page, in the page itself.
 function measure() {
@@ -335,7 +201,7 @@ for (const width of WIDTHS) {
     page.on('console', (m) => { if (m.type() === 'error' && !/Failed to load resource|status of 40[46]/.test(m.text())) errors.push(m.text()) })
     // A "player" page is opened in the Giocatore view; the choice is taken out again afterwards, as the storage is shared.
     if (kind === 'player' || kind === 'nogames') await page.addInitScript(() => localStorage.setItem('view-as', 'player'))
-    noGames = kind === 'nogames'
+    backendState.noGames = kind === 'nogames'
     await page.goto(origin + path)
     await page.waitForLoadState('networkidle').catch(() => {})
     await page.waitForTimeout(400)
@@ -350,7 +216,7 @@ for (const width of WIDTHS) {
       if (!shown.text.includes('I tuoi gruppi non hanno partite in programma')) m.problems.push('Fantahockey does not say that the groups have no game coming up')
       if (shown.selects > 0) m.problems.push('Fantahockey offers the pick form although the groups have no game coming up')
     }
-    noGames = false
+    backendState.noGames = false
     if (kind === 'auth') {
       const shown = await page.evaluate(() => ({ path: location.pathname, password: Boolean(document.querySelector('input[type=password]')), email: Boolean(document.querySelector('input[type=email]')) }))
       if (shown.path !== path || !shown.password || !shown.email) m.problems.push(`the page does not show the sign in form: opened ${path}, ended on ${shown.path}, email field ${shown.email}, password field ${shown.password}`)
@@ -381,6 +247,136 @@ for (const width of WIDTHS) {
   const settle = async (path) => { await page.goto(origin + path); await page.waitForLoadState('networkidle').catch(() => {}); await page.waitForTimeout(300) }
   const asViewEarly = async (view, path) => { await page.evaluate((v) => localStorage.setItem('view-as', v), view); await settle(path) }
   const active = () => page.evaluate(() => ({ role: document.activeElement?.getAttribute('role'), checked: document.activeElement?.getAttribute('aria-checked'), text: document.activeElement?.textContent?.trim(), cls: document.activeElement?.className }))
+
+  // A failed load is not an empty club, and retry restores data without a page reload.
+  for (const width of [375,1280]) {
+    await page.setViewportSize({width,height:900})
+  for (const [path,failure] of [
+    ['/members',{path:'/rest/v1/profiles',query:'deleted_at'}],
+    ['/events','/rest/v1/events'],
+    ['/announcements','/rest/v1/announcements'],
+    ['/campionato','/rest/v1/league_matches'],
+    [`/events/${training}`,'/rest/v1/events'],
+    [`/events/${training}/edit`,'/rest/v1/events'],
+    [`/members/${member}`,{path:'/rest/v1/profiles',query:'id',value:`eq.${member}`}],
+    ['/settings/club','/rest/v1/club_settings'],
+    ['/settings/documents','/rest/v1/club_settings'],
+  ]) {
+    backendState.failure=failure
+    await settle(path)
+    check((await page.locator('main [role=alert]').count()) === 1, `load failure: ${path} has no clear error`)
+    check((await page.getByRole('button',{name:'Riprova',exact:true}).count()) === 1, `load failure: ${path} has no retry`)
+    check(!/Nessun membro\.|Non ci sono eventi|Nessun avviso/.test(await page.locator('main').innerText()), `load failure: ${path} claims the list is empty`)
+    await page.screenshot({path:join(out,`load-failure-${path.replace(/[^a-z0-9]/gi,'_')}-${width}.png`),fullPage:true})
+    backendState.failure=null
+    await page.getByRole('button',{name:'Riprova',exact:true}).click()
+    await page.waitForTimeout(300)
+    check((await page.locator('main [role=alert]').count()) === 0, `load failure: ${path} retry did not recover`)
+  }
+  }
+  await page.setViewportSize({width:1280,height:800})
+  // A failed phone read cannot erase the saved contact when another profile field is submitted.
+  {
+    const contact=fixtures.tables.profile_contacts.find((c)=>c.user_id===ME)
+    const kept=contact.phone;contact.phone='+39 333 1234567'
+    backendState.failure='/rest/v1/profile_contacts'
+    await settle('/profile/info')
+    check(!(await page.locator('form button[type=submit]').isEnabled()), 'profile: save is enabled after the phone failed to load')
+    check(!(await page.locator('input[type=tel]').isEnabled()), 'profile: unloaded phone looks editable')
+    const before=backendRequests.length
+    await page.locator('form').evaluate((form)=>form.requestSubmit())
+    await page.waitForTimeout(100)
+    check(!backendRequests.slice(before).some((r)=>r.method==='PATCH'), 'profile: submitting with an unloaded phone changed data')
+    backendState.failure=null
+    await page.getByRole('button',{name:'Riprova',exact:true}).click()
+    await page.waitForTimeout(250)
+    check((await page.locator('input[type=tel]').inputValue()).replace(/\D/g,'')==='393331234567', 'profile: retry did not restore the saved phone')
+    check(await page.locator('form button[type=submit]').isEnabled(), 'profile: save did not recover after loading contact data')
+    contact.phone=kept
+  }
+
+  // Custom validation respects the pattern even though native browser validation is disabled.
+  await settle('/settings/groups')
+  await page.getByRole('button',{name:'Aggiungi gruppo',exact:true}).click()
+  await page.locator('.add-group input').first().fill('Prova audit')
+  await page.locator('.add-group input[pattern]').fill('A!')
+  await page.locator('.add-group button[type=submit]').click()
+  check(await page.locator('.add-group input[pattern]').getAttribute('aria-invalid') === 'true', 'validation: an invalid group code reaches the backend')
+  check((await page.locator('.add-group .field-error').count()) === 1, 'validation: invalid group code has no inline explanation')
+
+  // Changing a calendar filter does not reload an event editor and discard its unsaved draft.
+  await settle(`/events/${training}/edit`)
+  await page.getByLabel('Titolo',{exact:true}).fill('Titolo da conservare')
+  await page.click('.side-switch .ms-button')
+  await page.getByRole('menuitemradio',{name:'B',exact:true}).click()
+  await page.waitForTimeout(250)
+  check(await page.getByLabel('Titolo',{exact:true}).inputValue()==='Titolo da conservare', 'event edit: changing the global group discards the draft')
+  await page.evaluate(()=>localStorage.removeItem('group-filter'))
+
+  // Destructive settings use the shared keyboard safe confirmation.
+  for (const [path,opener] of [
+    ['/settings/rinks','main .rinks form button.danger'],
+    ['/settings/groups','main .group-edit button.danger-link'],
+  ]) {
+    await settle(path)
+    if(path.endsWith('groups'))await page.locator('main .group-head').first().click()
+    const trigger=page.locator(opener).first()
+    await trigger.click()
+    check(await page.locator('dialog[open]').isVisible(), `settings delete: ${path} has no modal confirmation`)
+    check((await active()).text==='Annulla', `settings delete: ${path} does not focus cancel`)
+    await page.keyboard.press('Escape')
+    check(!(await page.locator('dialog[open]').count()), `settings delete: ${path} ignores Escape`)
+    check(await trigger.evaluate((el)=>el===document.activeElement), `settings delete: ${path} did not restore focus`)
+  }
+  // A saved group name reaches the global selector without refreshing the document.
+  {
+    const keepGroups=structuredClone(fixtures.tables.groups)
+    backendState.mutations=true
+    await settle('/settings/groups')
+    await page.click('.side-switch .ms-button')
+    await page.getByRole('menuitemradio',{name:'A',exact:true}).click()
+    await page.locator('main .group-head').first().click()
+    await page.locator('.group-edit form input').first().fill('Gruppo audit')
+    await page.locator('.group-edit form button[type=submit]').click()
+    await page.waitForTimeout(300)
+    check((await page.locator('.side-switch .ms-button').innerText()).includes('Gruppo audit'), 'groups: saved name stays stale in the global selector')
+    fixtures.tables.groups=keepGroups;backendState.mutations=false
+  }
+  // Adding a rink invalidates the location cache before navigating back to Events.
+  {
+    const keepRinks=structuredClone(fixtures.tables.rinks)
+    const next=fixtures.tables.events.find((x)=>x.id.endsWith('000000000012'))
+    const kept=next.rink_id
+    backendState.mutations=true
+    await settle('/events')
+    await page.locator('.side a[href="/settings"]').click()
+    await page.locator('.shell-nav a[href="/settings/rinks"]').click()
+    await page.locator('main .rinks').waitFor({state:'visible'})
+    const form=page.locator('main form').last()
+    await form.locator('input').fill('Pista audit')
+    await form.locator('button[type=submit]').click()
+    await page.waitForTimeout(200)
+    const rink=fixtures.tables.rinks.find((x)=>x.name==='Pista audit')
+    check(Boolean(rink),'rinks: add did not create the sample rink')
+    if(rink) next.rink_id=rink.id
+    await page.locator('.side a[href="/events"]').click()
+    await page.waitForTimeout(300)
+    check((await page.locator('main .next').innerText()).includes('Pista audit'), 'rinks: a newly added rink is missing until a full refresh')
+    next.rink_id=kept;fixtures.tables.rinks=keepRinks;backendState.mutations=false
+  }
+  // Printing and CSV confirmation actually run, rather than only opening a dialog.
+  await settle('/members')
+  await page.evaluate(()=>{window.__auditPrinted=false;window.print=()=>{window.__auditPrinted=true}})
+  await page.getByRole('button',{name:'Stampa',exact:true}).click()
+  await page.locator('dialog[open]').getByRole('button',{name:'Stampa',exact:true}).click()
+  await page.waitForTimeout(250)
+  check(await page.evaluate(()=>window.__auditPrinted), 'output: print confirmation did not run print')
+  await page.getByRole('button',{name:'Esporta CSV',exact:true}).click()
+  const download=page.waitForEvent('download')
+  await page.locator('dialog[open]').getByRole('button',{name:'Scarica il file',exact:true}).click()
+  const file=await download
+  const filePath=await file.path()
+  check(file.suggestedFilename().endsWith('.csv')&&Boolean(filePath)&&readFileSync(filePath,'utf8').includes('Cognome;Nome'), 'output: CSV confirmation did not produce the member file')
 
   // The group menu opens on the chosen item, moves with the arrows and gives the focus back on Escape.
   await settle('/members')
@@ -589,7 +585,7 @@ for (const width of WIDTHS) {
     const kept = await offlinePage.evaluate(async () => { const copy = await (await caches.open('offline-data-v1')).match('/offline-copy.json'); return copy ? await copy.text() : null })
     check(kept !== null && kept.includes('"events"'), 'offline: no saved copy was made after opening the app online')
     check(kept === null || !/@example\.test|phone|rating|email/.test(kept), 'offline: the saved copy holds a contact or a rating')
-    apiDown = true
+    backendState.apiDown = true
     // A phone with no signal says so: the page is opened with navigator.onLine false.
     await offlinePage.addInitScript(() => { if (localStorage.getItem('fake-offline')) Object.defineProperty(navigator, 'onLine', { get: () => false }) })
     await offlinePage.evaluate(() => localStorage.setItem('fake-offline', '1'))
@@ -603,7 +599,7 @@ for (const width of WIDTHS) {
     await offlinePage.locator('.fold-head').first().click().catch(() => {})
     await offlinePage.screenshot({ path: join(out, 'offline-375.png'), fullPage: true })
     await offlinePage.setViewportSize({ width: 1280, height: 800 })
-    apiDown = false
+    backendState.apiDown = false
     await offlinePage.evaluate(() => localStorage.removeItem('fake-offline'))
     await offlineSettle('/profile')
     await offlinePage.locator('button.shell-signout').first().click()

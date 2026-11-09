@@ -1,0 +1,40 @@
+{
+  "roles": [
+    [
+      "board",
+      118,
+      2194,
+      20,
+      78
+    ],
+    [
+      "coach",
+      118,
+      1840,
+      18,
+      78
+    ],
+    [
+      "player",
+      118,
+      1185,
+      8,
+      47
+    ]
+  ],
+  "routes": 354,
+  "records": 5219,
+  "outcomes": {
+    "unchanged": 612,
+    "changed": 4012,
+    "external-link-inspected": 203,
+    "request": 204,
+    "disabled": 46,
+    "message": 125,
+    "download": 15,
+    "file-picker-inspected": 2
+  },
+  "redirects": 52,
+  "unexplored_states": 0,
+  "findings": []
+}

@@ -4,6 +4,18 @@ Every point Davide raised about the interface, with its status. Newest review fi
 
 Status words: Open, In progress, Done (PR number), Decided (waiting for Davide), Won't do (with the reason).
 
+## Complete interaction review (8 and 9 November 2026)
+
+1. Davide requested a complete control audit across the app. Status: Done (PR 50). The route and control inventory, exact coverage, fixes and limits are recorded in `docs/INTERACTION_AUDIT.md`.
+2. Respect all declared field validation rules and show inline explanations. Status: Done (PR 50), including patterns, number steps and other type errors.
+3. Distinguish failed reads from empty lists and protect editors from unloaded data. Status: Done (PR 50), with retry actions on the main lists and critical editors. Club settings wait for the stored configuration.
+4. Prevent a failed phone read from clearing the saved number during a profile save. Status: Done (PR 50). Saving waits for contact data and confirms returned rows.
+5. Keep event drafts when the global group filter changes, and prevent stale record controls during navigation. Status: Done (PR 50).
+6. Use the shared keyboard safe confirmation for group and rink deletion. Status: Done (PR 50). Cancel has initial focus, Escape closes it and focus returns.
+7. Refresh changed group metadata in the global selector and invalidate rink cache after add and delete. Status: Done (PR 50).
+8. Make staff contact details tappable in the phone member cards. Status: Open suggestion, not changed during the audit.
+9. Remove the duplicate group choice from club statistics and clarify multiple membership aggregates. Status: Open suggestion, awaiting a product decision.
+
 ## Local review follow up (8 November 2026)
 
 1. Reduce the empty space in the next event panel. Status: Done (PR 50). Date and time stay together; location and Maps form one block, adapting to the card's width.

@@ -61,8 +61,8 @@ const events = [
   ev(15, { title: 'Allenamento C1 aperto', observer_details: ['presence','lineup','plan','discussion','game'], starts_at: at(4, 21), ends_at: at(4, 22, 30) }),
   ev(16, { title: 'Allenamento dettagli riservati', participant_details: [], starts_at: at(5, 21), ends_at: at(5, 22, 30) }),
   ev(13, { title: 'Allenamento C1 riservato', starts_at: new Date(Date.now() + 30 * 60000).toISOString(), ends_at: new Date(Date.now() + 90 * 60000).toISOString(), rink_id: null }),
-  // Starts in ten minutes, so there is always one event without an answer inside the week (the window ends at Monday 00:00).
-  ev(12, { title: 'Allenamento di prova', starts_at: new Date(Date.now() + 10 * 60000).toISOString(), ends_at: new Date(Date.now() + 100 * 60000).toISOString(), rink_id: null }),
+  // An ongoing event remains answerable even when the check crosses Monday 00:00.
+  ev(12, { title: 'Allenamento di prova', starts_at: new Date(Date.now() - 60000).toISOString(), ends_at: new Date(Date.now() + 100 * 60000).toISOString(), rink_id: null }),
 ]
 const ids = { consultation: eid(13), shared: eid(15), unassigned: eid(14), hidden: eid(16), training: eid(5), game: eid(2), member, futureGame: eid(6) }
 

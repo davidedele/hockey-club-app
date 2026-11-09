@@ -1356,3 +1356,5 @@ input:disabled { opacity: 1; color: var(--muted); background: var(--surface-2); 
 
 .overlap-notice { margin-bottom: 1rem; }
 .overlap-notice .list a { display: inline-flex; align-items: center; min-height: 44px; overflow-wrap: anywhere; }
+
+.shell .shell-content > .load-error { padding: 0; margin: 0; }
