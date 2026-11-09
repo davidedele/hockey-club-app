@@ -32,7 +32,7 @@ export default function OutputAction(props: {
 
   return (
     <>
-      <button type="button" className="chip" disabled={disabled} onClick={() => setOpen(true)}>{label}</button>
+      <button type="button" className="chip" disabled={disabled} onClick={(e) => { e.currentTarget.focus(); setOpen(true) }}>{label}</button>
       {open && (
         <dialog ref={ref} className="output-dialog" aria-labelledby={id} onClose={() => setOpen(false)}>
           <h2 id={id}>{t(kind === 'print' ? 'out.printTitle' : 'out.csvTitle')}</h2>

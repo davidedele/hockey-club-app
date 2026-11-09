@@ -1,3 +1,6 @@
+import { ConfirmDialog } from '../components/ConfirmAction'
+import LoadError from '../components/LoadError'
+import { PageSkeleton } from '../components/Skeleton'
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import PageHeader from '../components/PageHeader'
 import { Navigate } from 'react-router-dom'
@@ -15,6 +18,7 @@ export default function RinkSettings() {
   const [rinks, setRinks] = useState<Rink[]>([])
   const [prices, setPrices] = useState<Map<number, number>>(new Map())
   const [loaded, setLoaded] = useState(false)
+  const [loadError, setLoadError] = useState('')
   const [newName, setNewName] = useState('')
   const [error, setError] = useState('')
 
@@ -23,6 +27,9 @@ export default function RinkSettings() {
       supabase.from('rinks').select('id, name, address, note').order('name'),
       supabase.from('rink_prices').select('rink_id, price_cents'),
     ])
+    const failure = r.error ?? p.error
+    if (failure) { setLoadError(errorText(failure)); setLoaded(true); return }
+    setLoadError('')
     setRinks((r.data ?? []) as Rink[])
     setPrices(new Map(((p.data ?? []) as RinkPrice[]).map((x) => [x.rink_id, x.price_cents])))
     setLoaded(true)
@@ -33,6 +40,8 @@ export default function RinkSettings() {
   }, [load])
 
   if (!loading && !isBoard) return <Navigate to="/settings" replace />
+  if (loadError) return <LoadError title={t('settings.rinks')} back={{to:'/settings',label:t('settings.title')}} message={loadError} onRetry={()=>void load()} />
+  if (!loaded) return <PageSkeleton />
 
   async function add(e: FormEvent) {
     e.preventDefault()
@@ -40,6 +49,7 @@ export default function RinkSettings() {
     const { error } = await supabase.from('rinks').insert({ name: newName.trim() })
     if (error) return setError(rinkError(error))
     setNewName('')
+    forgetRinks()
     await load()
   }
 
@@ -106,6 +116,7 @@ function RinkRow({ rink, price, onChange }: { rink: Rink; price: number | null; 
     setBusy(false)
     setConfirming(false)
     if (error || !data || data.length === 0) return setError(rinkError(error ?? { message: 'forbidden' }))
+    forgetRinks()
     await onChange()
   }
 
@@ -128,18 +139,11 @@ function RinkRow({ rink, price, onChange }: { rink: Rink; price: number | null; 
         {error && <p className="error" role="alert">{error}</p>}
         <div className="actions">
           <button type="submit" disabled={busy}>{t('rinks.save')}</button>
-          {!confirming && <button type="button" className="danger" disabled={busy} onClick={() => setConfirming(true)}>{t('rinks.remove')}</button>}
+          <button type="button" className="danger" disabled={busy} onClick={(e) => { e.currentTarget.focus(); setConfirming(true) }}>{t('rinks.remove')}</button>
         </div>
       </form>
-      {confirming && (
-        <div className="box" role="alertdialog" aria-label={t('rinks.remove')}>
-          <p>{t('rinks.removeConfirm', { name: rink.name })}</p>
-          <div className="actions">
-            <button className="danger" disabled={busy} onClick={() => void remove()}>{t('rinks.remove')}</button>
-            <button className="link" disabled={busy} onClick={() => setConfirming(false)}>{t('common.cancel')}</button>
-          </div>
-        </div>
-      )}
+      <ConfirmDialog open={confirming} title={t('rinks.remove')} body={t('rinks.removeConfirm', {name:rink.name})} busy={busy}
+        choices={[{label:t('rinks.remove'),onChoose:()=>void remove()}]} onClose={()=>setConfirming(false)} />
     </li>
   )
 }

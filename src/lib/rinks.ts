@@ -9,7 +9,8 @@ export function useRinks(): Rink[] {
   const [rinks, setRinks] = useState<Rink[]>(cache ?? [])
   useEffect(() => {
     if (cache) return
-    void supabase.from('rinks').select('id, name, address, note').then(({ data }) => {
+    void supabase.from('rinks').select('id, name, address, note').then(({ data, error }) => {
+      if (error) return
       cache = (data ?? []) as Rink[]
       setRinks(cache)
     })

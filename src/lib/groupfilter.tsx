@@ -55,16 +55,20 @@ export function GroupFilterProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!profile) return
-    void Promise.all([
+    const refresh = () => { void Promise.all([
       supabase.from('groups').select('*').order('id'),
       supabase.from('group_members').select('group_id').eq('user_id', profile.id),
     ]).then(([g, m]) => {
+      if (g.error || m.error) return
       const rows = (g.data ?? []) as Group[]
       setAll(rows)
       setOwn(((m.data ?? []) as { group_id: number }[]).map((x) => x.group_id))
       // A group that no longer exists is dropped.
       setStored((current) => (current !== null && current !== MY_GROUPS && !rows.some((x) => x.id === current) ? null : current))
-    })
+    }) }
+    refresh()
+    window.addEventListener('groups-changed',refresh)
+    return () => window.removeEventListener('groups-changed',refresh)
   }, [profile])
 
   const playerCalendar = view === 'player' && calendar
