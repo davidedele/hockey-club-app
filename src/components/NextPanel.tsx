@@ -17,7 +17,7 @@ export default function NextPanel(props: { club: string; colours: CSSProperties 
   const location = eventLocation(e, rink)
   const game = e.type === 'game'
   const started = new Date(e.starts_at).getTime() <= Date.now()
-  const label = started ? t('events.now') : t(game ? 'events.nextGame' : 'events.nextTraining')
+  const label = started ? t('events.now') : e.type==='training'?t('events.nextTraining'):game?t('events.nextGame'):t('events.nextEvent')
   return (
     <section className={game ? 'next game' : 'next'} style={game ? props.colours : undefined} aria-label={label}>
       {game && <div className="stripes" aria-hidden="true"><span /><span /><span /><span /><span /><span /></div>}

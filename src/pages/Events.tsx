@@ -1,3 +1,5 @@
+import LinkedEventLabel from '../components/LinkedEventLabel'
+import { useViewState, useReturnScroll } from '../lib/viewstate'
 import LoadError from '../components/LoadError'
 import { PageSkeleton } from '../components/Skeleton'
 import EventOverlapNotice from '../components/EventOverlapNotice'
@@ -45,11 +47,11 @@ export default function Events() {
   const [myGroups, setMyGroups] = useState<number[]>([])
   const [answers, setAnswers] = useState<Map<string, Answer>>(new Map())
   const [counts, setCounts] = useState<Map<string, number>>(new Map())
-  const [view, setView] = useState<'upcoming' | 'past'>('upcoming')
-  const [weekShift, setWeekShift] = useState(0)
-  const [picked, setPicked] = useState<string | null>(null)
-  const [extra, setExtra] = useState(0)
-  const [todoExtra, setTodoExtra] = useState(0)
+  const [view, setView] = useViewState<'upcoming' | 'past'>('events.scope','upcoming', x=>x==='upcoming'||x==='past')
+  const [weekShift, setWeekShift] = useViewState('events.weekShift',0)
+  const [picked, setPicked] = useViewState<string | null>('events.picked',null)
+  const [extra, setExtra] = useViewState('events.extra',0)
+  const [todoExtra, setTodoExtra] = useViewState('events.todoExtra',0)
   const [laterOpen, setLaterOpen] = useState(false)
   const [loaded, setLoaded] = useState(false)
   const [loadError, setLoadError] = useState('')
@@ -58,6 +60,7 @@ export default function Events() {
   const [busy, setBusy] = useState('')
   const [savedFor, setSavedFor] = useState('')
   const [error, setError] = useState('')
+  useReturnScroll('events.scroll', loaded)
 
   const load = useCallback(async () => {
     if (!profile) return
@@ -173,7 +176,7 @@ export default function Events() {
     const title = e.type === 'game' && e.opponent ? t('events.vs', { club: club.name || t('app.name'), opponent: e.opponent }) : e.title
     const meta = [placeOf(e), e.meetup_at ? t('events.meetup', { time: formatTime(e.meetup_at) }) : null].filter(Boolean).join(', ')
     return (
-      <li key={e.id} className={`${e.type === 'game' ? 'evrow game' : 'evrow'}${e.cancelled_at ? ' cancelled' : ''}${asPlayer && !invitedTo(e, myGroups) ? ' consultation' : ''}`}>
+      <li key={e.id} className={`${e.type === 'game' ? 'evrow game' : 'evrow'}${e.parent_event_id ? ' linked-event' : ''}${e.cancelled_at ? ' cancelled' : ''}${asPlayer && !invitedTo(e, myGroups) ? ' consultation' : ''}`}>
         <Link className="evlink" to={`/events/${e.id}`}>
           <div>
             <div className="d">{formatShortDay(e.starts_at)}</div>
@@ -184,6 +187,7 @@ export default function Events() {
             <div className="m">{e.cancelled_at && <span className="tag">{t('events.cancelled')} </span>}{meta || groupsOf(e)}{savedFor === e.id && <span className="tag todo" role="status"> · {t('events.savedShort')}</span>}</div>
           </div>
         </Link>
+        <LinkedEventLabel event={e} events={allEvents}/>
         {!over && canAnswer(e) ? (
           <div className="quick" role="group" aria-label={t('events.answerFor', { day: formatDay(e.starts_at) })}>
             <button className={mine === 'present' ? 'on present' : ''} aria-pressed={mine === 'present'} title={t('answer.present')} aria-label={t('answer.present')} disabled={busy === e.id} onClick={() => void answer(e, 'present')}><Tick /><span className="quick-word">{t('answer.present')}</span></button>
@@ -202,12 +206,13 @@ export default function Events() {
     const over = new Date(e.ends_at).getTime() < now
     const title = e.type === 'game' && e.opponent ? t('events.vs', { club: club.name || t('app.name'), opponent: e.opponent }) : e.title
     return (
-      <article key={e.id} className={`${e.type === 'game' ? 'cal-ev game' : 'cal-ev'}${e.cancelled_at ? ' cancelled' : ''}${asPlayer && !invitedTo(e, myGroups) ? ' consultation' : ''}`} style={e.type === 'game' ? teamColours(e) : undefined}>
+      <article key={e.id} className={`${e.type === 'game' ? 'cal-ev game' : 'cal-ev'}${e.parent_event_id ? ' linked-event' : ''}${e.cancelled_at ? ' cancelled' : ''}${asPlayer && !invitedTo(e, myGroups) ? ' consultation' : ''}`} style={e.type === 'game' ? teamColours(e) : undefined}>
         <Link to={`/events/${e.id}`}>
           <span className="t">{formatTime(e.starts_at)}</span>
           <span className="ti">{title}</span>{(unassignedTraining(e) || (asPlayer && !invitedTo(e, myGroups))) && <span className="consultation-label">{unassignedTraining(e) ? t('events.unassigned') : t('events.readOnly')}</span>}
           {e.cancelled_at ? <span className="m">{t('events.cancelled')}</span> : placeOf(e) && <span className="m">{placeOf(e)}</span>}
         </Link>
+        <LinkedEventLabel event={e} events={allEvents}/>
         {!over && canAnswer(e) ? (
           <div className="quick" role="group" aria-label={t('events.answerFor', { day: formatDay(e.starts_at) })}>
             <button className={mine === 'present' ? 'on present' : ''} aria-pressed={mine === 'present'} title={t('answer.present')} aria-label={t('answer.present')} disabled={busy === e.id} onClick={() => void answer(e, 'present')}><Tick /><span className="quick-word">{t('answer.present')}</span></button>

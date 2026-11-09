@@ -20,8 +20,9 @@ interface ClubDocument {
 
 // The club's papers (V3): the privacy notice and the PDF files the board adds. Members read; the board adds,
 // renames and removes. Links expire after ten minutes, like the other documents.
-export default function ClubDocuments() {
-  const { isBoard } = useSession()
+export default function ClubDocuments({ manage = false }: { manage?: boolean }) {
+  const { isBoard: board } = useSession()
+  const isBoard = board && manage
   const club = useClub()
   const [docs, setDocs] = useState<ClubDocument[] | null>(null)
   const [links, setLinks] = useState<Map<string, string>>(new Map())
@@ -32,7 +33,8 @@ export default function ClubDocuments() {
   const [message, setMessage] = useState('')
 
   const load = useCallback(async () => {
-    const { data } = await supabase.from('club_documents').select('id, title, file_path, created_at').order('created_at', { ascending: false })
+    const { data, error: failure } = await supabase.from('club_documents').select('id, title, file_path, created_at').order('created_at', { ascending: false })
+    if (failure) { setError(errorText(failure)); return }
     const list = (data ?? []) as ClubDocument[]
     setDocs(list)
     const paths = [...list.map((d) => d.file_path), ...(club.privacyNoticePath ? [club.privacyNoticePath] : [])]
@@ -98,6 +100,11 @@ export default function ClubDocuments() {
     setBusy(false)
   }
 
+  async function openFile(path: string) {
+    const result = await supabase.storage.from('documents').createSignedUrl(path, LINK_SECONDS)
+    if (result.error) setError(errorText(result.error))
+    else if (result.data?.signedUrl) window.location.assign(result.data.signedUrl)
+  }
   const noticeLink = club.privacyNoticePath ? links.get(club.privacyNoticePath) : undefined
   const empty = docs !== null && docs.length === 0 && !club.privacyNoticePath
   return (
@@ -112,7 +119,7 @@ export default function ClubDocuments() {
           {club.privacyNoticePath && (
             <li className="row">
               <span>{t('club.notice')}</span>
-              {noticeLink ? <a href={noticeLink} target="_blank" rel="noopener noreferrer">{t('clubdocs.open')}</a> : null}
+              {noticeLink ? <button type="button" className="secondary" onClick={() => void openFile(club.privacyNoticePath!)}>{t('clubdocs.open')}</button> : null}
             </li>
           )}
           {docs.map((d) => (
@@ -122,7 +129,7 @@ export default function ClubDocuments() {
                 <small className="hint"> {formatDateYear(dayKey(d.created_at))}</small>
               </span>
               <span className="row-actions">
-                {links.get(d.file_path) && <a href={links.get(d.file_path)} target="_blank" rel="noopener noreferrer" aria-label={t('clubdocs.openNamed', { title: d.title })}>{t('clubdocs.open')}</a>}
+                {links.get(d.file_path) && <button type="button" className="secondary" onClick={() => void openFile(d.file_path)} aria-label={t('clubdocs.openNamed', { title: d.title })}>{t('clubdocs.open')}</button>}
                 {isBoard && <ConfirmAction label={t('clubdocs.remove')} title={t('clubdocs.removeTitle')} body={t('clubdocs.removeBody', { title: d.title })} confirm={t('clubdocs.remove')} disabled={busy} onConfirm={() => void remove(d)} />}
               </span>
             </li>

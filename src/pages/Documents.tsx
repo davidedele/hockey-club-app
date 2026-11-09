@@ -1,3 +1,4 @@
+import ClubRequests from '../components/ClubRequests'
 import { personName } from '../lib/names'
 import { useCallback, useEffect, useRef, useState, type ChangeEvent, type FormEvent } from 'react'
 import ConfirmAction from '../components/ConfirmAction'
@@ -208,6 +209,7 @@ export default function Documents() {
         description={own ? t('docs.intro') : t('docs.introStaff', { name: person?.first_name ?? '' })}
         crumb={own ? t('docs.title') : name}
       />
+      <ClubRequests userId={userId} />
       {error && <p className="error" role="alert">{error}</p>}
       {message && <p className="hint" role="status">{message}</p>}
       <div className="doc-cards">

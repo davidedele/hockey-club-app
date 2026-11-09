@@ -1,3 +1,4 @@
+import { useClub } from '../lib/club'
 import { ConfirmDialog } from '../components/ConfirmAction'
 import LoadError from '../components/LoadError'
 import { PageSkeleton } from '../components/Skeleton'
@@ -14,6 +15,8 @@ import type { Rink, RinkPrice } from '../lib/types'
 
 // The board names the club's rinks and, if it wants the cost as well as the hours, sets a price per hour.
 export default function RinkSettings() {
+  const club=useClub()
+  const [savingDefault,setSavingDefault]=useState(false)
   const { isBoard, loading } = useSession()
   const [rinks, setRinks] = useState<Rink[]>([])
   const [prices, setPrices] = useState<Map<number, number>>(new Map())
@@ -56,6 +59,7 @@ export default function RinkSettings() {
   return (
     <div className="section">
       <PageHeader title={t('settings.rinks')} back={{ to: '/settings', label: t('settings.title') }} description={t('rinks.intro')} />
+      <label>{t('booking.defaultRink')}<select disabled={!club.ready||savingDefault} value={club.homeRinkId??''} onChange={e=>{const value=e.target.value;setSavingDefault(true);void (async()=>{const r=await supabase.from('club_settings').update({home_rink_id:value?Number(value):null}).eq('id',true).select('id').single();if(r.error)setError(errorText(r.error));else await club.reload();setSavingDefault(false)})()}}><option value="">{t('form.rinkNone')}</option>{rinks.map(r=><option key={r.id} value={r.id}>{r.name}</option>)}</select><span className="hint">{t('booking.defaultHint')}</span></label>
       {error && <p className="error" role="alert">{error}</p>}
       {loaded && rinks.length === 0 && <p className="hint">{t('rinks.empty')}</p>}
       {rinks.length > 0 && (
@@ -136,7 +140,8 @@ function RinkRow({ rink, price, onChange }: { rink: Rink; price: number | null; 
         <label>{t('rinks.price')}
           <input inputMode="decimal" value={euros} onChange={(e) => setEuros(e.target.value)} />
         </label>
-        {error && <p className="error" role="alert">{error}</p>}
+  
+      {error && <p className="error" role="alert">{error}</p>}
         <div className="actions">
           <button type="submit" disabled={busy}>{t('rinks.save')}</button>
           <button type="button" className="danger" disabled={busy} onClick={(e) => { e.currentTarget.focus(); setConfirming(true) }}>{t('rinks.remove')}</button>

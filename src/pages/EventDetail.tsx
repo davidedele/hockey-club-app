@@ -1,3 +1,4 @@
+import RelatedEvents from '../components/RelatedEvents'
 import LoadError from '../components/LoadError'
 import { readableInk } from '../lib/colour'
 import { useGroupFilter } from '../lib/groupfilter'
@@ -360,6 +361,8 @@ export default function EventDetail() {
         )}
         {location.label && <p className="ev-venue">{location.label}</p>}
       </header>
+      <RelatedEvents event={event} staff={isStaff} />
+      {isStaff&&event.booking_needs_review&&<p className="hint">{t('booking.reviewWarning')}</p>}
 
       {readOnly && <p className="consultation-note"><strong>{unassignedTraining(event) ? t('events.unassigned') : t('events.readOnly')}</strong> {t(unassignedTraining(event) ? 'visibility.unassignedHelp' : 'visibility.readOnlyHelp')}</p>}
       {error && <p className="error" role="alert">{error}</p>}

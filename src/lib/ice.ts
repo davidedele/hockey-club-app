@@ -1,11 +1,14 @@
 import { dayKey, isoToItaly } from './time'
-import type { Rink } from './types'
+import type { Rink, EventType } from './types'
 
 // What the ice count needs of an event.
 export interface IceEvent {
   id: string
   title: string
-  type: 'training' | 'game'
+  type: EventType
+  booking_starts_at?: string | null
+  booking_ends_at?: string | null
+  booking_needs_review?: boolean
   starts_at: string
   ends_at: string
   rink_id: number | null
@@ -22,16 +25,18 @@ export interface IceMonth {
 
 const round = (n: number) => Math.round(n * 100) / 100
 
-// The booked ice is the event's own start and end.
-export const hoursOf = (e: Pick<IceEvent, 'starts_at' | 'ends_at'>) => round((Date.parse(e.ends_at) - Date.parse(e.starts_at)) / 3600000)
+// Explicit reservations take precedence; older ice events retain their existing duration.
+export const hoursOf = (e: Pick<IceEvent, 'starts_at' | 'ends_at' | 'booking_starts_at' | 'booking_ends_at'>) => round((Date.parse(e.booking_ends_at ?? e.ends_at) - Date.parse(e.booking_starts_at ?? e.starts_at)) / 3600000)
+
+export const countsAsIce = (e: IceEvent) => e.type === 'training' || e.type === 'game' || !!e.booking_starts_at
 
 const key = (e: IceEvent) => String(e.rink_id ?? NO_RINK)
 
 // Months run on the Italian calendar. Cancelled events are counted apart from the ones that took place.
 export function iceMonths(events: IceEvent[]): IceMonth[] {
   const months = new Map<string, IceMonth>()
-  for (const e of events) {
-    const month = dayKey(e.starts_at).slice(0, 7)
+  for (const e of events.filter(countsAsIce)) {
+    const month = dayKey(e.booking_starts_at ?? e.starts_at).slice(0, 7)
     const m = months.get(month) ?? { month, used: {}, cancelled: {} }
     const into = e.cancelled_at ? m.cancelled : m.used
     into[key(e)] = round((into[key(e)] ?? 0) + hoursOf(e))
@@ -73,14 +78,14 @@ const field = (v: string) => {
 export function iceCsv(events: IceEvent[], rinks: Rink[], prices: Map<number, number>, labels: { header: string[]; cancelled: string; took: string; noRink: string; training: string; game: string }): string {
   const name = new Map(rinks.map((r) => [r.id, r.name]))
   const lines = [labels.header.map(field).join(';')]
-  for (const e of [...events].sort((a, b) => a.starts_at.localeCompare(b.starts_at))) {
-    const start = isoToItaly(e.starts_at)
+  for (const e of events.filter(countsAsIce).sort((a, b) => a.starts_at.localeCompare(b.starts_at))) {
+    const start = isoToItaly(e.booking_starts_at ?? e.starts_at)
     const hours = hoursOf(e)
     const price = e.rink_id !== null && !e.cancelled_at ? prices.get(e.rink_id) : undefined
     lines.push([
       start.date.split('-').reverse().join('/'),
       start.time,
-      isoToItaly(e.ends_at).time,
+      isoToItaly(e.booking_ends_at ?? e.ends_at).time,
       e.title,
       e.type === 'game' ? labels.game : labels.training,
       e.rink_id === null ? labels.noRink : name.get(e.rink_id) ?? '',

@@ -1,3 +1,5 @@
+import LinkedEventLabel from '../components/LinkedEventLabel'
+import { useViewState, useChangeEffect } from '../lib/viewstate'
 import { savedCalendarView, rememberCalendarView, type CalendarView } from '../lib/calendarview'
 import { unassignedTraining } from '../lib/eventaccess'
 import EventActions from './EventActions'
@@ -14,14 +16,14 @@ import OutputAction from './OutputAction'
 import TablePager from './TablePager'
 
 type View = CalendarView
-type Cat = 'training' | 'friendly' | 'league'
+type Cat = 'training' | 'friendly' | 'league' | 'theory' | 'off_ice' | 'other'
 type ListKey = 'date' | 'event' | 'place' | 'answer'
 type Scope = 'upcoming' | 'past' | 'all'
 
-const CATS: Cat[] = ['training', 'friendly', 'league']
+const CATS: Cat[] = ['training', 'friendly', 'league', 'theory', 'off_ice', 'other']
 const FIRST_SEASON = 2026
 const MAX_PER_DAY = 3
-const catOf = (e: EventRow): Cat => (e.type === 'training' ? 'training' : e.league_match_id !== null ? 'league' : 'friendly')
+const catOf = (e: EventRow): Cat => (e.type === 'game' ? e.league_match_id !== null ? 'league' : 'friendly' : e.type)
 
 // The calendar of the computer layout: a week, a month or a list, with the types of event to show,
 // a search, the season, and print and export.
@@ -45,18 +47,20 @@ export default function CalendarPanel(props: {
   const seasons = Array.from({ length: Math.max(1, currentSeason - FIRST_SEASON + 1) }, (_, i) => currentSeason - i)
   const [view, setView] = useState<View>(savedCalendarView)
   useEffect(() => { rememberCalendarView(view) }, [view])
-  const [month, setMonth] = useState(today.slice(0, 7))
-  const [season, setSeason] = useState(currentSeason)
-  const [types, setTypes] = useState<Set<Cat>>(new Set(CATS))
-  const [query, setQuery] = useState('')
-  const [page, setPage] = useState(1)
+  const [month, setMonth] = useViewState('calendar.month', today.slice(0, 7), x=>typeof x==='string'&&/^\d{4}-\d{2}$/.test(x))
+  const [season, setSeason] = useViewState('calendar.season', currentSeason, x=>typeof x==='number'&&x>=FIRST_SEASON&&x<=currentSeason)
+  const [savedTypes, setSavedTypes] = useViewState<Cat[]>('calendar.types', CATS, x=>Array.isArray(x)&&x.every(c=>CATS.includes(c)))
+  const types=new Set(savedTypes)
+  const setTypes=(next: Set<Cat> | ((current:Set<Cat>)=>Set<Cat>))=>setSavedTypes([...typeof next==='function'?next(types):next])
+  const [query, setQuery] = useViewState('calendar.query', '', x=>typeof x==='string')
+  const [page, setPage] = useViewState('calendar.page', 1, x=>Number.isInteger(x)&&Number(x)>0)
   const { groupId } = useGroupFilter()
   // Another group has fewer events, so go back to the first page rather than land on an empty one.
-  useEffect(() => { setPage(1) }, [groupId])
-  const [size, setSize] = useState(25)
-  const sort = useSort<ListKey>('date')
+  useChangeEffect(() => setPage(1), groupId)
+  const [size, setSize] = useViewState('calendar.size', 25, x=>[25,50,100].includes(Number(x)))
+  const sort = useSort<ListKey>('date', 'asc', 'calendar.sort')
   // The list opens on what is still to come, so the next event is the first row.
-  const [scope, setScope] = useState<Scope>('upcoming')
+  const [scope, setScope] = useViewState<Scope>('calendar.scope', 'upcoming', x=>['upcoming','past','season'].includes(String(x)))
 
   const title = (e: EventRow) => (e.type === 'game' && e.opponent ? t('events.vs', { club: clubName, opponent: e.opponent }) : e.title)
   const typeName = (c: Cat) => t(`cal.${c}` as MessageKey)
@@ -65,7 +69,7 @@ export default function CalendarPanel(props: {
 
   const inSeason = useMemo(() => events.filter((e) => seasonOf(e.starts_at) === season), [events, season])
   const counts = useMemo(() => {
-    const c: Record<Cat, number> = { training: 0, friendly: 0, league: 0 }
+    const c: Record<Cat, number> = { training: 0, friendly: 0, league: 0, theory: 0, off_ice: 0, other: 0 }
     for (const e of inSeason) c[catOf(e)] += 1
     return c
   }, [inSeason])
@@ -234,7 +238,7 @@ export default function CalendarPanel(props: {
                       {isStaff && inMonth && <Link className="mday-add" to={`/events/new?date=${d}`} aria-label={t('cal.newOn', { day: formatDay(`${d}T12:00:00Z`) })}>+</Link>}
                     </div>
                     {list.slice(0, MAX_PER_DAY).map((e) => (
-                      <Link key={e.id} to={`/events/${e.id}`} className={`mev ${catOf(e)}${e.cancelled_at ? ' cancelled' : ''}${isObserver(e) ? ' consultation' : ''}`} title={`${formatTime(e.starts_at)} ${title(e)}${isObserver(e) ? ' · ' + t(unassignedTraining(e) ? 'events.unassigned' : 'events.readOnly') : ''}`}>
+                      <Link key={e.id} to={`/events/${e.id}`} className={`mev ${catOf(e)}${e.parent_event_id ? ' linked-event' : ''}${e.cancelled_at ? ' cancelled' : ''}${isObserver(e) ? ' consultation' : ''}`} title={`${formatTime(e.starts_at)} ${title(e)}${isObserver(e) ? ' · ' + t(unassignedTraining(e) ? 'events.unassigned' : 'events.readOnly') : ''}`}>
                         <span className="t">{formatTime(e.starts_at)}</span><span className="mev-title">{title(e)}</span>{(unassignedTraining(e) || isObserver(e)) && <span className="consultation-label">{unassignedTraining(e) ? t('events.unassigned') : t('events.readOnly')}</span>}
                       </Link>
                     ))}
@@ -267,10 +271,10 @@ export default function CalendarPanel(props: {
                 </thead>
                 <tbody>
                   {pages.map((e) => (
-                    <tr key={e.id} className={`${new Date(e.ends_at).getTime() < Date.now() ? 'past' : ''}${e.cancelled_at ? ' cancelled' : ''}${isObserver(e) ? ' consultation' : ''}`}>
+                    <tr key={e.id} className={`${new Date(e.ends_at).getTime() < Date.now() ? 'past' : ''}${e.parent_event_id ? ' linked-event' : ''}${e.cancelled_at ? ' cancelled' : ''}${isObserver(e) ? ' consultation' : ''}`}>
                       <td><Link to={`/events/${e.id}`}>{formatShortDay(e.starts_at)}</Link> <span className="hint">{formatTime(e.starts_at)}</span></td>
                       <td><span className={`cat ${catOf(e)}`}><span className="dot" aria-hidden="true" />{typeName(catOf(e))}</span></td>
-                      <td><Link className="event-title-link" to={`/events/${e.id}`}>{title(e)}</Link>{e.cancelled_at && <span className="tag"> {t('events.cancelled')}</span>}</td>
+                      <td><Link className="event-title-link" to={`/events/${e.id}`}>{title(e)}</Link><LinkedEventLabel event={e} events={events}/>{e.cancelled_at && <span className="tag"> {t('events.cancelled')}</span>}</td>
                       <td>{placeName(e)}</td>
                       <td>{groupName(e)}</td>
                       <td>{isStaff ? <EventActions event={e} onChanged={onChanged} /> : (unassignedTraining(e) || isObserver(e)) ? <span className="consultation-label">{t(unassignedTraining(e) ? 'events.unassigned' : 'events.readOnly')}</span> : answerText(e)}</td>

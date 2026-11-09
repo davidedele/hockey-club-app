@@ -1,3 +1,4 @@
+import { useLeagueName } from '../lib/leaguealias'
 import { useEffect, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
 import PageHeader from '../components/PageHeader'
@@ -37,6 +38,7 @@ function kindText(kind: string | null): string {
 // One league game as the league website reports it: score, goals, penalties and line-ups. It is read
 // when the page opens and not stored in the app.
 export default function LeagueMatch() {
+  const displayTeam = useLeagueName()
   const { matchId } = useParams()
   const [params] = useSearchParams()
   const eventId = params.get('event')
@@ -52,8 +54,8 @@ export default function LeagueMatch() {
     })
   }, [matchId])
 
-  const home = detail ? prettyName(detail.home.name) : ''
-  const away = detail ? prettyName(detail.away.name) : ''
+  const home = detail ? displayTeam(detail.home.name) : ''
+  const away = detail ? displayTeam(detail.away.name) : ''
   const sideName = (s: 'home' | 'away') => (s === 'home' ? home : away)
 
   return (

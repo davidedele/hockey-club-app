@@ -24,7 +24,7 @@ import Attendance from './pages/Attendance'
 import ClubSettings from './pages/ClubSettings'
 import Documents from './pages/Documents'
 import CertificateReview from './pages/CertificateReview'
-import DocumentSettings from './pages/DocumentSettings'
+import ClubDocumentHub from './pages/ClubDocumentHub'
 import Championship from './pages/Championship'
 import DocumentsBanner from './components/DocumentsBanner'
 import UpdateBanner from './components/UpdateBanner'
@@ -285,7 +285,7 @@ export default function App() {
         </Route>
         <Route path="/settings" element={<Settings />}>
           <Route path="club" element={<ClubSettings />} />
-          <Route path="documents" element={<DocumentSettings />} />
+          <Route path="documents" element={<ClubDocumentHub />} />
           <Route path="groups" element={<GroupSettings />} />
           <Route path="rinks" element={<RinkSettings />} />
           <Route path="ice" element={<IceHours />} />

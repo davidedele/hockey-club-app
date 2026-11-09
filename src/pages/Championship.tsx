@@ -1,3 +1,5 @@
+import { useLeagueName } from '../lib/leaguealias'
+import { useViewState, useChangeEffect, useReturnScroll } from '../lib/viewstate'
 import LoadError from '../components/LoadError'
 import { PageSkeleton } from '../components/Skeleton'
 import { useCallback, useEffect, useMemo, useState } from 'react'
@@ -18,6 +20,7 @@ const SHOWN = 10
 // The league as the website shows it, for the club's teams: standings, next games and results
 // of each competition a group plays in, with the club's own games marked.
 export default function Championship() {
+  const displayTeam = useLeagueName()
   const { profile, isStaff, isBoard } = useSession()
   const [groups, setGroups] = useState<Group[]>([])
   const [mine, setMine] = useState<number[]>([])
@@ -27,14 +30,15 @@ export default function Championship() {
   const [eventOf, setEventOf] = useState<Map<number, string>>(new Map())
   const [sync, setSync] = useState<LeagueSync | null>(null)
   const { groupId, scope } = useGroupFilter()
-  const [compId, setCompId] = useState<number | null>(null)
-  const [onlyOurs, setOnlyOurs] = useState(false)
+  const [compId, setCompId] = useViewState<number | null>('champ.competition', null, x=>x===null||Number.isInteger(x))
+  const [onlyOurs, setOnlyOurs] = useViewState('champ.onlyOurs',false)
   // How many more of each list were asked for, ten at a time.
-  const [moreNext, setMoreNext] = useState(0)
-  const [moreResults, setMoreResults] = useState(0)
+  const [moreNext, setMoreNext] = useViewState('champ.more',0)
+  const [moreResults, setMoreResults] = useViewState('champ.results',0)
   const [refreshing, setRefreshing] = useState(false)
   const [loaded, setLoaded] = useState(false)
   const [loadError, setLoadError] = useState('')
+  useReturnScroll('champ.scroll',loaded)
 
   const load = useCallback(async () => {
     if (!profile) return
@@ -62,7 +66,7 @@ export default function Championship() {
   }, [profile])
 
   // Show what is stored at once, then ask for a fresh reading when it is old.
-  useEffect(() => { setCompId(null) }, [groupId])
+  useChangeEffect(() => setCompId(null), groupId)
 
   useEffect(() => {
     void load().then(async (ok) => {
@@ -110,9 +114,9 @@ export default function Championship() {
       <>
         <span className="lm-when">{formatShortDay(m.starts_at)} <strong>{formatTime(m.starts_at)}</strong></span>
         <span className="lm-teams">
-          <span className={m.home === team ? 'lm-team us' : 'lm-team'}>{prettyName(m.home)}</span>
+          <span className={m.home === team ? 'lm-team us' : 'lm-team'}>{displayTeam(m.home, m.championship_id)}</span>
           {score ? <span className="lm-score">{score}</span> : <span className="lm-vs">{t('champ.against')}</span>}
-          <span className={m.away === team ? 'lm-team us' : 'lm-team'}>{prettyName(m.away)}</span>
+          <span className={m.away === team ? 'lm-team us' : 'lm-team'}>{displayTeam(m.away, m.championship_id)}</span>
         </span>
         {m.venue && <span className="lm-venue">{prettyName(m.venue)}</span>}
       </>
@@ -197,7 +201,7 @@ export default function Championship() {
                       {table.map((r) => (
                         <tr key={r.position} className={r.team === team ? 'ours' : undefined}>
                           <td>{r.position}</td>
-                          <th scope="row">{prettyName(r.team)}</th>
+                          <th scope="row">{displayTeam(r.team)}</th>
                           <td>{r.played}</td>
                           <td className="strong">{r.points}</td>
                           <td>{r.goal_diff > 0 ? `+${r.goal_diff}` : r.goal_diff}</td>
@@ -214,7 +218,7 @@ export default function Championship() {
                 <h2 id="games-title">{t('champ.next')}</h2>
                 <div className="chips">
                   <button className={!onlyOurs ? 'chip on' : 'chip'} aria-pressed={!onlyOurs} onClick={() => { setOnlyOurs(false); setMoreNext(0); setMoreResults(0) }}>{t('champ.allGames')}</button>
-                  <button className={onlyOurs ? 'chip on' : 'chip'} aria-pressed={onlyOurs} onClick={() => { setOnlyOurs(true); setMoreNext(0); setMoreResults(0) }}>{t('champ.onlyTeam', { team: prettyName(team) })}</button>
+                  <button className={onlyOurs ? 'chip on' : 'chip'} aria-pressed={onlyOurs} onClick={() => { setOnlyOurs(true); setMoreNext(0); setMoreResults(0) }}>{t('champ.onlyTeam', { team: displayTeam(team) })}</button>
                 </div>
               </div>
               {upcoming.length === 0 ? <p className="hint">{t('champ.noNext')}</p> : <ul className="list lmatches">{upcoming.map(row)}</ul>}

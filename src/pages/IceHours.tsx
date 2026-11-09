@@ -34,7 +34,7 @@ export default function IceHours() {
     setLoaded(false)
     void (async () => {
       const [e, r, p] = await Promise.all([
-        supabase.from('events').select('id, title, type, starts_at, ends_at, rink_id, cancelled_at')
+        supabase.from('events').select('id, title, type, starts_at, ends_at, rink_id, cancelled_at, booking_starts_at, booking_ends_at, booking_needs_review')
           .gte('starts_at', italyToIso(`${season}-09-01`, '00:00')).lt('starts_at', italyToIso(`${season + 1}-09-01`, '00:00'))
           .order('starts_at').limit(1000),
         supabase.from('rinks').select('id, name').order('name'),
@@ -123,6 +123,7 @@ export default function IceHours() {
   return (
     <div className="section">
       <PageHeader title={t('ice.title')} back={{ to: '/settings', label: t('settings.title') }} description={t('ice.intro')} crumb={t('settings.ice')} />
+      {events.some(e=>e.booking_needs_review)&&<p className="hint">{t('booking.reviewWarning')} {events.filter(e=>e.booking_needs_review).map(e=><Link key={e.id} to={`/events/${e.id}/edit`}>{e.title} </Link>)}</p>}
       <div className="stats-filters">
         <div className="chips" role="group" aria-label={t('ice.season')}>
           {seasons.map((s) => (
