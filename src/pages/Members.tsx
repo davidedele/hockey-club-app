@@ -1,3 +1,4 @@
+import { useViewState, useChangeEffect, useReturnScroll } from '../lib/viewstate'
 import LoadError from '../components/LoadError'
 import { PageSkeleton } from '../components/Skeleton'
 import TableScroll from '../components/TableScroll'
@@ -30,14 +31,15 @@ export default function Members() {
   const [memberships, setMemberships] = useState<{ group_id: number; user_id: string }[]>([])
   const [contacts, setContacts] = useState<Contact[]>([])
   const [docs, setDocs] = useState<MemberDocument[]>([])
+  useReturnScroll('members.scroll', loaded)
   const club = useClub()
   const { groupId: filter, scope } = useGroupFilter()
-  const [query, setQuery] = useState('')
-  const [page, setPage] = useState(1)
+  const [query, setQuery] = useViewState('members.query','',x=>typeof x==='string')
+  const [page, setPage] = useViewState('members.page',1,x=>Number.isInteger(x)&&Number(x)>0)
   // Another group has fewer people, so go back to the first page rather than land on an empty one.
-  useEffect(() => { setPage(1) }, [filter])
-  const [size, setSize] = useState(25)
-  const sort = useSort<MemberKey>('name')
+  useChangeEffect(() => setPage(1), filter)
+  const [size, setSize] = useViewState('members.size',25,x=>[25,50,100].includes(Number(x)))
+  const sort = useSort<MemberKey>('name','asc','members.sort')
 
   const load = useCallback(async () => {
       setLoaded(false)

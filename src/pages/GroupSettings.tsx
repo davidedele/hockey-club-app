@@ -124,6 +124,7 @@ function GroupEditor({ group, count, league, onDone, onChange }: { group: Group;
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const [confirming, setConfirming] = useState(false)
+  const [alias, setAlias] = useState(group.league_alias ?? '')
   const [leagueTeam, setLeagueTeam] = useState(group.league_team ?? '')
   const [comps, setComps] = useState<number[]>(group.league_championships ?? [])
 
@@ -144,6 +145,7 @@ function GroupEditor({ group, count, league, onDone, onChange }: { group: Group;
       game_dark: own ? dark : null,
       game_light: own ? light : null,
       league_team: leagueTeam || null,
+      league_alias: alias.trim() || null,
       league_championships: leagueTeam ? comps : [],
     })
     setBusy(false)
@@ -200,6 +202,7 @@ function GroupEditor({ group, count, league, onDone, onChange }: { group: Group;
   return (
     <div className="group-edit">
       <form {...checked(save)}>
+
         <label>{t('groups.name')}
           <input required maxLength={40} value={name} onChange={(e) => setName(e.target.value)} />
         </label>
@@ -244,6 +247,7 @@ function GroupEditor({ group, count, league, onDone, onChange }: { group: Group;
             <option key={name} value={name}>{prettyName(name)}</option>
           ))}
         </select>
+      <label>{t('groups.alias')}<input maxLength={60} value={alias} onChange={e=>setAlias(e.target.value)}/><span className="hint">{t('groups.aliasHint')}</span></label>
         {league.teams.length === 0 && <p className="hint">{t('groups.leagueEmpty')}</p>}
         {leagueTeam && league.champs.length > 0 && (
           <div className="field">

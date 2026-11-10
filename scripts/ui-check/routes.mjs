@@ -1,6 +1,7 @@
 export function interfaceRoutes(ids) {
   const { training, game, member, futureGame } = ids
   return [
+  ['event-theory', `/events/${ids.theory}`, 'sub'], ['event-new-linked', `/events/new?parent=${training}&position=before`, 'sub'], ['settings-request-new', '/settings/documents', 'sub'], ['profile-requests-player','/profile/documents','player'],
   ['home', '/'], ['events', '/events'], ['members', '/members'], ['championship', '/campionato'], ['championship-assists', '/campionato?stats=assists'], ['championship-penalties', '/campionato?stats=penalties'], ['league-match', '/campionato/partita/501', 'sub'], ['stats', '/stats'], ['stats-players', '/stats?tab=players'], ['stats-predictions', '/stats?tab=predictions'], ['stats-hall', '/stats?tab=hall'], ['stats-fanta', '/stats?tab=fanta'], ['stats-fanta-player', '/stats?tab=fanta', 'player'], ['stats-fanta-nogames', '/stats?tab=fanta', 'nogames'],
   ['attendance', '/attendance'], ['attendance-events', '/attendance?tab=events'],
   ['event-training', `/events/${training}`, 'sub'], ['event-game', `/events/${game}`, 'sub'], ['event-game-last-tab', `/events/${game}?tab=lineup`, 'sub'], ['event-training-last-tab', `/events/${training}?tab=plan`, 'sub'], ['event-future-game', `/events/${futureGame}`, 'sub'],

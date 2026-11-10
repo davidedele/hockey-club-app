@@ -1358,3 +1358,41 @@ input:disabled { opacity: 1; color: var(--muted); background: var(--surface-2); 
 .overlap-notice .list a { display: inline-flex; align-items: center; min-height: 44px; overflow-wrap: anywhere; }
 
 .shell .shell-content > .load-error { padding: 0; margin: 0; }
+
+/* Club requests use the same cards, fields and quiet status surfaces as other settings. */
+.club-requests { min-width: 0; }
+.club-requests .page-head { display: flex; flex-wrap: wrap; align-items: center; gap: .75rem; justify-content: space-between; }
+.request-card { min-width: 0; padding: 1rem; margin: 1rem 0; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); overflow-wrap: anywhere; }
+.request-card h3 { margin-top: 0; color: var(--ink); font-weight: 600; }
+.request-card > label, .request-review label { display: block; margin: 1rem 0; }
+.request-card fieldset { border: 1px solid var(--line); border-radius: var(--radius-control); margin: 1rem 0; padding: .75rem; min-width: 0; }
+.request-card textarea { display: block; width: 100%; min-height: 6rem; margin-top: .375rem; padding: .75rem; font: inherit; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-control); resize: vertical; }
+.request-instructions { white-space: pre-wrap; }
+.request-review { margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--line); }
+.request-members { list-style: none; padding: 0; }
+.request-members li { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .5rem 1rem; border-bottom: 1px solid var(--line); padding: .75rem 0; }
+.request-members li > span { min-width: 0; }
+.request-members li > span:last-child { color: var(--muted); }
+.request-card summary { cursor: pointer; padding: .75rem 0; min-height: 44px; }
+.booking-fields { border: 1px solid var(--line); border-radius: var(--radius); padding: 1rem; margin: 1rem 0; min-width: 0; }
+.linked-event-note { background: var(--surface-2); border: 1px solid var(--line); border-inline-start: 3px solid var(--accent); border-radius: var(--radius); padding: 1rem; margin: 1rem 0; min-width: 0; overflow-wrap: anywhere; }
+.linked-event-note h2 { margin: 0; }
+.related-events { list-style: none; margin: 1rem 0; padding: 0 0 0 .75rem; border-inline-start: 2px solid var(--line-strong); }
+.related-events li { padding: .5rem .75rem; display: flex; flex-wrap: wrap; gap: .25rem 1rem; }
+.related-events li.current { font-weight: 600; }
+.related-events li span { color: var(--muted); }
+.linked-label { display: block; font-size: .875rem; color: var(--muted); font-weight: 400; overflow-wrap: anywhere; }
+.linked-label a { display: inline-flex; min-height: 44px; align-items: center; color: inherit; }
+.evrow.linked-event, .cal-ev.linked-event { background: var(--surface-2); border-inline-start: 3px solid var(--line-strong); margin-top: 0; border-start-start-radius: 0; }
+.cal-ev.linked-event .linked-label { padding: 0 .75rem; }
+.evrow.linked-event > .linked-label { grid-column: 1 / -1; padding-inline: .75rem; }
+tr.linked-event td { background: var(--surface-2); }
+.cal-filters .theory .dot, .cat.theory .dot { background: #6d5cae; }
+.cal-filters .off_ice .dot, .cat.off_ice .dot { background: #297d6c; }
+.cal-filters .other .dot, .cat.other .dot { background: var(--muted); }
+
+.club-requests form.request-card > fieldset { border: 0; padding: 0; margin: 0; }
+.club-requests .button.file { width: fit-content; max-width: 100%; white-space: normal; }
+
+.linked-event-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .75rem; }
+.related-events li > a { display: inline-flex; align-items: center; min-height: 44px; }

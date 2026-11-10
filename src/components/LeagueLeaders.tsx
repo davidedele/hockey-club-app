@@ -1,3 +1,4 @@
+import { useLeagueName } from '../lib/leaguealias'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { t } from '../i18n'
@@ -12,7 +13,9 @@ const KIND_TEXT = { goals: 'champ.kind.goals', assists: 'champ.kind.assists', po
 
 // Top scorers, most assists, points and penalties of one championship, for the players of every team, added up from
 // the game pages of the league website. The server reads a few new games each time somebody opens the page.
-export default function LeagueLeaders(props: { championshipId: number; finishedIds: number[] }) {
+export default function LeagueLeaders(props: {
+  championshipId: number; finishedIds: number[] }) {
+  const displayTeam = useLeagueName()
   const { championshipId, finishedIds } = props
   const [params] = useSearchParams()
   const asked = params.get('stats')
@@ -88,7 +91,7 @@ export default function LeagueLeaders(props: { championshipId: number; finishedI
                     <span className="leader-rank">{r.rank}</span>
                     <span className="leader-who">
                       <span className="leader-name">{prettyName(r.player_name)}{r.player_number ? ` ${t('champ.number', { n: r.player_number })}` : ''}</span>
-                      <span className="leader-team">{prettyName(r.team)}</span>
+                      <span className="leader-team">{displayTeam(r.team, championshipId)}</span>
                     </span>
                   </th>
                   {cols.map((c, i) => <td key={c.col} className={i === 0 ? 'strong' : undefined}>{c.value(r)}</td>)}

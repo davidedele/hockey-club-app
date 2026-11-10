@@ -4,6 +4,18 @@ Every point Davide raised about the interface, with its status. Newest review fi
 
 Status words: Open, In progress, Done (PR number), Decided (waiting for Davide), Won't do (with the reason).
 
+## Documents, bookings and event navigation (9 November 2026)
+
+Davide approved the proposed scope and separate attendance on 9 November. Signing means checkbox acceptance, or a signed file submitted for staff review. Implemented on `codex/club-requests-bookings` after resuming on 10 November. The local review and SQL handoff instructions are in `docs/CLUB_WORKFLOWS_REVIEW.md`. Hosted test project review and merge are still pending.
+
+1. Rename the club settings shell and navigation to Impostazioni club. Move club document administration there; keep player compliance under Profile, Documenti. Status: Done locally, awaiting test project review.
+2. Make required reading, acknowledgement and document upload requests easy to create and complete. Current club PDFs are a read only library; Documenti richiesti configures only the certificate and privacy requirements. Generic requests are now implemented. Proposed staff flow: action type, document or instructions, audience, optional deadline and review, then summary. Proposed player flow: actionable cards with clear status and next action. Checkbox acceptance and signed file uploads were approved. Status: Done locally, awaiting test project review.
+3. Home games need a separate booked ice interval and automatic selection of the large rink. Current accounting uses event start and end, and league import does not assign a rink. Proposal: configurable default home rink, separate booking start and end, and accounting/export using that interval with existing event duration as fallback. League rescheduling must flag a booking needing review instead of silently moving a confirmed reservation. Status: Done locally, awaiting test project review.
+4. Preserve calendar date, layout, season, types, search, list scope, sorting, page and scroll through detail, editing, saving and cancellation. Only layout currently persists; hardcoded return links lose context. Members search/page and Championship competition/filter/list expansion have similar local state. Proposal: validated URL state and preserved return context, with browser storage only for durable preferences. Status: Done locally, awaiting test project review.
+5. Add an optional league display alias to group settings, separate from the exact league team mapping. Apply it consistently to games, standings and relevant statistics without changing synchronization identities. Scope resolution by championship when the same source team name has multiple mappings. Status: Done locally, awaiting test project review.
+6. Add Teoria, Off-Ice and Evento types, and a clear Aggiungi evento collegato action before or after an event. Current database supports only training and game. Proposal: fixed initial types, inherited groups and separate attendance by default, no ice accounting without a booking, and explicit handling of linked event edits, cancellation and deletion. Separate attendance and independent management were approved. Status: Done locally, awaiting test project review.
+7. Related source findings: club document reads currently ignore errors, and signed file URLs expire after ten minutes without renewal. Preserve document version history and acknowledgements when replacing a required PDF; keep personal uploads private. Status: Done locally, awaiting test project review.
+
 ## Complete interaction review (8 and 9 November 2026)
 
 1. Davide requested a complete control audit across the app. Status: Done (PR 50). The route and control inventory, exact coverage, fixes and limits are recorded in `docs/INTERACTION_AUDIT.md`.

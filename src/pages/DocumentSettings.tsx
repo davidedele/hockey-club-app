@@ -2,7 +2,6 @@ import LoadError from '../components/LoadError'
 import { PageSkeleton } from '../components/Skeleton'
 import { useEffect, useState, type FormEvent } from 'react'
 import { Navigate } from 'react-router-dom'
-import PageHeader from '../components/PageHeader'
 import { errorText, t } from '../i18n'
 import { useClub } from '../lib/club'
 import { checked } from '../lib/formcheck'
@@ -46,7 +45,7 @@ export default function DocumentSettings() {
 
   return (
     <div className="section">
-      <PageHeader title={t('settings.documents')} back={{ to: '/settings', label: t('settings.title') }} description={t('reqdocs.intro')} />
+
       <form className="form-col" {...checked(save)}>
         <h2>{t('reqdocs.certTitle')}</h2>
         <label>{t('reqdocs.months')}

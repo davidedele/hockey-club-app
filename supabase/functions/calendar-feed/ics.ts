@@ -3,7 +3,7 @@
 
 export type FeedEvent = {
   id: string
-  type: 'training' | 'game'
+  type: 'training' | 'game' | 'theory' | 'off_ice' | 'other'
   title: string
   starts_at: string
   ends_at: string

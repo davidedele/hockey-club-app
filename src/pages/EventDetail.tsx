@@ -1,3 +1,5 @@
+import { eventClubName } from '../lib/leaguealias'
+import RelatedEvents from '../components/RelatedEvents'
 import LoadError from '../components/LoadError'
 import { readableInk } from '../lib/colour'
 import { useGroupFilter } from '../lib/groupfilter'
@@ -135,7 +137,7 @@ export default function EventDetail() {
     .join(', ') || t('events.unassigned')
   const dayLabel = formatDay(event.starts_at)
   const link = `${window.location.origin}/events/${id}`
-  const matchName = event.type === 'game' && event.opponent ? t('events.vs', { club: club.name || t('app.name'), opponent: event.opponent }) : event.title
+  const matchName = event.type === 'game' && event.opponent ? t('events.vs', { club: eventClubName(event, groups, club.name || t('app.name')), opponent: event.opponent }) : event.title
   const jerseyLabel = event.jersey ? jerseyName(club, event.jersey) : ''
   const hasScore = event.score_for !== null && event.score_against !== null
   const shareText = [
@@ -254,7 +256,7 @@ export default function EventDetail() {
     ...(allowed('presence') ? [{ key: 'presence' as Tab, label: t('event.tabPresence') }] : []),
     ...(game && allowed('game') ? [{ key: 'game' as Tab, label: t('event.tabGame') }] : []),
     ...(allowed('discussion') ? [{ key: 'discussion' as Tab, label: t('event.tabDiscussion') }] : []),
-    ...(!cancelled && allowed('lineup') ? [{ key: 'lineup' as Tab, label: t('lineup.open') }] : []),
+    ...(!cancelled && ['training','game'].includes(event.type) && allowed('lineup') ? [{ key: 'lineup' as Tab, label: t('lineup.open') }] : []),
     ...(!cancelled && event.type === 'training' && allowed('plan') ? [{ key: 'plan' as Tab, label: t('plan.open') }] : []),
   ]
   const asked = params.get('tab')
@@ -265,7 +267,7 @@ export default function EventDetail() {
   const strip = at < 0 ? [] : near.slice(Math.max(0, at - 2), at + 3)
   // Where both team names are shown, the home side comes first, in the names and in the score.
   const nearTitle = (x: NearEvent) => (x.type === 'game' && x.opponent
-    ? t('events.vs', x.home_away === 'away' ? { club: x.opponent, opponent: club.name || t('app.name') } : { club: club.name || t('app.name'), opponent: x.opponent })
+    ? t('events.vs', x.home_away === 'away' ? { club: x.opponent, opponent: club.name || t('app.name') } : { club: eventClubName(x, groups, club.name || t('app.name')), opponent: x.opponent })
     : x.title)
   const nearScore = (x: NearEvent) => (x.home_away === 'away' ? `${x.score_against} : ${x.score_for}` : `${x.score_for} : ${x.score_against}`)
 
@@ -360,6 +362,8 @@ export default function EventDetail() {
         )}
         {location.label && <p className="ev-venue">{location.label}</p>}
       </header>
+      <RelatedEvents event={event} staff={isStaff} />
+      {isStaff&&event.booking_needs_review&&<p className="hint">{t('booking.reviewWarning')}</p>}
 
       {readOnly && <p className="consultation-note"><strong>{unassignedTraining(event) ? t('events.unassigned') : t('events.readOnly')}</strong> {t(unassignedTraining(event) ? 'visibility.unassignedHelp' : 'visibility.readOnlyHelp')}</p>}
       {error && <p className="error" role="alert">{error}</p>}

@@ -6,7 +6,7 @@ export type NoticeRow = {
   event_id: string
   change_id: number | null
   title: string
-  type: 'training' | 'game'
+  type: 'training' | 'game' | 'theory' | 'off_ice' | 'other'
   series_id: string | null
   starts_at: string
   ends_at: string
@@ -24,6 +24,7 @@ export const noticeWords = {
   hello: 'Ciao',
   newTraining: 'Nuovo allenamento',
   newGame: 'Nuova partita',
+  newEvent: 'Nuovo evento',
   newMany: 'Aggiornamenti del calendario',
   changed: 'Cambio',
   cancelled: 'Annullato',
@@ -149,7 +150,7 @@ export function buildEventNotice(firstName: string, rows: NoticeRow[], appUrl: s
 
   let subject = w.newMany
   if (news.length === 1 && created.length === 1 && edits.lines.length === 0) {
-    subject = `${news[0].type === 'game' ? w.newGame : w.newTraining}: ${news[0].title}, ${when(news[0].starts_at)}`
+    subject = `${news[0].type === 'game' ? w.newGame : news[0].type==='training'?w.newTraining:w.newEvent}: ${news[0].title}, ${when(news[0].starts_at)}`
   } else if (created.length === 0 && edits.lines.length === 1) {
     const only = [...edits.kinds][0]
     const ev = changed.find((r) => !hide.has(r.event_id))!

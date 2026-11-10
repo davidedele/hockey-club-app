@@ -36,6 +36,14 @@ export default function EventForm() {
   const [rinkId, setRinkId] = useState<number | null>(null)
   const [loaded, setLoaded] = useState(!editing)
 
+  const [parentId,setParentId]=useState<string|null>(params.get('parent'))
+  const [parentTitle,setParentTitle]=useState('')
+  const [bookingReview,setBookingReview]=useState(false)
+  const [bookingConfirmed,setBookingConfirmed]=useState(false)
+  const [bookingStart,setBookingStart]=useState('')
+  const [bookingEnd,setBookingEnd]=useState('')
+  const [bookingDate,setBookingDate]=useState('')
+  const [bookingEndDate,setBookingEndDate]=useState('')
   const [type, setType] = useState<EventType>('training')
   const [title, setTitle] = useState('')
   const [titleTouched, setTitleTouched] = useState(false)
@@ -81,6 +89,15 @@ export default function EventForm() {
       setGroups((g.data ?? []) as Group[])
       setRinks((r.data ?? []) as Rink[])
       setListsReady(true)
+      if (!id && params.get('parent')) {
+        const parent=await supabase.from('events').select('*,event_groups(group_id)').eq('id',params.get('parent')!).single()
+        if(!active)return
+        if(parent.error){setLoadError(errorText(parent.error));setLoadedFor('new');setLoaded(true);return}
+        const p=parent.data as EventRow
+        setParentTitle(p.title);setType('theory');setTitleTouched(false);setGroupIds(p.event_groups.map(g=>g.group_id))
+        const anchor=params.get('position')==='before'?new Date(Date.parse(p.starts_at)-30*60000).toISOString():p.ends_at
+        const start=isoToItaly(anchor);setDate(start.date);setStartTime(start.time);setEndTime(isoToItaly(new Date(Date.parse(anchor)+30*60000).toISOString()).time);setEndTouched(true);setMeetupTouched(true);setMeetupTime('')
+      }
       if (!id) {
         setLoadedFor('new'); setLoaded(true)
         return
@@ -92,6 +109,10 @@ export default function EventForm() {
       const e = data as EventRow | null
       if (e) {
         const start = isoToItaly(e.starts_at)
+        setBookingReview(e.booking_needs_review??false)
+        setParentId(e.parent_event_id??null)
+        if(e.booking_starts_at){const b=isoToItaly(e.booking_starts_at);setBookingStart(b.time);setBookingDate(b.date)}
+        if(e.booking_ends_at){const b=isoToItaly(e.booking_ends_at);setBookingEnd(b.time);setBookingEndDate(b.date)}
         setType(e.type)
         setTitle(e.title)
         setTitleTouched(true)
@@ -124,6 +145,7 @@ export default function EventForm() {
     if (!editing && chosenGroup !== null && chosenGroup > 0) setGroupIds((current) => current.length ? current : [chosenGroup])
   }, [editing, chosenGroup])
 
+  useEffect(()=>{if(!editing&&type==='game'&&homeAway==='home'&&rinkId===null&&club.homeRinkId!==null)setRinkId(club.homeRinkId)},[editing,type,homeAway,club.homeRinkId])
   if (!isStaff) return <Navigate to="/events" replace />
   if (loadedFor !== (id ?? 'new')) return <PageSkeleton />
   if (loadError) return <LoadError title={t(editing ? 'form.editTitle' : 'form.newTitle')} back={{to:'/events',label:t('nav.events')}} message={loadError} onRetry={() => setLoadAttempt((n) => n+1)} />
@@ -131,7 +153,7 @@ export default function EventForm() {
   if (!loaded || !listsReady) return <PageSkeleton />
 
   // Sensible defaults that follow the start time until the person types their own.
-  const shownTitle = titleTouched ? title : t(type === 'game' ? 'form.titleGame' : 'form.titleTraining')
+  const shownTitle = titleTouched ? title : t(`eventType.${type}`)
   const shownEnd = endTouched ? endTime : startTime ? shiftClock(startTime, 90) : ''
   const shownMeetup = meetupTouched ? meetupTime : startTime ? shiftClock(startTime, -60) : ''
 
@@ -161,6 +183,10 @@ export default function EventForm() {
     const endsAt = endIso(date, startTime, shownEnd)
     if (Date.parse(endsAt) - Date.parse(startsAt) > 12 * 3600000) return setError(t('form.tooLong'))
     if (type === 'game' && video.trim() !== '' && !/^https:\/\/\S+$/.test(video.trim())) return setError(t('form.videoInvalid'))
+    if(rinkId&&(bookingStart||bookingEnd)&&(!bookingStart||!bookingEnd||!rinkId))return setError(t('booking.invalid'))
+    const bookedStart=rinkId&&bookingStart?italyToIso(bookingDate||date,bookingStart):null
+    const bookedEnd=rinkId&&bookingEnd?italyToIso(bookingEndDate||bookingDate||date,bookingEnd):null
+    if(bookedStart&&bookedEnd&&(Date.parse(bookedEnd)<=Date.parse(bookedStart)||Date.parse(bookedEnd)-Date.parse(bookedStart)>86400000))return setError(t('booking.invalid'))
     const isGame = type === 'game'
     const values = {
       type, title: shownTitle.trim(), starts_at: startsAt, ends_at: endsAt,
@@ -170,6 +196,7 @@ export default function EventForm() {
       home_away: isGame ? homeAway : null, jersey: isGame ? jersey || null : null,
       video_url: isGame ? video.trim() || null : null,
       group_ids: groupsPending ? [] : groupIds, groups_pending: type === 'training' && groupsPending,
+      parent_event_id: parentId, booking_confirmed: bookingConfirmed, booking_starts_at: bookedStart, booking_ends_at: bookedEnd,
       participant_details: participant, observer_details: observer,
     }
     if (editing && scope !== 'one') {
@@ -185,17 +212,14 @@ export default function EventForm() {
   return (
     <div className="page narrow">
       <PageHeader title={editing ? t('form.editTitle') : t('form.newTitle')} back={editing ? { to: `/events/${id}`, label: t('event.backToEvent') } : { to: '/events', label: t('nav.events') }} />
+      {parentId&&<div className="linked-event-note"><p>{t('linked.form',{title:parentTitle||t('linked.event')})}</p><p className="hint">{t('linked.independent')}</p><button type="button" className="secondary" onClick={()=>setParentId(null)}>{t('linked.unlink')}</button></div>}
       <form {...checked(submit)}>
         {!editing && (
           <div className="field">
-            <span className="label">{t('form.type')}</span>
-            <div className="chips">
-              {(['training', 'game'] as const).map((x) => (
-                <button type="button" key={x} className={type === x ? 'chip on' : 'chip'} aria-pressed={type === x} onClick={() => { setType(x); if (x === 'game') setGroupsPending(false) }}>
-                  {t(x === 'game' ? 'eventType.game' : 'eventType.training')}
-                </button>
-              ))}
-            </div>
+            <label className="label" htmlFor="event-type">{t('form.type')}</label>
+            <select id="event-type" value={type} onChange={e=>{setType(e.target.value as EventType);if(e.target.value!=='training')setGroupsPending(false);if(!['training','game'].includes(e.target.value))setRinkId(null)}}>
+              {(['training','game','theory','off_ice','other'] as const).map(x=><option key={x} value={x}>{t(`eventType.${x}`)}</option>)}
+            </select>
           </div>
         )}
         <label>
@@ -213,7 +237,7 @@ export default function EventForm() {
           </label>
           <label>
             {t('form.end')}
-            <input type="time" required value={shownEnd} onChange={(e) => { setEndTime(e.target.value); setEndTouched(true) }} />
+            <input aria-label={t('form.end')} type="time" required value={shownEnd} onChange={(e) => { setEndTime(e.target.value); setEndTouched(true) }} />
             {startTime && shownEnd && shownEnd <= startTime && <span className="hint">{t('form.endNextDay')}</span>}
           </label>
           <label>
@@ -232,7 +256,7 @@ export default function EventForm() {
             <span className="label">{t('form.rink')}</span>
             <div className="chips wrap">
               {[null, ...rinks].map((r) => (
-                <button type="button" key={r?.id ?? 'none'} className={rinkId === (r?.id ?? null) ? 'chip on' : 'chip'} aria-pressed={rinkId === (r?.id ?? null)} onClick={() => setRinkId(r?.id ?? null)}>
+                <button type="button" key={r?.id ?? 'none'} className={rinkId === (r?.id ?? null) ? 'chip on' : 'chip'} aria-label={r?r.name:t('form.rinkNone')} aria-pressed={rinkId === (r?.id ?? null)} onClick={() => setRinkId(r?.id ?? null)}>
                   {r ? r.name : t('form.rinkNone')}
                 </button>
               ))}
@@ -245,6 +269,7 @@ export default function EventForm() {
           <input name="venue" maxLength={120} value={location.locked ? location.venue : venue} disabled={location.locked} onChange={(e) => setVenue(e.target.value)} aria-describedby={location.locked ? 'rink-address-note' : undefined} />
           {location.locked && <span id="rink-address-note" className="hint">{t('form.rinkAddressUsed')}</span>}
         </label>
+        {rinkId!==null&&<fieldset className="booking-fields"><legend>{t('booking.title')}</legend>{bookingReview&&<label className="check"><input type="checkbox" checked={bookingConfirmed} onChange={e=>setBookingConfirmed(e.target.checked)}/>{t('booking.confirm')}</label>}<p className="hint">{t('booking.hint')}</p><div className="when-grid"><label>{t('booking.startDate')}<input type="date" value={bookingDate||date} onChange={e=>setBookingDate(e.target.value)}/></label><label>{t('booking.start')}<input type="time" value={bookingStart} onChange={e=>setBookingStart(e.target.value)}/></label><label>{t('booking.endDate')}<input type="date" value={bookingEndDate||bookingDate||date} onChange={e=>setBookingEndDate(e.target.value)}/></label><label>{t('booking.end')}<input type="time" value={bookingEnd} onChange={e=>setBookingEnd(e.target.value)}/></label></div></fieldset>}
         {type === 'game' && (
           <>
             <label>
@@ -255,7 +280,7 @@ export default function EventForm() {
               <span className="label">{t('form.homeAway')}</span>
               <div className="chips">
                 {(['home', 'away'] as const).map((x) => (
-                  <button type="button" key={x} className={homeAway === x ? 'chip on' : 'chip'} aria-pressed={homeAway === x} onClick={() => setHomeAway(x)}>
+                  <button type="button" key={x} className={homeAway === x ? 'chip on' : 'chip'} aria-pressed={homeAway === x} onClick={() => {setHomeAway(x);if(!editing&&x==='away'&&rinkId===club.homeRinkId&&!bookingStart&&!bookingEnd)setRinkId(null)}}>
                     {t(x === 'home' ? 'event.home' : 'event.away')}
                   </button>
                 ))}
@@ -290,16 +315,16 @@ export default function EventForm() {
           </> : <>
             {type === 'training' && <label className="check"><input type="checkbox" checked={groupsPending} onChange={(e) => setGroupsPending(e.target.checked)} />{t('form.assignLater')}</label>}
             {groupsPending && type === 'training' ? <p className="hint">{t('form.assignLaterHelp')}</p> : <>
-              {listsReady ? <div className="chips wrap">{groups.map((g) => <button type="button" key={g.id} className={groupIds.includes(g.id) ? 'chip on' : 'chip'} aria-pressed={groupIds.includes(g.id)} onClick={() => toggleGroup(g.id)}>{g.name}</button>)}</div> : <ChipsSkeleton />}
+              {listsReady ? <div className="chips wrap">{groups.map((g) => <button type="button" key={g.id} className={groupIds.includes(g.id) ? 'chip on' : 'chip'} aria-label={g.name} aria-pressed={groupIds.includes(g.id)} onClick={() => toggleGroup(g.id)}>{g.name}</button>)}</div> : <ChipsSkeleton />}
               <span className="hint">{t('form.groupsConsultation')}</span>
             </>}
           </>}
         </div>
-        {!editing && type === 'training' && <div className="field">
+        {!editing && !parentId && type === 'training' && <div className="field">
           <label className="check"><input type="checkbox" checked={repeat} onChange={(e) => setRepeat(e.target.checked)} />{t('form.repeat')}</label>
           {repeat && <label>{t('form.repeatWeeks')}<input type="number" inputMode="numeric" min={2} max={53} value={weeks} onChange={(e) => setWeeks(e.target.value)} /><span className="hint">{t('form.repeatHint')}</span></label>}
         </div>}
-        <EventVisibility game={type === 'game'} participant={participant} observer={observer} onParticipant={setParticipant} onObserver={setObserver} />
+        <EventVisibility activity={type} game={type === 'game'} participant={participant} observer={observer} onParticipant={setParticipant} onObserver={setObserver} />
         {editing && inSeries && <EventScopeSelect value={scope} onChange={setScope} disabled={busy} />}
         {error && <p className="error" role="alert">{error}</p>}
         <button type="submit" disabled={busy}>{editing ? t('common.save') : t('form.create')}</button>

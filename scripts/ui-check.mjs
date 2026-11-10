@@ -64,7 +64,7 @@ const { answer, eventRequests, requests: backendRequests, state: backendState } 
 
 // 4. The pages. "sub" pages must offer a way back; "auth" pages are outside the app frame.
 const { training, game, member, futureGame } = fixtures.ids
-const ROUTES = interfaceRoutes(fixtures.ids).filter(([name]) => name.includes(only))
+const ROUTES = (process.env.UI_CHECK_INTERACTIONS_ONLY?[]:interfaceRoutes(fixtures.ids)).filter(([name]) => name.includes(only))
 
 // 5. What is measured on every page, in the page itself.
 function measure() {
@@ -209,6 +209,7 @@ for (const width of WIDTHS) {
     if (name === 'events-month-player' && width >= 1000) await page.getByRole('button', {name:'Mese', exact:true}).click()
     if (name === 'event-new-visibility') await page.locator('.visibility-settings .fold-head').click()
     if (name === 'event-new-pending') { await page.getByLabel('Assegna i gruppi in seguito', {exact:true}).check(); await page.getByLabel('Ripeti ogni settimana', {exact:true}).check() }
+    if(name==='settings-request-new')await page.getByRole('button',{name:'Aggiungi richiesta',exact:true}).click()
     const m = await page.evaluate(measure)
     if (kind === 'player' || kind === 'nogames') await page.evaluate(() => localStorage.removeItem('view-as'))
     if (kind === 'nogames') {
@@ -233,7 +234,7 @@ for (const width of WIDTHS) {
   await context.close()
 }
 // 6b. Interactions that a screenshot cannot prove, at computer width.
-{
+if (!process.env.UI_CHECK_SKIP_INTERACTIONS) {
   const context = await browser.newContext({ viewport: { width: 1280, height: 800 }, ...contextOptions })
   await context.route(`${API}/**`, answer)
   await context.addInitScript(largeText, LARGE)
@@ -248,6 +249,21 @@ for (const width of WIDTHS) {
   const asViewEarly = async (view, path) => { await page.evaluate((v) => localStorage.setItem('view-as', v), view); await settle(path) }
   const active = () => page.evaluate(() => ({ role: document.activeElement?.getAttribute('role'), checked: document.activeElement?.getAttribute('aria-checked'), text: document.activeElement?.textContent?.trim(), cls: document.activeElement?.className }))
 
+  const checkGroupName=async()=>{
+
+    const keepGroups=structuredClone(fixtures.tables.groups)
+    backendState.mutations=true
+    await settle('/settings/groups')
+    await page.click('.side-switch .ms-button')
+    await page.getByRole('menuitemradio',{name:'A',exact:true}).click()
+    await page.locator('main .group-head').first().click()
+    await page.locator('.group-edit form').getByLabel('Nome',{exact:true}).fill('Gruppo audit')
+    await page.locator('.group-edit form button[type=submit]').click()
+    await page.waitForTimeout(300)
+    check((await page.locator('.side-switch .ms-button').innerText()).includes('Gruppo audit'), 'groups: saved name stays stale in the global selector')
+    fixtures.tables.groups=keepGroups;backendState.mutations=false
+  }
+  if(process.env.UI_CHECK_CONTRACTS==='metadata'){await checkGroupName()} else {
   // A failed load is not an empty club, and retry restores data without a page reload.
   for (const width of [375,1280]) {
     await page.setViewportSize({width,height:900})
@@ -328,20 +344,7 @@ for (const width of WIDTHS) {
     check(!(await page.locator('dialog[open]').count()), `settings delete: ${path} ignores Escape`)
     check(await trigger.evaluate((el)=>el===document.activeElement), `settings delete: ${path} did not restore focus`)
   }
-  // A saved group name reaches the global selector without refreshing the document.
-  {
-    const keepGroups=structuredClone(fixtures.tables.groups)
-    backendState.mutations=true
-    await settle('/settings/groups')
-    await page.click('.side-switch .ms-button')
-    await page.getByRole('menuitemradio',{name:'A',exact:true}).click()
-    await page.locator('main .group-head').first().click()
-    await page.locator('.group-edit form input').first().fill('Gruppo audit')
-    await page.locator('.group-edit form button[type=submit]').click()
-    await page.waitForTimeout(300)
-    check((await page.locator('.side-switch .ms-button').innerText()).includes('Gruppo audit'), 'groups: saved name stays stale in the global selector')
-    fixtures.tables.groups=keepGroups;backendState.mutations=false
-  }
+  await checkGroupName()
   // Adding a rink invalidates the location cache before navigating back to Events.
   {
     const keepRinks=structuredClone(fixtures.tables.rinks)
@@ -724,7 +727,7 @@ for (const width of WIDTHS) {
     await page.getByRole('button',{name:'Grande',exact:true}).click()
     await page.getByLabel('Assegna i gruppi in seguito', {exact:true}).check()
     check((await page.locator('main').innerText()).includes('Nessuno riceverà richieste di presenza'), 'events: pending training does not explain attendance')
-    await page.locator('input[type=date]').fill(fixtures.tables.events.find((e) => e.id === training).starts_at.slice(0,10))
+    await page.getByLabel('Data',{exact:true}).fill(fixtures.tables.events.find((e) => e.id === training).starts_at.slice(0,10))
     await page.getByLabel('Inizio', {exact:true}).fill('22:30')
     await page.getByLabel('Ripeti ogni settimana', {exact:true}).check()
     await page.locator('.visibility-settings .fold-head').click()
@@ -742,8 +745,9 @@ for (const width of WIDTHS) {
 
   // Required documents (decision 132): the months field is checked by the app, the consent can be a tick box.
   await settle('/settings/documents')
+  await page.locator('[data-fold=existing] .fold-head').click()
   await page.fill('main input[type=number]', '40')
-  await page.click('main button[type=submit]')
+  await page.click('[data-fold=existing] button[type=submit]')
   const rangeMessage = await page.evaluate(() => { const bad = document.querySelector('main input[type=number][aria-invalid=true]'); const id = (bad?.getAttribute('aria-describedby') || '').split(' ').find((x) => x.startsWith('fe-')); return id ? document.getElementById(id)?.textContent?.trim() ?? '' : '' })
   check(/\S/.test(rangeMessage), 'required documents: 40 months is not refused with a message under the field')
   {
@@ -751,7 +755,7 @@ for (const width of WIDTHS) {
     fixtures.tables.club_settings[0].privacy_notice_path = 'club/privacy.pdf'
     fixtures.tables.club_settings[0].consent_mode = 'tick'
     await asViewEarly('player', '/profile/documents')
-    check((await page.locator('main input[type=checkbox]').count()) === 1 && (await page.locator('main button:has-text("Ho letto e accetto")').count()) === 0, 'required documents: the tick box mode shows no tick box or still shows the button')
+    check((await page.locator('.doc-cards input[type=checkbox]').count()) === 1 && (await page.locator('main button:has-text("Ho letto e accetto")').count()) === 0, 'required documents: the tick box mode shows no tick box or still shows the button')
     fixtures.tables.club_settings[0].consent_mode = 'button'
     await asViewEarly('player', '/profile/documents')
     check((await page.locator('main button:has-text("Ho letto e accetto")').count()) === 1, 'required documents: the button mode shows no button')
@@ -900,6 +904,7 @@ for (const width of WIDTHS) {
   await emptyForm(guest, 'reset password form', '/reset-password')
   await anon.close()
 
+  }
   report.push({ width: 1280, name: 'interactions', path: '-', kind: 'auth', problems, errors: [] })
   await context.close()
 }

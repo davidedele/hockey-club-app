@@ -2,7 +2,7 @@
 
 export type ReminderEvent = {
   title: string
-  type: 'training' | 'game'
+  type: 'training' | 'game' | 'theory' | 'off_ice' | 'other'
   starts_at: string
   venue: string | null
 }

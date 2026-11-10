@@ -80,6 +80,7 @@ export default function Lineup({ embedded = false }: { embedded?: boolean }) {
 
   if (loaded && !event) return <Navigate to="/events" replace />
   if (!event) return <PageSkeleton />
+  if (!['training','game'].includes(event.type)) return <Navigate to={`/events/${id}`} replace />
   if (!detailAllowed(event, 'lineup', isStaff, invitedTo(event, myGroups))) return <Navigate to={`/events/${id}`} replace />
 
   const over = new Date(event.ends_at).getTime() < Date.now()

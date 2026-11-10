@@ -1,3 +1,4 @@
+import ClubDocumentHub from './ClubDocumentHub'
 import { Navigate } from 'react-router-dom'
 import Crest from '../components/Crest'
 import SectionShell from '../components/SectionShell'
@@ -5,14 +6,13 @@ import { t, type MessageKey } from '../i18n'
 import { useClub } from '../lib/club'
 import { useSession } from '../lib/session'
 import ClubSettings from './ClubSettings'
-import Invites from './Invites'
 
 // The settings: club, groups, rinks, ice hours and invites for the board; invites only for coaches.
 export default function Settings() {
   const { isStaff, isBoard, loading } = useSession()
   const club = useClub()
   if (!loading && !isStaff) return <Navigate to="/events" replace />
-  const keys = isBoard ? ['club', 'documents', 'groups', 'rinks', 'ice', 'league', 'invites'] : ['invites']
+  const keys = isBoard ? ['club', 'documents', 'groups', 'rinks', 'ice', 'league', 'invites'] : ['documents', 'invites']
   return (
     <SectionShell
       base="/settings"
@@ -28,7 +28,7 @@ export default function Settings() {
       }
       items={keys.map((k) => ({ to: `/settings/${k}`, label: t(`settings.${k}` as MessageKey) }))}
       indexTo={`/settings/${keys[0]}`}
-      index={isBoard ? <ClubSettings /> : <Invites />}
+      index={isBoard ? <ClubSettings /> : <ClubDocumentHub />}
     />
   )
 }

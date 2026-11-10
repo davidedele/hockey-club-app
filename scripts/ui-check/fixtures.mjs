@@ -253,3 +253,19 @@ export const fixtures = {
     my_calendar_token: 'sampletoken0123456789sampletoken0123456789',
   },
 }
+
+// Generic club requests and related events, with invented files and identities.
+fixtures.tables.club_settings[0].home_rink_id = 1
+const requestId = (n) => `40000000-0000-4000-8000-${String(n).padStart(12,'0')}`
+fixtures.tables.club_requests = [
+ {id:requestId(1),title:'Regolamento: conferma di lettura',instructions:'Leggi il regolamento prima della prossima attività.',action:'read',document_id:fixtures.tables.club_documents[0].id,group_ids:[],deadline:at(7,12).slice(0,10),review:false,active:true,created_at:at(-1,9)},
+ {id:requestId(2),title:'Modulo firmato da verificare',instructions:'Carica tutte le pagine del modulo firmato in un unico PDF.',action:'upload',document_id:fixtures.tables.club_documents[1].id,group_ids:[1],deadline:at(14,12).slice(0,10),review:true,active:true,created_at:at(-2,9)},
+ {id:requestId(3),title:'Accettazione completata',instructions:'Conferma registrata per questa versione del documento.',action:'accept',document_id:fixtures.tables.club_documents[0].id,group_ids:[],deadline:null,review:false,active:true,created_at:at(-3,9)},
+]
+fixtures.tables.club_request_responses = [
+ {request_id:requestId(2),user_id:uid(2),file_path:`${uid(2)}/request-${requestId(2)}-abcd.pdf`,submitted_at:at(-1,10),status:'pending',review_note:''},
+ {request_id:requestId(3),user_id:ME,file_path:null,submitted_at:at(-1,10),status:'complete',review_note:''},
+]
+fixtures.ids.theory = eid(998)
+fixtures.tables.events.push({...fixtures.tables.events.find(e=>e.id===fixtures.ids.training),id:fixtures.ids.theory,type:'theory',title:'Teoria prima dell’allenamento',starts_at:at(1,19),ends_at:at(1,19,30),meetup_at:null,rink_id:null,series_id:null,parent_event_id:fixtures.ids.training})
+fixtures.tables.event_groups.push({event_id:fixtures.ids.theory,group_id:1})

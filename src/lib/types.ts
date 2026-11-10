@@ -8,6 +8,7 @@ export interface Group {
   game_dark: string | null
   game_light: string | null
   logo_path: string | null
+  league_alias?: string | null
   league_team?: string | null
   league_championships?: number[]
 }
@@ -42,12 +43,16 @@ export interface Invite {
 export type EventDetailKey = 'presence' | 'lineup' | 'plan' | 'discussion' | 'game'
 export type EventScope = 'one' | 'following' | 'future'
 
-export type EventType = 'training' | 'game'
+export type EventType = 'training' | 'game' | 'theory' | 'off_ice' | 'other'
 export type Answer = 'present' | 'absent'
 export type Status = 'on_time' | 'late' | 'excused' | 'unexcused' | 'injured' | 'not_called_up'
 
 export interface EventRow {
   id: string
+  booking_starts_at?: string | null
+  booking_ends_at?: string | null
+  booking_needs_review?: boolean
+  parent_event_id?: string | null
   groups_pending?: boolean
   participant_details?: EventDetailKey[]
   observer_details?: EventDetailKey[]

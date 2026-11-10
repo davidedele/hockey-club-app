@@ -32,3 +32,11 @@ The settings are in `netlify.toml`: build command, the redirect that makes direc
 4. Update the `calendar-feed` function for canonical training addresses in subscriptions.
 5. Complete the player and staff review, including a real phone, then merge PR 50 when approved. Confirm the hosted build succeeds.
 6. Review existing scheduling data separately: the older Tuesday series and the 12 November overlap have not been edited or deleted by this update. Notification setup remains deferred.
+
+## Pending club documents and scheduling update
+
+1. Branch `codex/club-requests-bookings`; full testing and rollout instructions are in `docs/CLUB_WORKFLOWS_REVIEW.md`.
+2. After 0062, apply `supabase/apply/apply_0063_event_types.sql` and commit it, then separately apply `supabase/apply/apply_0064_club_requests_bookings.sql` to the test project. Do not combine the files in a single transaction.
+3. Review club document requests with both roles, the configured home rink and an overnight booking export. Existing records are not bulk rewritten. Historical or away games without a rink still need staff reconciliation.
+4. Deploy the updated `send-reminders` function for the generic new event email subject. No notification or installation setup guide is included.
+5. After the test project review, merge and deploy the frontend with both schema changes available. The SQL files and edge function deployment are separate from frontend hosting. No automatic production database or hosted document writes have been performed.

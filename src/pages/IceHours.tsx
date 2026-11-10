@@ -33,10 +33,21 @@ export default function IceHours() {
     let stale = false
     setLoaded(false)
     void (async () => {
+      async function readBookings() {
+        const all:IceEvent[]=[]
+        for(let offset=0;;offset+=500){
+          const result=await supabase.from('events').select('id, title, type, starts_at, ends_at, home_away, rink_id, cancelled_at, booking_starts_at, booking_ends_at, booking_needs_review')
+          .or(`and(booking_starts_at.lt.${italyToIso(`${season+1}-09-01`,'00:00')},booking_ends_at.gt.${italyToIso(`${season}-09-01`,'00:00')}),and(booking_starts_at.is.null,starts_at.lt.${italyToIso(`${season+1}-09-01`,'00:00')},ends_at.gt.${italyToIso(`${season}-09-01`,'00:00')})`)
+          .order('starts_at').order('id').range(offset,offset+499)
+          if(result.error)return {data:[],error:result.error}
+          const rows=(result.data??[]) as IceEvent[]
+          all.push(...rows)
+          if(rows.length<500)return {data:all,error:null}
+          if(stale)return {data:[],error:null}
+        }
+      }
       const [e, r, p] = await Promise.all([
-        supabase.from('events').select('id, title, type, starts_at, ends_at, rink_id, cancelled_at')
-          .gte('starts_at', italyToIso(`${season}-09-01`, '00:00')).lt('starts_at', italyToIso(`${season + 1}-09-01`, '00:00'))
-          .order('starts_at').limit(1000),
+        readBookings(),
         supabase.from('rinks').select('id, name').order('name'),
         supabase.from('rink_prices').select('rink_id, price_cents'),
       ])
@@ -51,7 +62,7 @@ export default function IceHours() {
     return () => { stale = true }
   }, [season, isBoard])
 
-  const months = useMemo(() => iceMonths(events), [events])
+  const months = useMemo(() => iceMonths(events).filter(m=>m.month>=`${season}-09`&&m.month<`${season+1}-09`), [events, season])
   const used = useMemo(() => totals(months, 'used'), [months])
   const cancelled = useMemo(() => totals(months, 'cancelled'), [months])
   const columns = useMemo(() => {
@@ -67,7 +78,8 @@ export default function IceHours() {
   function download() {
     const csv = iceCsv(events, rinks, prices, {
       header: [t('ice.colDate'), t('ice.colStart'), t('ice.colEnd'), t('ice.colEvent'), t('ice.colType'), t('ice.colRink'), t('ice.colHours'), t('ice.colState'), t('ice.colCost')],
-      cancelled: t('events.cancelled'), took: t('ice.took'), noRink: t('ice.noRink'), training: t('eventType.training'), game: t('eventType.game'),
+      cancelled: t('events.cancelled'), took: t('ice.took'), noRink: t('ice.noRink'), training: t('eventType.training'), game: t('eventType.game'), other: type=>t(`eventType.${type}`),
+      range:{start:italyToIso(`${season}-09-01`,'00:00'),end:italyToIso(`${season+1}-09-01`,'00:00')},endDate:t('booking.exportEndDate'),review:t('booking.exportReview'),confirmed:t('booking.exportConfirmed'),
     })
     const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }))
     const a = document.createElement('a')
@@ -123,6 +135,7 @@ export default function IceHours() {
   return (
     <div className="section">
       <PageHeader title={t('ice.title')} back={{ to: '/settings', label: t('settings.title') }} description={t('ice.intro')} crumb={t('settings.ice')} />
+      {events.some(e=>e.booking_needs_review)&&<p className="hint">{t('booking.reviewWarning')} {events.filter(e=>e.booking_needs_review).map(e=><Link key={e.id} to={`/events/${e.id}/edit`}>{e.title} </Link>)}</p>}
       <div className="stats-filters">
         <div className="chips" role="group" aria-label={t('ice.season')}>
           {seasons.map((s) => (

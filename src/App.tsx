@@ -24,7 +24,7 @@ import Attendance from './pages/Attendance'
 import ClubSettings from './pages/ClubSettings'
 import Documents from './pages/Documents'
 import CertificateReview from './pages/CertificateReview'
-import DocumentSettings from './pages/DocumentSettings'
+import ClubDocumentHub from './pages/ClubDocumentHub'
 import Championship from './pages/Championship'
 import DocumentsBanner from './components/DocumentsBanner'
 import UpdateBanner from './components/UpdateBanner'
@@ -47,7 +47,6 @@ import Plan from './pages/Plan'
 import Login from './pages/Login'
 import MemberEdit from './pages/MemberEdit'
 import Members from './pages/Members'
-import ClubDocuments from './pages/ClubDocuments'
 import MySeason from './pages/MySeason'
 import Security from './pages/Security'
 import MfaGate from './components/MfaGate'
@@ -275,7 +274,7 @@ export default function App() {
           <Route path="info" element={<ProfileInfo />} />
           <Route path="documents" element={<Documents />} />
           <Route path="absences" element={<ProfileAbsences />} />
-          <Route path="club-documents" element={<ClubDocuments />} />
+          <Route path="club-documents" element={<Navigate to="/profile/documents" replace />} />
           <Route path="season" element={<MySeason />} />
           <Route path="security" element={<Security />} />
           <Route path="notifications" element={<ProfileNotifications />} />
@@ -285,7 +284,7 @@ export default function App() {
         </Route>
         <Route path="/settings" element={<Settings />}>
           <Route path="club" element={<ClubSettings />} />
-          <Route path="documents" element={<DocumentSettings />} />
+          <Route path="documents" element={<ClubDocumentHub />} />
           <Route path="groups" element={<GroupSettings />} />
           <Route path="rinks" element={<RinkSettings />} />
           <Route path="ice" element={<IceHours />} />

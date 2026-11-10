@@ -6,6 +6,7 @@ import { supabase } from './supabase'
 
 // The club's own name, logo and game day colours, set by staff in the app.
 export interface Club {
+  homeRinkId: number | null
   name: string
   logoPath: string | null
   logoUrl: string | null
@@ -26,7 +27,7 @@ interface ClubState extends Club {
   reload: () => Promise<void>
 }
 
-const DEFAULT: Club = { name: '', logoPath: null, logoUrl: null, gameDark: '#111111', gameLight: '#ffd400', privacyNoticePath: null, jerseyLight: 'Chiara', jerseyDark: 'Scura', certificateMonths: 12, certificateReview: true, consentMode: 'button' }
+const DEFAULT: Club = { homeRinkId: null, name: '', logoPath: null, logoUrl: null, gameDark: '#111111', gameLight: '#ffd400', privacyNoticePath: null, jerseyLight: 'Chiara', jerseyDark: 'Scura', certificateMonths: 12, certificateReview: true, consentMode: 'button' }
 const Ctx = createContext<ClubState | null>(null)
 
 export function logoUrl(path: string | null): string | null {
@@ -39,13 +40,13 @@ export function ClubProvider({ children }: { children: ReactNode }) {
   const [loadError, setLoadError] = useState('')
 
   const reload = useCallback(async () => {
-    const { data, error } = await supabase.from('club_settings').select('name, logo_path, game_dark, game_light, privacy_notice_path, jersey_light_name, jersey_dark_name, certificate_months, certificate_review, consent_mode').maybeSingle()
-    const row = data as { name: string; logo_path: string | null; game_dark: string; game_light: string; privacy_notice_path: string | null; jersey_light_name: string; jersey_dark_name: string; certificate_months: number | null; certificate_review: boolean | null; consent_mode: 'button' | 'tick' | null } | null
+    const { data, error } = await supabase.from('club_settings').select('home_rink_id, name, logo_path, game_dark, game_light, privacy_notice_path, jersey_light_name, jersey_dark_name, certificate_months, certificate_review, consent_mode').maybeSingle()
+    const row = data as { home_rink_id: number | null; name: string; logo_path: string | null; game_dark: string; game_light: string; privacy_notice_path: string | null; jersey_light_name: string; jersey_dark_name: string; certificate_months: number | null; certificate_review: boolean | null; consent_mode: 'button' | 'tick' | null } | null
     if (error || !row) { setReady(false); setLoadError(errorText(error)); return }
     setReady(true)
     setLoadError('')
     setClub({
-      name: row.name, logoPath: row.logo_path, logoUrl: logoUrl(row.logo_path), gameDark: row.game_dark, gameLight: row.game_light,
+      homeRinkId: row.home_rink_id ?? null, name: row.name, logoPath: row.logo_path, logoUrl: logoUrl(row.logo_path), gameDark: row.game_dark, gameLight: row.game_light,
       privacyNoticePath: row.privacy_notice_path, jerseyLight: row.jersey_light_name, jerseyDark: row.jersey_dark_name,
       certificateMonths: row.certificate_months ?? 12, certificateReview: row.certificate_review ?? true, consentMode: row.consent_mode ?? 'button',
     })

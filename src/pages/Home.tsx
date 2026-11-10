@@ -1,3 +1,4 @@
+import { eventClubName } from '../lib/leaguealias'
 import { readableInk } from '../lib/colour'
 import { useCallback, useEffect, useMemo, useState, type CSSProperties } from 'react'
 import { Link } from 'react-router-dom'
@@ -145,7 +146,7 @@ export default function Home() {
         <div className="home-main">
           {next && <div className="nowline" aria-hidden="true"><i /></div>}
           {next ? (
-            <NextPanel club={club.name || t('app.name')} colours={colours(next)} event={next} groups={groupName(next)} mine={answers.get(next.id) ?? null} count={detailAllowed(next, 'presence', isStaff, invitedTo(next, myGroups)) ? count : undefined} canAnswer={asPlayer && canAnswerEvent(next, myGroups, notCalled.has(next.id))} busy={busy} onAnswer={(v) => void answer(next, v)} />
+            <NextPanel club={eventClubName(next!, groups, club.name || t('app.name'))} colours={colours(next)} event={next} groups={groupName(next)} mine={answers.get(next.id) ?? null} count={detailAllowed(next, 'presence', isStaff, invitedTo(next, myGroups)) ? count : undefined} canAnswer={asPlayer && canAnswerEvent(next, myGroups, notCalled.has(next.id))} busy={busy} onAnswer={(v) => void answer(next, v)} />
           ) : (
             loaded && <section className="card"><h2>{t('home.next')}</h2><p className="hint">{t('events.empty')}</p></section>
           )}
@@ -161,7 +162,7 @@ export default function Home() {
                   <li key={e.id}>
                     <Link to={`/events/${e.id}`}>
                       <span className="hl-when">{formatShortDay(e.starts_at)} <strong>{formatTime(e.starts_at)}</strong></span>
-                      <span className="hl-what">{e.type === 'game' && e.opponent ? t('events.vs', { club: club.name || t('app.name'), opponent: e.opponent }) : e.title}</span>
+                      <span className="hl-what">{e.type === 'game' && e.opponent ? t('events.vs', { club: eventClubName(e, groups, club.name || t('app.name')), opponent: e.opponent }) : e.title}</span>
                     </Link>
                   </li>
                 ))}

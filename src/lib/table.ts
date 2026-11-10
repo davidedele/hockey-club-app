@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useViewState } from './viewstate'
 import { locale } from '../i18n'
 
 export type Dir = 'asc' | 'desc'
@@ -38,8 +38,8 @@ export function pageOf<T>(rows: T[], page: number, size: number): T[] {
 export const pageCount = (total: number, size: number) => Math.max(1, Math.ceil(total / size))
 
 // A column and a direction. Pressing the same column again reverses it.
-export function useSort<K extends string>(initial: K, dir: Dir = 'asc') {
-  const [state, setState] = useState<{ key: K; dir: Dir }>({ key: initial, dir })
+export function useSort<K extends string>(initial: K, dir: Dir = 'asc', memoryKey?: string) {
+  const [state, setState] = useViewState<{ key: K; dir: Dir }>(memoryKey, { key: initial, dir }, x=>!!x&&typeof x==='object'&&'dir' in x&&((x as {dir:string}).dir==='asc'||(x as {dir:string}).dir==='desc')&&'key' in x&&typeof x.key==='string')
   return {
     ...state,
     set: (key: K, dir: Dir) => setState({ key, dir }),
