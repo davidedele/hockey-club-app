@@ -201,7 +201,7 @@ export default function Championship() {
                       {table.map((r) => (
                         <tr key={r.position} className={r.team === team ? 'ours' : undefined}>
                           <td>{r.position}</td>
-                          <th scope="row">{displayTeam(r.team)}</th>
+                          <th scope="row">{displayTeam(r.team, comp?.id)}</th>
                           <td>{r.played}</td>
                           <td className="strong">{r.points}</td>
                           <td>{r.goal_diff > 0 ? `+${r.goal_diff}` : r.goal_diff}</td>
@@ -218,7 +218,7 @@ export default function Championship() {
                 <h2 id="games-title">{t('champ.next')}</h2>
                 <div className="chips">
                   <button className={!onlyOurs ? 'chip on' : 'chip'} aria-pressed={!onlyOurs} onClick={() => { setOnlyOurs(false); setMoreNext(0); setMoreResults(0) }}>{t('champ.allGames')}</button>
-                  <button className={onlyOurs ? 'chip on' : 'chip'} aria-pressed={onlyOurs} onClick={() => { setOnlyOurs(true); setMoreNext(0); setMoreResults(0) }}>{t('champ.onlyTeam', { team: displayTeam(team) })}</button>
+                  <button className={onlyOurs ? 'chip on' : 'chip'} aria-pressed={onlyOurs} onClick={() => { setOnlyOurs(true); setMoreNext(0); setMoreResults(0) }}>{t('champ.onlyTeam', { team: displayTeam(team, comp?.id) })}</button>
                 </div>
               </div>
               {upcoming.length === 0 ? <p className="hint">{t('champ.noNext')}</p> : <ul className="list lmatches">{upcoming.map(row)}</ul>}

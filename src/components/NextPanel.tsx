@@ -27,6 +27,7 @@ export default function NextPanel(props: { club: string; colours: CSSProperties 
           <span>{props.groups}</span>
         </div>
         <div className="next-content"><div className="next-schedule">
+        {!game&&e.type!=='training'&&<div className="vs">{e.title}</div>}
         {game && e.opponent && <div className="vs">{t('events.vs', { club: props.club, opponent: e.opponent })}</div>}
         <div className="day-line">{formatDay(e.starts_at)}</div>
         <div className="time">

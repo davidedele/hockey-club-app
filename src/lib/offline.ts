@@ -1,6 +1,6 @@
 import { supabase } from './supabase'
 import { eventLocation } from './maps'
-import type { Rink, LineupSlot } from './types'
+import type { Rink, LineupSlot, EventType } from './types'
 
 // Offline use (V11, decision 137). The rule of what is kept on the phone:
 //   1. Only what the signed in person may read through the database rules, and only this: the events that start in the
@@ -25,7 +25,7 @@ export const RENEW_MINUTES = 30
 
 export interface OfflineEvent {
   id: string
-  type: 'training' | 'game'
+  type: EventType
   title: string
   starts_at: string
   ends_at: string
@@ -78,12 +78,12 @@ export function buildCopy(userId: string, now: Date, raw: { events: Row[]; group
     saved_at: now.toISOString(),
     events: events.map((e) => ({
       id: e.id as string,
-      type: e.type as 'training' | 'game',
+      type: e.type as EventType,
       title: String(e.title ?? ''),
       starts_at: e.starts_at as string,
       ends_at: e.ends_at as string,
       meetup_at: (e.meetup_at as string | null) ?? null,
-      venue: eventLocation({ type: e.type as 'training' | 'game', venue: (e.venue as string | null) ?? null }, raw.rinks?.find((r) => r.id === e.rink_id)).label || null,
+      venue: eventLocation({ type: e.type as EventType, venue: (e.venue as string | null) ?? null }, raw.rinks?.find((r) => r.id === e.rink_id)).label || null,
       opponent: (e.opponent as string | null) ?? null,
       home_away: (e.home_away as 'home' | 'away' | null) ?? null,
       cancelled: e.cancelled_at != null,

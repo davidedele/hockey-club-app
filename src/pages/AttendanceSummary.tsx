@@ -1,3 +1,5 @@
+import type { EventType } from '../lib/types'
+import { useViewState, useChangeEffect } from '../lib/viewstate'
 import TableScroll from '../components/TableScroll'
 import { useEffect, useMemo, useState } from 'react'
 import SortHeader from '../components/SortHeader'
@@ -51,18 +53,19 @@ export default function AttendanceSummary() {
   const { groupId, groups } = useGroupFilter()
   const current = seasonOf(new Date().toISOString())
   const seasons = Array.from({ length: Math.max(1, current - FIRST_SEASON + 1) }, (_, i) => current - i)
-  const [period, setPeriod] = useState<'season' | 'last30'>('season')
-  const [season, setSeason] = useState(current)
-  const [type, setType] = useState<'' | 'training' | 'game'>('')
+  const [period, setPeriod] = useViewState<'season'|'last30'>('attendance.period','season')
+  const [season, setSeason] = useViewState('attendance.season',current)
+  const [type, setType] = useViewState<''|EventType>('attendance.type','')
   const [role, setRole] = useState('')
-  const [query, setQuery] = useState('')
+  const [query, setQuery] = useViewState('attendance.query','')
   const [rows, setRows] = useState<Row[]>([])
   const [loaded, setLoaded] = useState(false)
   const [error, setError] = useState('')
-  const [page, setPage] = useState(1)
-  const [size, setSize] = useState(25)
-  const sort = useSort<string>('name')
+  const [page, setPage] = useViewState('attendance.page',1)
+  const [size, setSize] = useViewState('attendance.size',25)
+  const sort = useSort<string>('name','asc','attendance.sort')
 
+  useChangeEffect(()=>setPage(1),`${period}/${season}/${type}/${groupId}`)
   useEffect(() => {
     setLoaded(false)
     void (async () => {
@@ -73,7 +76,6 @@ export default function AttendanceSummary() {
       else setError('')
       setRows((data ?? []) as Row[])
       setLoaded(true)
-      setPage(1)
     })()
   }, [period, season, type, groupId])
 
@@ -114,10 +116,10 @@ export default function AttendanceSummary() {
           </select>
         </label>
         <label className="cal-field"><span>{t('att.type')}</span>
-          <select value={type} onChange={(e) => setType(e.target.value as '' | 'training' | 'game')}>
+          <select value={type} onChange={(e) => setType(e.target.value as '' | EventType)}>
             <option value="">{t('att.typeAll')}</option>
             <option value="training">{t('att.typeTraining')}</option>
-            <option value="game">{t('att.typeGame')}</option>
+            <option value="game">{t('att.typeGame')}</option>{(['theory','off_ice','other'] as const).map(type=><option value={type} key={type}>{t(`eventType.${type}`)}</option>)}
           </select>
         </label>
         <label className="cal-field"><span>{t('att.role')}</span>

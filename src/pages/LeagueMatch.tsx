@@ -42,20 +42,28 @@ export default function LeagueMatch() {
   const { matchId } = useParams()
   const [params] = useSearchParams()
   const eventId = params.get('event')
+  const [competition,setCompetition]=useState<number|null>(null)
   const [detail, setDetail] = useState<Detail | null>(null)
   const [error, setError] = useState('')
 
   useEffect(() => {
     const id = Number(matchId)
     if (!Number.isInteger(id)) return setError(t('match.notFound'))
-    void supabase.functions.invoke('league-match', { body: { id } }).then(({ data, error }) => {
-      if (error || !data || (data as { error?: string }).error) setError(error ? errorText(error) : t('match.unreachable'))
-      else setDetail(data as Detail)
+    let active=true
+    setDetail(null);setCompetition(null);setError('')
+    void Promise.all([
+      supabase.functions.invoke('league-match', {body:{id}}),
+      supabase.from('league_matches').select('championship_id').eq('id',id).maybeSingle(),
+    ]).then(([result,match])=>{
+      if(!active)return
+      if(result.error||!result.data||(result.data as {error?:string}).error)setError(result.error?errorText(result.error):t('match.unreachable'))
+      else {setDetail(result.data as Detail);setCompetition(match.data?.championship_id??null)}
     })
+    return()=>{active=false}
   }, [matchId])
 
-  const home = detail ? displayTeam(detail.home.name) : ''
-  const away = detail ? displayTeam(detail.away.name) : ''
+  const home = detail ? displayTeam(detail.home.name,competition) : ''
+  const away = detail ? displayTeam(detail.away.name,competition) : ''
   const sideName = (s: 'home' | 'away') => (s === 'home' ? home : away)
 
   return (

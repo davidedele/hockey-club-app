@@ -3,7 +3,8 @@ import Fold from './Fold'
 import { t, type MessageKey } from '../i18n'
 import { EVENT_DETAILS } from '../lib/eventaccess'
 import type { EventDetailKey } from '../lib/types'
-export default function EventVisibility({ participant, observer, onParticipant, onObserver, game }: {
+export default function EventVisibility({ participant, observer, onParticipant, onObserver, game, activity }: {
+  activity?: string
   game: boolean
   participant: EventDetailKey[]; observer: EventDetailKey[]
   onParticipant: (keys: EventDetailKey[]) => void; onObserver: (keys: EventDetailKey[]) => void
@@ -14,7 +15,7 @@ export default function EventVisibility({ participant, observer, onParticipant, 
     <p className="hint">{t('visibility.help')}</p>
     <div className="visibility-audiences">
       {([{ title: 'visibility.invited', keys: participant, set: onParticipant }, { title: 'visibility.others', keys: observer, set: onObserver }] as const).map((audience) =>
-        <fieldset key={audience.title}><legend>{t(audience.title)}</legend>{EVENT_DETAILS.filter((key) => game || key !== 'game').map((key) =>
+        <fieldset key={audience.title}><legend>{t(audience.title)}</legend>{EVENT_DETAILS.filter(key=>(game||key!=='game')&&(!activity||activity==='training'||(key!=='plan'&&((activity==='game')||key!=='lineup')))).map((key) =>
           <label className="check" key={key}><input type="checkbox" checked={audience.keys.includes(key)} onChange={(e) => audience.set(e.target.checked ? [...audience.keys, key] : audience.keys.filter((k) => k !== key))} />{t(`visibility.${key}` as MessageKey)}</label>
         )}</fieldset>)}
     </div>

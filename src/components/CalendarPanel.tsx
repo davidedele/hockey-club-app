@@ -34,6 +34,7 @@ export default function CalendarPanel(props: {
   isObserver: (event: EventRow) => boolean
   onChanged: () => void
   clubName: string
+  eventClub: (e: EventRow) => string
   groupName: (e: EventRow) => string
   placeName: (e: EventRow) => string
   weekShift: number
@@ -41,7 +42,7 @@ export default function CalendarPanel(props: {
   onWeekShift: (shift: number) => void
   renderWeek: (query: string, keep: (e: EventRow) => boolean) => ReactNode
 }) {
-  const { events, answers, isStaff, isObserver, onChanged, clubName, groupName, placeName, weekShift, onWeekShift } = props
+  const { events, answers, isStaff, isObserver, onChanged, groupName, placeName, weekShift, onWeekShift } = props
   const today = dayKey(new Date().toISOString())
   const currentSeason = seasonOf(new Date().toISOString())
   const seasons = Array.from({ length: Math.max(1, currentSeason - FIRST_SEASON + 1) }, (_, i) => currentSeason - i)
@@ -60,9 +61,9 @@ export default function CalendarPanel(props: {
   const [size, setSize] = useViewState('calendar.size', 25, x=>[25,50,100].includes(Number(x)))
   const sort = useSort<ListKey>('date', 'asc', 'calendar.sort')
   // The list opens on what is still to come, so the next event is the first row.
-  const [scope, setScope] = useViewState<Scope>('calendar.scope', 'upcoming', x=>['upcoming','past','season'].includes(String(x)))
+  const [scope, setScope] = useViewState<Scope>('calendar.scope', 'upcoming', x=>['upcoming','past','all'].includes(String(x)))
 
-  const title = (e: EventRow) => (e.type === 'game' && e.opponent ? t('events.vs', { club: clubName, opponent: e.opponent }) : e.title)
+  const title = (e: EventRow) => (e.type === 'game' && e.opponent ? t('events.vs', { club: props.eventClub(e), opponent: e.opponent }) : e.title)
   const typeName = (c: Cat) => t(`cal.${c}` as MessageKey)
   const text = query.trim().toLowerCase()
   const keep = (e: EventRow) => types.has(catOf(e)) && (text === '' || [title(e), placeName(e), e.opponent ?? ''].some((x) => x.toLowerCase().includes(text)))
@@ -154,7 +155,7 @@ export default function CalendarPanel(props: {
     sort.set('date', next === 'past' ? 'desc' : 'asc')
   }
   const scopeButton = (v: Scope, label: string) => (
-    <button className={scope === v ? 'chip on' : 'chip'} aria-pressed={scope === v} onClick={() => pickScope(v)}>{label}</button>
+    <button className={scope === v ? 'chip on' : 'chip'} aria-label={label} aria-pressed={scope === v} onClick={() => pickScope(v)}>{label}</button>
   )
 
   const viewButton = (v: View, label: string) => (

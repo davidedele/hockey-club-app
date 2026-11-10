@@ -1,0 +1,130 @@
+{
+  "layout_cases": 126,
+  "layout_findings": 0,
+  "focused_workflows": [
+    {
+      "name": "publish targeted request and review upload",
+      "role": "board",
+      "width": 375,
+      "passed": true
+    },
+    {
+      "name": "player confirmation and signed-file submission",
+      "role": "player",
+      "width": 375,
+      "passed": true
+    },
+    {
+      "name": "create a linked event with inherited teams and separate attendance",
+      "role": "board",
+      "width": 375,
+      "passed": true
+    },
+    {
+      "name": "publish targeted request and review upload",
+      "role": "board",
+      "width": 1280,
+      "passed": true
+    },
+    {
+      "name": "player confirmation and signed-file submission",
+      "role": "player",
+      "width": 1280,
+      "passed": true
+    },
+    {
+      "name": "create a linked event with inherited teams and separate attendance",
+      "role": "board",
+      "width": 1280,
+      "passed": true
+    },
+    {
+      "name": "home rink and full reservation distinct from match duration",
+      "role": "board",
+      "width": 1280,
+      "passed": true
+    },
+    {
+      "name": "calendar context survives saving and refresh",
+      "role": "board",
+      "width": 1280,
+      "passed": true
+    },
+    {
+      "name": "coach review and club library access",
+      "role": "coach",
+      "width": 375,
+      "passed": true
+    },
+    {
+      "name": "request load failure and retry",
+      "role": "board",
+      "width": 1280,
+      "passed": true
+    },
+    {
+      "name": "display aliases preserve league source",
+      "role": "board",
+      "width": 1280,
+      "passed": true
+    }
+  ],
+  "webkit_dark_large_workflows": [
+    {
+      "name": "publish targeted request and review upload",
+      "role": "board",
+      "width": 375,
+      "passed": true
+    },
+    {
+      "name": "player confirmation and signed-file submission",
+      "role": "player",
+      "width": 375,
+      "passed": true
+    },
+    {
+      "name": "create a linked event with inherited teams and separate attendance",
+      "role": "board",
+      "width": 375,
+      "passed": true
+    },
+    {
+      "name": "publish targeted request and review upload",
+      "role": "board",
+      "width": 1280,
+      "passed": true
+    },
+    {
+      "name": "player confirmation and signed-file submission",
+      "role": "player",
+      "width": 1280,
+      "passed": true
+    },
+    {
+      "name": "create a linked event with inherited teams and separate attendance",
+      "role": "board",
+      "width": 1280,
+      "passed": true
+    },
+    {
+      "name": "home rink and full reservation distinct from match duration",
+      "role": "board",
+      "width": 1280,
+      "passed": true
+    },
+    {
+      "name": "calendar context survives saving and refresh",
+      "role": "board",
+      "width": 1280,
+      "passed": true
+    }
+  ],
+  "hosted_writes": false,
+  "notes": [
+    "Unchanged layout cases retained from the full pass; six related-event cases rechecked after the target-size correction.",
+    "Existing general interaction contracts are verified separately.",
+    "Hosted storage and mail delivery require a test project review.",
+    "The complete general interaction run had one selector finding after the alias field was added. That shared group-name case now uses its label and passes independently; the other completed cases were not repeated."
+  ],
+  "general_contract_findings": 0
+}

@@ -1,3 +1,4 @@
+import { useViewState } from '../lib/viewstate'
 import TableScroll from '../components/TableScroll'
 import { useEffect, useMemo, useState } from 'react'
 import { Navigate } from 'react-router-dom'
@@ -45,7 +46,7 @@ export default function AttendanceGrid({ embedded = false }: { embedded?: boolea
   const { groupId: chosen } = useGroupFilter()
   // The grid is for one group: the one chosen in the switcher, or the first.
   const groupId = chosen ?? groups[0]?.id ?? null
-  const [month, setMonth] = useState(() => monthOf(new Date().toISOString()))
+  const [month, setMonth] = useViewState('attendance.grid.month',()=>monthOf(new Date().toISOString()))
   const [rows, setRows] = useState<GridRow[]>([])
   const [loaded, setLoaded] = useState(false)
   const [error, setError] = useState('')

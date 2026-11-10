@@ -1,3 +1,5 @@
+import LoadError from '../components/LoadError'
+import { PageSkeleton } from '../components/Skeleton'
 import { useCallback, useEffect, useState, type ChangeEvent, type FormEvent } from 'react'
 import ConfirmAction from '../components/ConfirmAction'
 import PageHeader from '../components/PageHeader'
@@ -20,12 +22,11 @@ interface ClubDocument {
 
 // The club's papers (V3): the privacy notice and the PDF files the board adds. Members read; the board adds,
 // renames and removes. Links expire after ten minutes, like the other documents.
-export default function ClubDocuments({ manage = false }: { manage?: boolean }) {
+export default function ClubDocuments({ manage = false, embedded = false }: { manage?: boolean; embedded?: boolean }) {
   const { isBoard: board } = useSession()
   const isBoard = board && manage
   const club = useClub()
   const [docs, setDocs] = useState<ClubDocument[] | null>(null)
-  const [links, setLinks] = useState<Map<string, string>>(new Map())
   const [title, setTitle] = useState('')
   const [file, setFile] = useState<File | null>(null)
   const [busy, setBusy] = useState(false)
@@ -33,15 +34,12 @@ export default function ClubDocuments({ manage = false }: { manage?: boolean }) 
   const [message, setMessage] = useState('')
 
   const load = useCallback(async () => {
+    setError('')
     const { data, error: failure } = await supabase.from('club_documents').select('id, title, file_path, created_at').order('created_at', { ascending: false })
     if (failure) { setError(errorText(failure)); return }
     const list = (data ?? []) as ClubDocument[]
     setDocs(list)
-    const paths = [...list.map((d) => d.file_path), ...(club.privacyNoticePath ? [club.privacyNoticePath] : [])]
-    if (paths.length) {
-      const signed = await supabase.storage.from('documents').createSignedUrls(paths, LINK_SECONDS)
-      setLinks(new Map(((signed.data ?? []) as { path: string | null; signedUrl: string }[]).filter((x) => x.path && x.signedUrl).map((x) => [x.path as string, x.signedUrl])))
-    }
+
   }, [club.privacyNoticePath])
 
   useEffect(() => {
@@ -101,25 +99,25 @@ export default function ClubDocuments({ manage = false }: { manage?: boolean }) 
   }
 
   async function openFile(path: string) {
+    const preview=window.open('about:blank','_blank');if(preview)preview.opener=null
     const result = await supabase.storage.from('documents').createSignedUrl(path, LINK_SECONDS)
-    if (result.error) setError(errorText(result.error))
-    else if (result.data?.signedUrl) window.location.assign(result.data.signedUrl)
+    if (result.error) {preview?.close();setError(errorText(result.error))}
+    else if (result.data?.signedUrl) {if(preview)preview.location.replace(result.data.signedUrl);else window.location.assign(result.data.signedUrl)}
+    else preview?.close()
   }
-  const noticeLink = club.privacyNoticePath ? links.get(club.privacyNoticePath) : undefined
+  if(docs===null)return error?<LoadError title={t('clubdocs.title')} message={error} onRetry={()=>void load()}/>:<PageSkeleton />
   const empty = docs !== null && docs.length === 0 && !club.privacyNoticePath
   return (
     <div className="section">
-      <PageHeader title={t('clubdocs.title')} description={t('clubdocs.description')} back={{ to: '/profile', label: t('profile.back') }} />
-      {docs === null ? (
-        <p className="hint">{t('common.loading')}</p>
-      ) : empty ? (
+      {!manage && !embedded && <PageHeader title={t('clubdocs.title')} description={t('clubdocs.description')} back={{ to: '/profile', label: t('profile.back') }} />}
+      {empty ? (
         <p className="hint">{isBoard ? t('clubdocs.emptyBoard') : t('clubdocs.empty')}</p>
       ) : (
         <ul className="list club-docs">
           {club.privacyNoticePath && (
             <li className="row">
               <span>{t('club.notice')}</span>
-              {noticeLink ? <button type="button" className="secondary" onClick={() => void openFile(club.privacyNoticePath!)}>{t('clubdocs.open')}</button> : null}
+              {club.privacyNoticePath ? <button type="button" className="secondary" onClick={() => void openFile(club.privacyNoticePath!)}>{t('clubdocs.open')}</button> : null}
             </li>
           )}
           {docs.map((d) => (
@@ -129,7 +127,7 @@ export default function ClubDocuments({ manage = false }: { manage?: boolean }) 
                 <small className="hint"> {formatDateYear(dayKey(d.created_at))}</small>
               </span>
               <span className="row-actions">
-                {links.get(d.file_path) && <button type="button" className="secondary" onClick={() => void openFile(d.file_path)} aria-label={t('clubdocs.openNamed', { title: d.title })}>{t('clubdocs.open')}</button>}
+                {<button type="button" className="secondary" onClick={() => void openFile(d.file_path)} aria-label={t('clubdocs.openNamed', { title: d.title })}>{t('clubdocs.open')}</button>}
                 {isBoard && <ConfirmAction label={t('clubdocs.remove')} title={t('clubdocs.removeTitle')} body={t('clubdocs.removeBody', { title: d.title })} confirm={t('clubdocs.remove')} disabled={busy} onConfirm={() => void remove(d)} />}
               </span>
             </li>

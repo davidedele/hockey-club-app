@@ -38,6 +38,8 @@ export default function EventForm() {
 
   const [parentId,setParentId]=useState<string|null>(params.get('parent'))
   const [parentTitle,setParentTitle]=useState('')
+  const [bookingReview,setBookingReview]=useState(false)
+  const [bookingConfirmed,setBookingConfirmed]=useState(false)
   const [bookingStart,setBookingStart]=useState('')
   const [bookingEnd,setBookingEnd]=useState('')
   const [bookingDate,setBookingDate]=useState('')
@@ -107,6 +109,7 @@ export default function EventForm() {
       const e = data as EventRow | null
       if (e) {
         const start = isoToItaly(e.starts_at)
+        setBookingReview(e.booking_needs_review??false)
         setParentId(e.parent_event_id??null)
         if(e.booking_starts_at){const b=isoToItaly(e.booking_starts_at);setBookingStart(b.time);setBookingDate(b.date)}
         if(e.booking_ends_at){const b=isoToItaly(e.booking_ends_at);setBookingEnd(b.time);setBookingEndDate(b.date)}
@@ -193,7 +196,7 @@ export default function EventForm() {
       home_away: isGame ? homeAway : null, jersey: isGame ? jersey || null : null,
       video_url: isGame ? video.trim() || null : null,
       group_ids: groupsPending ? [] : groupIds, groups_pending: type === 'training' && groupsPending,
-      parent_event_id: parentId, booking_starts_at: bookedStart, booking_ends_at: bookedEnd,
+      parent_event_id: parentId, booking_confirmed: bookingConfirmed, booking_starts_at: bookedStart, booking_ends_at: bookedEnd,
       participant_details: participant, observer_details: observer,
     }
     if (editing && scope !== 'one') {
@@ -213,8 +216,8 @@ export default function EventForm() {
       <form {...checked(submit)}>
         {!editing && (
           <div className="field">
-            <span className="label">{t('form.type')}</span>
-            <select value={type} onChange={e=>{setType(e.target.value as EventType);if(e.target.value!=='training')setGroupsPending(false);if(!['training','game'].includes(e.target.value))setRinkId(null)}}>
+            <label className="label" htmlFor="event-type">{t('form.type')}</label>
+            <select id="event-type" value={type} onChange={e=>{setType(e.target.value as EventType);if(e.target.value!=='training')setGroupsPending(false);if(!['training','game'].includes(e.target.value))setRinkId(null)}}>
               {(['training','game','theory','off_ice','other'] as const).map(x=><option key={x} value={x}>{t(`eventType.${x}`)}</option>)}
             </select>
           </div>
@@ -234,7 +237,7 @@ export default function EventForm() {
           </label>
           <label>
             {t('form.end')}
-            <input type="time" required value={shownEnd} onChange={(e) => { setEndTime(e.target.value); setEndTouched(true) }} />
+            <input aria-label={t('form.end')} type="time" required value={shownEnd} onChange={(e) => { setEndTime(e.target.value); setEndTouched(true) }} />
             {startTime && shownEnd && shownEnd <= startTime && <span className="hint">{t('form.endNextDay')}</span>}
           </label>
           <label>
@@ -253,7 +256,7 @@ export default function EventForm() {
             <span className="label">{t('form.rink')}</span>
             <div className="chips wrap">
               {[null, ...rinks].map((r) => (
-                <button type="button" key={r?.id ?? 'none'} className={rinkId === (r?.id ?? null) ? 'chip on' : 'chip'} aria-pressed={rinkId === (r?.id ?? null)} onClick={() => setRinkId(r?.id ?? null)}>
+                <button type="button" key={r?.id ?? 'none'} className={rinkId === (r?.id ?? null) ? 'chip on' : 'chip'} aria-label={r?r.name:t('form.rinkNone')} aria-pressed={rinkId === (r?.id ?? null)} onClick={() => setRinkId(r?.id ?? null)}>
                   {r ? r.name : t('form.rinkNone')}
                 </button>
               ))}
@@ -266,7 +269,7 @@ export default function EventForm() {
           <input name="venue" maxLength={120} value={location.locked ? location.venue : venue} disabled={location.locked} onChange={(e) => setVenue(e.target.value)} aria-describedby={location.locked ? 'rink-address-note' : undefined} />
           {location.locked && <span id="rink-address-note" className="hint">{t('form.rinkAddressUsed')}</span>}
         </label>
-        {rinkId!==null&&<fieldset className="booking-fields"><legend>{t('booking.title')}</legend><p className="hint">{t('booking.hint')}</p><div className="when-grid"><label>{t('booking.startDate')}<input type="date" value={bookingDate||date} onChange={e=>setBookingDate(e.target.value)}/></label><label>{t('booking.start')}<input type="time" value={bookingStart} onChange={e=>setBookingStart(e.target.value)}/></label><label>{t('booking.endDate')}<input type="date" value={bookingEndDate||bookingDate||date} onChange={e=>setBookingEndDate(e.target.value)}/></label><label>{t('booking.end')}<input type="time" value={bookingEnd} onChange={e=>setBookingEnd(e.target.value)}/></label></div></fieldset>}
+        {rinkId!==null&&<fieldset className="booking-fields"><legend>{t('booking.title')}</legend>{bookingReview&&<label className="check"><input type="checkbox" checked={bookingConfirmed} onChange={e=>setBookingConfirmed(e.target.checked)}/>{t('booking.confirm')}</label>}<p className="hint">{t('booking.hint')}</p><div className="when-grid"><label>{t('booking.startDate')}<input type="date" value={bookingDate||date} onChange={e=>setBookingDate(e.target.value)}/></label><label>{t('booking.start')}<input type="time" value={bookingStart} onChange={e=>setBookingStart(e.target.value)}/></label><label>{t('booking.endDate')}<input type="date" value={bookingEndDate||bookingDate||date} onChange={e=>setBookingEndDate(e.target.value)}/></label><label>{t('booking.end')}<input type="time" value={bookingEnd} onChange={e=>setBookingEnd(e.target.value)}/></label></div></fieldset>}
         {type === 'game' && (
           <>
             <label>
@@ -277,7 +280,7 @@ export default function EventForm() {
               <span className="label">{t('form.homeAway')}</span>
               <div className="chips">
                 {(['home', 'away'] as const).map((x) => (
-                  <button type="button" key={x} className={homeAway === x ? 'chip on' : 'chip'} aria-pressed={homeAway === x} onClick={() => setHomeAway(x)}>
+                  <button type="button" key={x} className={homeAway === x ? 'chip on' : 'chip'} aria-pressed={homeAway === x} onClick={() => {setHomeAway(x);if(!editing&&x==='away'&&rinkId===club.homeRinkId&&!bookingStart&&!bookingEnd)setRinkId(null)}}>
                     {t(x === 'home' ? 'event.home' : 'event.away')}
                   </button>
                 ))}
@@ -312,7 +315,7 @@ export default function EventForm() {
           </> : <>
             {type === 'training' && <label className="check"><input type="checkbox" checked={groupsPending} onChange={(e) => setGroupsPending(e.target.checked)} />{t('form.assignLater')}</label>}
             {groupsPending && type === 'training' ? <p className="hint">{t('form.assignLaterHelp')}</p> : <>
-              {listsReady ? <div className="chips wrap">{groups.map((g) => <button type="button" key={g.id} className={groupIds.includes(g.id) ? 'chip on' : 'chip'} aria-pressed={groupIds.includes(g.id)} onClick={() => toggleGroup(g.id)}>{g.name}</button>)}</div> : <ChipsSkeleton />}
+              {listsReady ? <div className="chips wrap">{groups.map((g) => <button type="button" key={g.id} className={groupIds.includes(g.id) ? 'chip on' : 'chip'} aria-label={g.name} aria-pressed={groupIds.includes(g.id)} onClick={() => toggleGroup(g.id)}>{g.name}</button>)}</div> : <ChipsSkeleton />}
               <span className="hint">{t('form.groupsConsultation')}</span>
             </>}
           </>}
@@ -321,7 +324,7 @@ export default function EventForm() {
           <label className="check"><input type="checkbox" checked={repeat} onChange={(e) => setRepeat(e.target.checked)} />{t('form.repeat')}</label>
           {repeat && <label>{t('form.repeatWeeks')}<input type="number" inputMode="numeric" min={2} max={53} value={weeks} onChange={(e) => setWeeks(e.target.value)} /><span className="hint">{t('form.repeatHint')}</span></label>}
         </div>}
-        <EventVisibility game={type === 'game'} participant={participant} observer={observer} onParticipant={setParticipant} onObserver={setObserver} />
+        <EventVisibility activity={type} game={type === 'game'} participant={participant} observer={observer} onParticipant={setParticipant} onObserver={setObserver} />
         {editing && inSeries && <EventScopeSelect value={scope} onChange={setScope} disabled={busy} />}
         {error && <p className="error" role="alert">{error}</p>}
         <button type="submit" disabled={busy}>{editing ? t('common.save') : t('form.create')}</button>

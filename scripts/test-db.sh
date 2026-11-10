@@ -20,7 +20,19 @@ run "$bin/pg_ctl" -D "$work/data" -o "-k $sock -c listen_addresses=''" -l "$work
 trap 'run "$bin/pg_ctl" -D "$work/data" -m immediate stop >/dev/null 2>&1; rm -rf "$work"' EXIT
 
 sql -f "$root/supabase/tests/00_shim.sql"
-for f in "$root"/supabase/migrations/*.sql; do sql -f "$f"; done
+for f in "$root"/supabase/migrations/*.sql; do
+  migration_name="$(basename "$f")"
+  if [ "${TEST_CLUB_APPLY_FILES:-0}" = 1 ] && [[ "$migration_name" == 006[34]_* ]]; then
+    handoff_file="$root/supabase/apply/apply_$migration_name"
+    sql -f "$handoff_file"
+    if repeat_result=$(sql -f "$handoff_file" 2>&1); then
+      echo "Repeat guard failed for $migration_name" >&2; exit 1
+    fi
+    [[ "$repeat_result" == *"already applied"* ]] || { echo "$repeat_result" >&2; exit 1; }
+  else
+    sql -f "$f"
+  fi
+done
 sql -f "$root/supabase/tests/01_helpers.sql"
 for f in "$root"/supabase/tests/[0-9][0-9]_*.sql; do
   case "$(basename "$f")" in 00_*|01_*) continue ;; esac

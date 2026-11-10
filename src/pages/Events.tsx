@@ -1,3 +1,4 @@
+import { eventClubName } from '../lib/leaguealias'
 import LinkedEventLabel from '../components/LinkedEventLabel'
 import { useViewState, useReturnScroll } from '../lib/viewstate'
 import LoadError from '../components/LoadError'
@@ -173,7 +174,7 @@ export default function Events() {
   function row(e: EventRow) {
     const mine = answers.get(e.id)
     const over = new Date(e.ends_at).getTime() < now
-    const title = e.type === 'game' && e.opponent ? t('events.vs', { club: club.name || t('app.name'), opponent: e.opponent }) : e.title
+    const title = e.type === 'game' && e.opponent ? t('events.vs', { club: eventClubName(e, groups, club.name || t('app.name')), opponent: e.opponent }) : e.title
     const meta = [placeOf(e), e.meetup_at ? t('events.meetup', { time: formatTime(e.meetup_at) }) : null].filter(Boolean).join(', ')
     return (
       <li key={e.id} className={`${e.type === 'game' ? 'evrow game' : 'evrow'}${e.parent_event_id ? ' linked-event' : ''}${e.cancelled_at ? ' cancelled' : ''}${asPlayer && !invitedTo(e, myGroups) ? ' consultation' : ''}`}>
@@ -204,7 +205,7 @@ export default function Events() {
   function card(e: EventRow) {
     const mine = answers.get(e.id)
     const over = new Date(e.ends_at).getTime() < now
-    const title = e.type === 'game' && e.opponent ? t('events.vs', { club: club.name || t('app.name'), opponent: e.opponent }) : e.title
+    const title = e.type === 'game' && e.opponent ? t('events.vs', { club: eventClubName(e, groups, club.name || t('app.name')), opponent: e.opponent }) : e.title
     return (
       <article key={e.id} className={`${e.type === 'game' ? 'cal-ev game' : 'cal-ev'}${e.parent_event_id ? ' linked-event' : ''}${e.cancelled_at ? ' cancelled' : ''}${asPlayer && !invitedTo(e, myGroups) ? ' consultation' : ''}`} style={e.type === 'game' ? teamColours(e) : undefined}>
         <Link to={`/events/${e.id}`}>
@@ -311,7 +312,7 @@ export default function Events() {
       {loaded && view === 'past' && past.length === 0 && <p className="hint">{t('events.emptyPast')}</p>}
 
       <div className="evgrid dash">
-        {next && <NextPanel club={club.name || t('app.name')} colours={teamColours(next)} event={next} groups={groupsOf(next)} mine={answers.get(next.id) ?? null} count={detailAllowed(next, 'presence', isStaff, invitedTo(next, myGroups)) ? counts.get(next.id) : undefined} canAnswer={canAnswer(next)} busy={busy === next.id} onAnswer={(v) => void answer(next, v)} />}
+        {next && <NextPanel club={eventClubName(next!, groups, club.name || t('app.name'))} colours={teamColours(next)} event={next} groups={groupsOf(next)} mine={answers.get(next.id) ?? null} count={detailAllowed(next, 'presence', isStaff, invitedTo(next, myGroups)) ? counts.get(next.id) : undefined} canAnswer={canAnswer(next)} busy={busy === next.id} onAnswer={(v) => void answer(next, v)} />}
         {view === 'upcoming' && asPlayer && (
           <section className="todo desk-only" aria-label={t('dash.todo')}>
             <h2>{t('dash.todo')}{pending.length > 0 && <span className="count">{pending.length}</span>}</h2>
@@ -342,7 +343,7 @@ export default function Events() {
       </div>
 
       {!picked && view === 'upcoming' && (
-        <CalendarPanel
+        <CalendarPanel eventClub={e=>eventClubName(e,groups,club.name||t('app.name'))}
           events={events}
           answers={answers}
           isStaff={isStaff}

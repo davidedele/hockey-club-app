@@ -1,14 +1,14 @@
 import { useState, useCallback, useEffect, useLayoutEffect, useRef, type SetStateAction } from 'react'
 import { useSession } from './session'
-export function useViewState<T>(key: string, initial: T | (() => T), valid?: (value: unknown) => boolean) {
+export function useViewState<T>(key: string | undefined, initial: T | (() => T), valid?: (value: unknown) => boolean) {
   const { profile, view } = useSession()
   const storageKey = `view-v1:${profile?.id ?? 'guest'}:${view}:${key}`
   const fallback = () => typeof initial === 'function' ? (initial as () => T)() : initial
-  const read = () => { try { const raw = sessionStorage.getItem(storageKey); if(raw !== null){ const value: unknown = JSON.parse(raw); if(!valid || valid(value)) return value as T } } catch { /* Memory remains available when storage is blocked. */ } return fallback() }
+  const read = () => { try { const raw = key ? sessionStorage.getItem(storageKey) : null; if(raw !== null){ const value: unknown = JSON.parse(raw); if(!valid || valid(value)) return value as T } } catch { /* Memory remains available when storage is blocked. */ } return fallback() }
   const [state, set] = useState<T>(read)
   const last = useRef(storageKey)
   useEffect(() => { if(last.current !== storageKey){last.current=storageKey;set(read())} }, [storageKey])
-  const update = useCallback((value: SetStateAction<T>) => set(current => { const next = typeof value === 'function' ? (value as (v:T)=>T)(current) : value; try {sessionStorage.setItem(storageKey, JSON.stringify(next))} catch {} return next }), [storageKey])
+  const update = useCallback((value: SetStateAction<T>) => set(current => { const next = typeof value === 'function' ? (value as (v:T)=>T)(current) : value; try {if(key)sessionStorage.setItem(storageKey, JSON.stringify(next))} catch {} return next }), [storageKey])
   return [state, update] as const
 }
 export function useReturnScroll(key: string, ready: boolean) {

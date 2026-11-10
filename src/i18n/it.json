@@ -1372,7 +1372,7 @@
   "requests.send": "Invia documento",
   "requests.confirm": "Conferma",
   "requests.sent": "Risposta registrata.",
-  "requests.progress": "{n} completati · {pending} da verificare",
+  "requests.progress": "Completati: {n} di {total} · Da verificare: {pending}",
   "requests.member": "Membro",
   "requests.note": "Nota per il membro (facoltativa)",
   "requests.approve": "Approva",
@@ -1389,5 +1389,16 @@
   "error.request_file_invalid": "Il documento non è valido.",
   "error.request_pdf_invalid": "Scegli un PDF fino a 5 MB.",
   "error.request_upload_invalid": "Scegli un PDF, JPG o PNG fino a 5 MB.",
-  "error.request_review_changed": "Questa risposta è già stata verificata. Ricarica la pagina."
+  "error.request_review_changed": "Questa risposta è già stata verificata. Ricarica la pagina.",
+  "requests.recorded": "Risposta registrata il {date}",
+  "requests.allMembers": "Tutti i membri",
+  "requests.memberStatus": "Stato dei membri",
+  "error.request_already_sent": "Risposta già registrata. Ricarica la pagina per vedere lo stato aggiornato.",
+  "booking.exportEndDate": "Data fine ghiaccio",
+  "booking.exportReview": "Da verificare",
+  "booking.exportConfirmed": "Nessuna segnalazione",
+  "requests.pendingOne": "1 richiesta da completare",
+  "requests.pendingMany": "{n} richieste da completare",
+  "booking.confirm": "Ho verificato la prenotazione del ghiaccio",
+  "linked.add": "Aggiungi evento collegato"
 }

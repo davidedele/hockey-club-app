@@ -22,7 +22,7 @@ An event is created once. Every member can consult its main schedule information
 A player in two target groups sees the event once and answers once.
 
 ## 4. Events
-Two types: training and game.
+Types: training, game, theory, off ice and other club events. Related events can be placed before or after another event, copy its groups and keep separate attendance. Relationships are one level; schedule changes, cancellation and deletion do not cascade.
 Fields: title, start time, end time, meetup time (usually an hour before the start), venue, groups.
 Staff can edit, cancel, restore or delete one occurrence, that occurrence and following future occurrences, or every future occurrence in a series, with a count and date range before confirmation. Historical occurrences are excluded from series actions. Trainings can repeat weekly (the club trains on Tuesday, Thursday and Sunday; the Thursday session runs about 22:30 to 23:55 with meetup at 21:30).
 Games also have: opponent, home or away, final score.
@@ -39,7 +39,7 @@ A season attendance summary per player, and a per event grid, are available to t
 ## 6. Ice hours
 The weekly training limit was dropped on 28 October (Davide), so there is no plan per player and no limit warning.
 In its place the board counts the ice the club uses, because the venue bills a monthly flat fee and does a real count with an adjustment at the end of the season, and the club has to compare its own hours with theirs.
-Every training and game has a rink (the club uses two). The booked ice is the event's own start and end time, so an event from 14:00 to 15:30 is 1.5 hours. Staff can adjust the times.
+Every training and game has a rink (the club uses two). An explicit reservation records the complete booked ice interval independently from match time. Without it, existing training and game times remain the fallback, so an event from 14:00 to 15:30 is 1.5 hours. Theory, off ice and other events count only explicit reservations. Home games select the configured large rink by default. Monthly accounting splits reservations at Italian month boundaries; exports respect the selected season. Staff can adjust the times.
 An event with nobody present still counts, because the ice is paid for anyway. A cancelled event is kept and marked cancelled, and its hours are counted apart, so the board can see what was booked and then dropped. Deleting stays for mistakes and does not count.
 A recap page for the board shows the hours per rink, per month and for the season, the cancelled hours, and an export to a file that opens in Excel. An hourly price per rink is optional: if the board enters one, the page also shows the cost. Coaches and players never see prices.
 
@@ -84,6 +84,7 @@ On iPhone, push notifications need the app to be added to the home screen.
 
 ## 13. Data and privacy
 Keep the minimum: name, email, phone (optional), jersey number, position, group membership, profile picture (optional, added by the person, decided 21 October), game numbers, ratings and MVP votes (decided 21 October), absence periods with an optional reason (22 October), medical certificate expiry and file, privacy consent date (22 October).
+The board can also publish document reading, checkbox acceptance and file upload requests with optional staff review and a submission deadline. Keep the request, source PDF, member response, date and review outcome. Personal uploads stay visible only to the member and staff. Published contents and completed responses are preserved; replacement documents require a new request.
 Not needed: date of birth, height, weight, parent fields.
 Row level security in the database: players can consult the club calendar, answer only events of their assigned groups, and read optional event sections according to the visibility settings (8 November, decisions 143 and 144); ratings follow the rule above; only the board sees plans and warnings.
 The club holds members' data, so the board should agree to the move and members should be told what is stored.

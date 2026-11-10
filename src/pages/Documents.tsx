@@ -1,3 +1,5 @@
+import ClubDocuments from './ClubDocuments'
+import Fold, { useFolds } from '../components/Fold'
 import ClubRequests from '../components/ClubRequests'
 import { personName } from '../lib/names'
 import { useCallback, useEffect, useRef, useState, type ChangeEvent, type FormEvent } from 'react'
@@ -27,6 +29,7 @@ function Status({ level, text }: { level: Level; text: string }) {
 // A member's paperwork: the medical certificate and the privacy consent.
 // Without an id it is the signed in person's own page; staff open anyone's from the member page.
 export default function Documents() {
+  const folds=useFolds()
   const { id } = useParams()
   const { profile, isStaff } = useSession()
   const club = useClub()
@@ -209,7 +212,7 @@ export default function Documents() {
         description={own ? t('docs.intro') : t('docs.introStaff', { name: person?.first_name ?? '' })}
         crumb={own ? t('docs.title') : name}
       />
-      <ClubRequests userId={userId} />
+      {(!isStaff || !own) && <ClubRequests userId={userId} />}
       {error && <p className="error" role="alert">{error}</p>}
       {message && <p className="hint" role="status">{message}</p>}
       <div className="doc-cards">
@@ -268,6 +271,7 @@ export default function Documents() {
         {!own && <p className="hint">{t('docs.consentOnlyMember')}</p>}
       </section>
       </div>
+      {own&&!isStaff&&<Fold id="library" title={t('requests.library')} summary={t('requests.libraryHint')} open={folds.open==='library'} onToggle={()=>folds.toggle('library')}><ClubDocuments embedded/></Fold>}
     </div>
   )
 }

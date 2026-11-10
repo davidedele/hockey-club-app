@@ -16,7 +16,7 @@ begin
  if new.type='game' and new.home_away='home' and new.rink_id is null then
    select home_rink_id into new.rink_id from public.club_settings where id=true;
  end if;
- if tg_op='UPDATE' and new.starts_at is distinct from old.starts_at and old.booking_starts_at is not null
+ if tg_op='UPDATE' and (new.starts_at is distinct from old.starts_at or new.ends_at is distinct from old.ends_at or new.home_away is distinct from old.home_away or new.venue is distinct from old.venue) and old.booking_starts_at is not null
    and new.booking_starts_at is not distinct from old.booking_starts_at and new.booking_ends_at is not distinct from old.booking_ends_at then
    new.booking_needs_review:=true;
  end if;
@@ -41,6 +41,8 @@ create table public.club_requests (
  active boolean not null default true, created_by uuid default auth.uid() references public.profiles(id) on delete set null,
  created_at timestamptz not null default now(), check(action='upload' or document_id is not null), check(action='upload' or not review)
 );
+create index club_requests_document_idx on public.club_requests(document_id);
+create index club_requests_author_idx on public.club_requests(created_by);
 create table public.club_request_responses (
  request_id uuid not null references public.club_requests(id) on delete restrict,
  user_id uuid not null references public.profiles(id) on delete cascade,
@@ -50,6 +52,9 @@ create table public.club_request_responses (
  review_note text not null default '' check(length(review_note)<=1000), primary key(request_id,user_id),
  check(file_path is null or file_path ~ ('^'||user_id::text||'/request-'||request_id::text||'-[a-f0-9-]+\.(pdf|jpg|png)$'))
 );
+create index request_responses_user_idx on public.club_request_responses(user_id);
+create index request_responses_reviewer_idx on public.club_request_responses(reviewed_by);
+create index club_home_rink_idx on public.club_settings(home_rink_id);
 alter table public.club_requests enable row level security;
 alter table public.club_request_responses enable row level security;
 revoke all on public.club_requests,public.club_request_responses from public,anon,authenticated;
@@ -77,7 +82,9 @@ begin
  elsif p_file is not null then raise exception 'request_file_invalid'; end if;
  insert into public.club_request_responses(request_id,user_id,file_path,status)
  values(p_id,auth.uid(),p_file,case when r.review then 'pending' else 'complete' end)
- on conflict(request_id,user_id) do update set file_path=excluded.file_path,submitted_at=now(),status=excluded.status,reviewed_at=null,reviewed_by=null,review_note='';
+ on conflict(request_id,user_id) do update set file_path=excluded.file_path,submitted_at=now(),status=excluded.status,reviewed_at=null,reviewed_by=null,review_note=''
+ where club_request_responses.status='rejected';
+ if not found then raise exception 'request_already_sent'; end if;
 end $$;
 create function public.review_club_request(p_id uuid,p_user uuid,p_approve boolean,p_note text default '') returns void language plpgsql security definer set search_path='' as $$
 begin
@@ -111,9 +118,9 @@ begin
   v_new.meetup_at:=(p_changes->>'meetup_at')::timestamptz;
   v_new.venue:=nullif(trim(p_changes->>'venue'),'');
   v_new.rink_id:=(p_changes->>'rink_id')::smallint;
-  v_new.booking_starts_at:=(p_changes->>'booking_starts_at')::timestamptz;
-  v_new.booking_ends_at:=(p_changes->>'booking_ends_at')::timestamptz;
-  v_new.parent_event_id:=(p_changes->>'parent_event_id')::uuid;
+  v_new.booking_starts_at:=case when p_changes ? 'booking_starts_at' then (p_changes->>'booking_starts_at')::timestamptz else v_old.booking_starts_at end;
+  v_new.booking_ends_at:=case when p_changes ? 'booking_ends_at' then (p_changes->>'booking_ends_at')::timestamptz else v_old.booking_ends_at end;
+  v_new.parent_event_id:=case when p_changes ? 'parent_event_id' then (p_changes->>'parent_event_id')::uuid else v_old.parent_event_id end;
   if v_new.parent_event_id is not null and (p_repeat_weeks>0 or p_scope<>'one') then raise exception 'event_link_invalid'; end if;
   v_new.opponent:=nullif(trim(p_changes->>'opponent'),'');
   v_new.home_away:=p_changes->>'home_away';
@@ -167,7 +174,7 @@ begin
         ((v_target.starts_at at time zone 'Europe/Rome')+v_shift+((v_new.booking_starts_at at time zone 'Europe/Rome')-(v_new.starts_at at time zone 'Europe/Rome'))) at time zone 'Europe/Rome' end,
       booking_ends_at=case when v_new.booking_ends_at is null then null else
         ((v_target.starts_at at time zone 'Europe/Rome')+v_shift+((v_new.booking_ends_at at time zone 'Europe/Rome')-(v_new.starts_at at time zone 'Europe/Rome'))) at time zone 'Europe/Rome' end,
-      booking_needs_review=false,parent_event_id=v_new.parent_event_id,
+      booking_needs_review=case when coalesce((p_changes->>'booking_confirmed')::boolean,false) or v_new.booking_starts_at is distinct from v_old.booking_starts_at or v_new.booking_ends_at is distinct from v_old.booking_ends_at then false else v_target.booking_needs_review end,parent_event_id=v_new.parent_event_id,
       jersey=v_new.jersey,video_url=v_new.video_url,participant_details=v_new.participant_details,observer_details=v_new.observer_details,
       groups_pending=case when type='training' then true else false end
       where id=v_target.id;
@@ -191,3 +198,9 @@ $$;
 revoke all on function public.save_event(uuid,jsonb,text,integer,integer) from public,anon,authenticated;
 grant execute on function public.save_event(uuid,jsonb,text,integer,integer) to authenticated;
 
+
+-- Do not remove the evidence file behind a published request or a submitted response.
+alter policy documents_delete on storage.objects using (bucket_id='documents' and (
+ public.can_manage_documents_of(split_part(name,'/',1)) or ((name like 'club/privacy-%' or name ~ '^club/doc-[0-9]{10,16}\.pdf$') and public.is_board()))
+ and not exists(select 1 from public.club_documents d join public.club_requests r on r.document_id=d.id where d.file_path=name)
+ and not exists(select 1 from public.club_request_responses r where r.file_path=name));

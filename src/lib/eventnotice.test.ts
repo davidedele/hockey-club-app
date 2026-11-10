@@ -11,6 +11,8 @@ const change = (over: Partial<NoticeRow>): NoticeRow =>
   row({ kind: 'changed', change_id: 1, old_starts_at: base.starts_at, old_ends_at: base.ends_at, old_venue: 'Pista grande', old_cancelled: false, ...over })
 
 describe('calendar email', () => {
+  it('announces theory as a generic event rather than training',()=>{expect(buildEventNotice('Pia',[row({type:'theory',title:'Teoria'})],'https://app.example.it/').subject).toContain('Nuovo evento: Teoria')})
+
   it('announces one new event with a clear subject', () => {
     const m = buildEventNotice('Pia', [row({})], 'https://app.example.it/')
     expect(m.subject).toBe('Nuovo allenamento: Allenamento, giovedì 5 novembre, 20:30')

@@ -21,7 +21,7 @@ type Due = {
   kind: 'first' | 'last'
   event_id: string
   title: string
-  type: 'training' | 'game'
+  type: 'training' | 'game' | 'theory' | 'off_ice' | 'other'
   starts_at: string
   venue: string | null
 }
