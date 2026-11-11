@@ -71,6 +71,7 @@ export interface EventRow {
   rink_id: number | null
   cancelled_at: string | null
   league_match_id: number | null
+  league_side?: 'home' | 'away' | null
   video_url: string | null
   event_groups: { group_id: number }[]
 }

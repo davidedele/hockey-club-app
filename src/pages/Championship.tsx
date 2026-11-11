@@ -27,7 +27,7 @@ export default function Championship() {
   const [champs, setChamps] = useState<LeagueChampionship[]>([])
   const [matches, setMatches] = useState<LeagueMatch[]>([])
   const [standings, setStandings] = useState<LeagueStanding[]>([])
-  const [eventOf, setEventOf] = useState<Map<number, string>>(new Map())
+  const [eventOf, setEventOf] = useState<Map<string, string>>(new Map())
   const [sync, setSync] = useState<LeagueSync | null>(null)
   const { groupId, scope } = useGroupFilter()
   const [compId, setCompId] = useViewState<number | null>('champ.competition', null, x=>x===null||Number.isInteger(x))
@@ -48,7 +48,7 @@ export default function Championship() {
       supabase.from('league_championships').select('*').order('position'),
       supabase.from('league_matches').select('*').order('starts_at'),
       supabase.from('league_standings').select('*').order('position'),
-      supabase.from('events').select('id, league_match_id').not('league_match_id', 'is', null),
+      supabase.from('events').select('id, league_match_id, league_side').not('league_match_id', 'is', null),
       leagueSync(),
     ])
     const failure = [g,m,c,lm,ls,ev].find((result) => result.error)?.error
@@ -59,7 +59,7 @@ export default function Championship() {
     setChamps((c.data ?? []) as LeagueChampionship[])
     setMatches((lm.data ?? []) as LeagueMatch[])
     setStandings((ls.data ?? []) as LeagueStanding[])
-    setEventOf(new Map(((ev.data ?? []) as { id: string; league_match_id: number }[]).map((x) => [x.league_match_id, x.id])))
+    setEventOf(new Map(((ev.data ?? []) as { id: string; league_match_id: number; league_side: string }[]).map((x) => [`${x.league_match_id}:${x.league_side}`, x.id])))
     setSync(s)
     setLoaded(true)
     return true
@@ -106,7 +106,8 @@ export default function Championship() {
 
   // A result opens the game's details from the league; a coming game of ours opens its event.
   function row(m: LeagueMatch) {
-    const eventId = ours(m) ? eventOf.get(m.id) : undefined
+    // A match between two of the club's teams has one game per side: take the side of the group shown.
+    const eventId = ours(m) ? eventOf.get(`${m.id}:${m.home === team ? 'home' : 'away'}`) : undefined
     const played = m.home_score !== null
     const to = played ? `/campionato/partita/${m.id}${eventId ? `?event=${eventId}` : ''}` : eventId ? `/events/${eventId}` : null
     const score = m.home_score !== null ? `${m.home_score} : ${m.away_score}` : ''
