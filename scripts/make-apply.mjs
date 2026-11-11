@@ -36,6 +36,7 @@ const FILES = {
   '0059': ['unanswered_until', `to_regprocedure('public.unanswered_people(integer)') is not null or to_regprocedure('public.unanswered_people(integer, timestamptz)') is not null`, `to_regprocedure('public.unanswered_people(integer, timestamptz)') is not null`],
   '0060': ['own_groups_leaks', `to_regprocedure('public.opponent_history(uuid)') is not null and to_regprocedure('public.game_prediction_list(uuid)') is not null`, `to_regprocedure('public.sees_group(smallint)') is not null`],
   '0065': ['stale_group_links', `to_regclass('public.club_requests') is not null`, `to_regprocedure('public.tidy_league_event_groups()') is not null`],
+  '0066': ['club_derby_games', `to_regprocedure('public.tidy_league_event_groups()') is not null`, `exists (select 1 from information_schema.columns where table_schema = 'public' and table_name = 'events' and column_name = 'league_side')`],
 }
 
 mkdirSync(join(root, 'supabase/apply'), { recursive: true })
