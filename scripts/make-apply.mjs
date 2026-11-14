@@ -39,6 +39,7 @@ const FILES = {
   '0066': ['club_derby_games', `to_regprocedure('public.tidy_league_event_groups()') is not null`, `exists (select 1 from information_schema.columns where table_schema = 'public' and table_name = 'events' and column_name = 'league_side')`],
   '0067': ['requirements', `to_regclass('public.club_requests') is not null and ${col('events', 'league_side')}`, `to_regclass('public.requirements') is not null`],
   '0068': ['requirements_data', `to_regclass('public.requirement_versions') is not null`, `exists (select 1 from public.requirements where slug = 'medical_certificate')`],
+  '0069': ['requirements_reminders', `to_regclass('public.requirement_reminder_log') is not null`, `to_regprocedure('public.requirements_due(timestamptz)') is not null`],
 }
 
 mkdirSync(join(root, 'supabase/apply'), { recursive: true })

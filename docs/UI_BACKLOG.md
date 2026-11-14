@@ -11,7 +11,7 @@ Davide, 14 November: the privacy consent and the medical certificate are treated
 1. One card per required document in Profilo, Documenti, with the same status words for all. Status: Done (step 3). The certificate and the consent are two cards like the others.
 2. The staff editor for defining a required document, replacing the club requests management and the certificate and consent settings. Status: Done (step 4). Impostazioni club, Documenti e richieste lists the documents; the board adds and changes them on their own pages with starting points, ordered items, groups, deadline, expiry, staff check, visibility and archive. The old months and consent setting is no longer shown there (its code stays until step 7).
 3. The staff review page, the Members column, the Home figures, the banner and the profile menu read the new status. Status: Done (step 5). The review page is `/members/review`, the staff page of one person is built from the same cards.
-4. Reminders for expiry read the new tables. Status: Open (step 6).
+4. Reminders for expiry read the new tables. Status: Done (step 6).
 5. Removal of the old tables and the old settings page, after Davide confirms. Status: Open (step 7).
 
 ## Documents, bookings and event navigation (9 November 2026)

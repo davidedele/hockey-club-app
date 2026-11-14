@@ -32,6 +32,7 @@ export function announcementPush(): PushMessage {
   return { title: 'Nuovo avviso dal club', body: 'Aprilo nell\'app.', url: '/announcements' }
 }
 
-export function certificatePush(): PushMessage {
-  return { title: 'Certificato medico', body: 'Controlla il tuo certificato nell\'app.', url: '/profile/documents' }
+// Nothing about which document it is: the title of a requirement can say something about health, and a lock screen is public.
+export function requirementPush(): PushMessage {
+  return { title: 'Documenti', body: 'Controlla i tuoi documenti nell\'app.', url: '/profile/documents' }
 }

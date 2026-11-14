@@ -6,10 +6,10 @@
 // Every notification asks the database how to reach the person (push, email, both or nothing).
 import { createClient } from 'npm:@supabase/supabase-js@2.118.0'
 import { buildAnnouncement } from './announcement.ts'
-import { buildCertificate, type CertificateRow } from './certificate.ts'
+import { buildRequirement, type RequirementDue } from './requirement.ts'
 import { buildEventNotice, type NoticeRow } from './eventnotice.ts'
 import { buildReminder, type ReminderEvent } from './reminder.ts'
-import { announcementPush, certificatePush, noticePush, reminderPush, type PushMessage } from './push.ts'
+import { announcementPush, requirementPush, noticePush, reminderPush, type PushMessage } from './push.ts'
 import webpush from 'npm:web-push@3.6.7'
 
 const MAX_EMAILS = 100
@@ -39,7 +39,7 @@ type DueAnnouncement = {
 
 type DueNotice = NoticeRow & { user_id: string; email: string; first_name: string }
 
-type DueCertificate = CertificateRow & { user_id: string; email: string; first_name: string }
+type DueRequirement = RequirementDue & { requirement_id: string; user_id: string; email: string; first_name: string }
 
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } })
@@ -172,22 +172,23 @@ Deno.serve(async (req: Request) => {
       await admin.rpc('event_notices_mark_sent', { p_user: userId, p_events: mail.newEvents, p_changes: mail.changes })
     }
   }
-  // The medical certificate running out, at five moments before and after the date.
+  // A required document running out (the medical certificate included), at five moments before and after the date.
+  // The preference kind stays 'certificate': one switch for all of them.
   let certificatesSent = 0
   let certificatesFailed = 0
-  const certificates = await admin.rpc('certificates_due')
+  const certificates = await admin.rpc('requirements_due')
   if (!certificates.error) {
-    for (const row of (certificates.data ?? []) as DueCertificate[]) {
+    for (const row of (certificates.data ?? []) as DueRequirement[]) {
       if (sent + failed + announcementsSent + announcementsFailed + noticesSent + noticesFailed
           + certificatesSent + certificatesFailed >= MAX_EMAILS) break
-      const mail = buildCertificate(row.first_name, row, appUrl)
-      const result = await deliver(admin, row.user_id, 'certificate', { to: row.email, ...mail }, certificatePush(), ctx)
+      const mail = buildRequirement(row.first_name, row, appUrl)
+      const result = await deliver(admin, row.user_id, 'certificate', { to: row.email, ...mail }, requirementPush(), ctx)
       if (result === 'failed') {
         certificatesFailed++
         continue
       }
       certificatesSent++
-      await admin.rpc('certificates_mark_sent', { p_user: row.user_id, p_valid_until: row.valid_until, p_stage: row.stage })
+      await admin.rpc('requirements_mark_sent', { p_requirement: row.requirement_id, p_user: row.user_id, p_valid_until: row.valid_until, p_stage: row.stage })
     }
   }
 
