@@ -36,9 +36,11 @@ export default function RequirementCard(props: {
   answeredVersion?: RequirementVersion
   answer?: RequirementAnswer
   userId: string
+  // A staff member looking at another person: they can send only what the requirement lets staff send, and cannot withdraw.
+  onBehalf?: boolean
   onChanged: () => Promise<void>
 }) {
-  const { requirement: req, version, answer, userId } = props
+  const { requirement: req, version, answer, userId, onBehalf } = props
   const now = today()
   const status = requirementStatus(req, answer, now)
   const [draft, setDraft] = useState<Record<string, boolean | string>>({})
@@ -54,7 +56,7 @@ export default function RequirementCard(props: {
 
   const blocks = version.blocks
   const hasFile = blocks.some((b) => b.type === 'file')
-  const formOpen = canSubmit(req, answer) && status.state !== 'pending' && status.state !== 'done'
+  const formOpen = canSubmit(req, answer) && (!onBehalf || req.staff_can_submit) && status.state !== 'pending' && status.state !== 'done'
   const answeredBlocks = props.answeredVersion?.blocks ?? blocks
 
   async function finish(problem: string, done = '') {
@@ -209,7 +211,7 @@ export default function RequirementCard(props: {
 
       {formOpen && (
         <form {...checked(send)} className="doc-panel">
-          <p className="doc-panel-title">{t('req.todo')}</p>
+          <p className="doc-panel-title">{t(onBehalf ? 'req.todoFor' : 'req.todo')}</p>
           {version.description && <p className="request-instructions">{version.description}</p>}
           {version.reading_path && (
             <p>
@@ -247,7 +249,7 @@ export default function RequirementCard(props: {
       )}
       {error && <p className="error" role="alert">{error}</p>}
       {message && <p className="hint" role="status">{message}</p>}
-      {answer && (
+      {answer && !onBehalf && (
         <div className="actions">
           <ConfirmAction label={t('req.withdraw')} title={t('req.withdrawTitle', { title: req.title })} body={t('req.withdrawBody')} confirm={t('req.withdraw')} disabled={busy} onConfirm={() => void withdraw()} />
         </div>

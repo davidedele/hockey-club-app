@@ -132,3 +132,78 @@ export function canSubmit(req: Requirement, answer: RequirementAnswer | undefine
 export function appliesTo(req: Requirement, groupIds: number[]): boolean {
   return req.group_ids.length === 0 || req.group_ids.some((g) => groupIds.includes(g))
 }
+
+export interface RequirementItem {
+  req: Requirement
+  answer: RequirementAnswer | undefined
+  status: RequirementStatus
+}
+
+// The requirements one person has to deal with: those for their groups that are active, and any they already answered.
+export function itemsFor(reqs: Requirement[], answers: RequirementAnswer[], groupIds: number[], now: string): RequirementItem[] {
+  return reqs
+    .map((req) => ({ req, answer: answers.find((a) => a.requirement_id === req.id) }))
+    .filter(({ req, answer }) => (req.active && appliesTo(req, groupIds)) || answer)
+    .map(({ req, answer }) => ({ req, answer, status: requirementStatus(req, answer, now) }))
+}
+
+export const needsAction = (i: RequirementItem) => ['missing', 'outdated', 'rejected', 'expired'].includes(i.status.state)
+export const isWaiting = (i: RequirementItem) => ['pending', 'expiring'].includes(i.status.state)
+
+const RANK: Record<Level, number> = { none: 0, ok: 0, soon: 1, bad: 2 }
+
+export interface PersonSummary {
+  level: Level
+  todo: number
+  waiting: number
+  text: string
+}
+
+// One line for a person across all their requirements: the profile menu, the banner and the Members column use it.
+export function personSummary(items: RequirementItem[]): PersonSummary {
+  const todo = items.filter(needsAction)
+  const waiting = items.filter(isWaiting)
+  const level = items.reduce<Level>((worst, i) => (RANK[i.status.level] > RANK[worst] ? i.status.level : worst), 'ok')
+  const single = (i: RequirementItem) => t('req.sum.single', { title: i.req.title, status: statusText(i.req, i.answer, i.status) })
+  let text = t('docs.allOk')
+  if (todo.length === 1) text = single(todo[0])
+  else if (todo.length > 1) text = t('req.sum.todoMany', { n: String(todo.length) })
+  else if (waiting.length === 1) text = single(waiting[0])
+  else if (waiting.length > 1) text = t('req.sum.waitingMany', { n: String(waiting.length) })
+  return { level, todo: todo.length, waiting: waiting.length, text }
+}
+
+// What staff see of one person. A coach does not see what the board keeps to itself, so those requirements are left out
+// instead of showing everybody as missing.
+export function staffItemsFor(reqs: Requirement[], answers: RequirementAnswer[], groupIds: number[], now: string, isBoard: boolean): RequirementItem[] {
+  return itemsFor(reqs.filter((r) => isBoard || r.visibility === 'staff'), answers, groupIds, now)
+}
+
+export interface StaffFigures {
+  // People with something to complete (missing, outdated, rejected or expired).
+  todo: number
+  // People with an answer that waits for a staff member.
+  toVerify: number
+  // People with something that ends within SOON_DAYS.
+  expiring: number
+}
+
+// The three Home figures, counted in people so that the same person is not counted twice.
+export function staffFigures(
+  people: string[],
+  memberships: { group_id: number; user_id: string }[],
+  reqs: Requirement[],
+  answers: RequirementAnswer[],
+  now: string,
+  isBoard: boolean,
+): StaffFigures {
+  const figures: StaffFigures = { todo: 0, toVerify: 0, expiring: 0 }
+  for (const id of people) {
+    const groupIds = memberships.filter((m) => m.user_id === id).map((m) => m.group_id)
+    const items = staffItemsFor(reqs, answers.filter((a) => a.user_id === id), groupIds, now, isBoard)
+    if (items.some(needsAction)) figures.todo++
+    if (items.some((i) => i.status.state === 'pending')) figures.toVerify++
+    if (items.some((i) => i.status.state === 'expiring')) figures.expiring++
+  }
+  return figures
+}

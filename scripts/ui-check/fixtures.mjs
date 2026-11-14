@@ -294,6 +294,10 @@ fixtures.tables.requirement_answers = [
  answerOf(3, { answers: { photos: true, social: false } }),
  answerOf(4, { status: 'rejected', answers: { form: `${ME}/req-${reqId(4)}-00000000-0000-4000-8000-000000000001.pdf` }, review_note: 'Manca la firma nella seconda pagina.' }),
  answerOf(5, { answers: { ok: true } }),
+ // Other people: two answers that wait for staff, and one the person confirmed themselves.
+ answerOf(4, { user_id: uid(2), status: 'pending', answers: { form: `${uid(2)}/req-${reqId(4)}-00000000-0000-4000-8000-000000000002.pdf` }, submitted_at: at(-1, 10) }),
+ answerOf(1, { user_id: member, status: 'pending', answers: { file: `${member}/req-${reqId(1)}-00000000-0000-4000-8000-000000000003.jpg`, issued: at(-5, 9).slice(0, 10) }, sources: { issued: 'typed' }, valid_until: at(360, 9).slice(0, 10), submitted_at: at(-1, 11) }),
+ answerOf(1, { user_id: uid(4), status: 'approved', reviewed_by: uid(4), reviewed_at: at(-2, 9), answers: { file: `${uid(4)}/req-${reqId(1)}-00000000-0000-4000-8000-000000000004.jpg`, issued: at(-20, 9).slice(0, 10) }, sources: { issued: 'read' }, valid_until: at(340, 9).slice(0, 10) }),
 ]
 fixtures.ids.theory = eid(998)
 fixtures.tables.events.push({...fixtures.tables.events.find(e=>e.id===fixtures.ids.training),id:fixtures.ids.theory,type:'theory',title:'Teoria prima dell’allenamento',starts_at:at(1,19),ends_at:at(1,19,30),meetup_at:null,rink_id:null,series_id:null,parent_event_id:fixtures.ids.training})

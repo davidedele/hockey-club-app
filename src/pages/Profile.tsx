@@ -16,33 +16,24 @@ import NotificationSettings from '../components/NotificationSettings'
 import ReminderSwitch from '../components/ReminderSwitch'
 import InstallApp from '../components/InstallApp'
 import LanguageChoice from '../components/LanguageChoice'
-import { useClub } from '../lib/club'
-import { summary } from '../lib/documents'
+import { useOwnRequirements } from '../lib/requirementdata'
+import { personSummary } from '../lib/requirements'
 import { takenNumbers, wearing, type Holder } from '../lib/jersey'
-import type { MemberDocument, Position } from '../lib/types'
+import type { Position } from '../lib/types'
 
 const back = () => ({ to: '/profile', label: t('profile.back') })
 
 // The profile: a card with the person and the list of sections, the open section beside it.
 export default function ProfileLayout() {
-  const { profile, realRoles, isStaff } = useSession()
+  const { profile, realRoles } = useSession()
   const photos = useAvatarUrls([profile?.avatar_path])
-  const club = useClub()
   const [myGroups, setMyGroups] = useState<string[]>([])
-  const [pendingRequests,setPendingRequests]=useState(0)
-  const [docs, setDocs] = useState<MemberDocument[] | null>(null)
+  const ownItems = useOwnRequirements()
 
   useEffect(() => {
     if (!profile) return
     const load = async () => {
-      const [g, d, requests, responses] = await Promise.all([
-        supabase.from('group_members').select('group_id,groups(name)').eq('user_id', profile.id),
-        supabase.from('member_documents').select('*').eq('user_id', profile.id),
-        supabase.from('club_requests').select('id,group_ids').eq('active',true),
-        supabase.from('club_request_responses').select('request_id,status').eq('user_id',profile.id),
-      ])
-      if(!requests.error&&!responses.error){const own=(g.data??[]).map(x=>x.group_id);setPendingRequests((requests.data??[]).filter(r=>(!r.group_ids.length||r.group_ids.some((id:number)=>own.includes(id)))&&!(responses.data??[]).some(s=>s.request_id===r.id&&s.status!=='rejected')).length)}
-      setDocs((d.data ?? []) as MemberDocument[])
+      const g = await supabase.from('group_members').select('group_id,groups(name)').eq('user_id', profile.id)
       const rows = (g.data ?? []) as unknown as { groups: { name: string } | null }[]
       setMyGroups(rows.flatMap((r) => (r.groups ? [r.groups.name] : [])))
     }
@@ -52,10 +43,10 @@ export default function ProfileLayout() {
   }, [profile])
 
   if (!profile) return null
-  const docState = docs ? summary(docs, club.privacyNoticePath) : null
+  const docState = ownItems ? personSummary(ownItems) : null
   const items = [
     { to: '/profile/info', label: t('profile.info') },
-    { to: '/profile/documents', label: t('docs.title'), extra: docState && <span className={`doc-status ${!isStaff&&pendingRequests?'soon':docState.level}`}><span className="dot" aria-hidden="true" />{!isStaff&&pendingRequests?t(pendingRequests===1?'requests.pendingOne':'requests.pendingMany',{n:String(pendingRequests)}):docState.text}</span> },
+    { to: '/profile/documents', label: t('docs.title'), extra: docState && <span className={`doc-status ${docState.level}`}><span className="dot" aria-hidden="true" />{docState.text}</span> },
     { to: '/profile/season', label: t('season.title') },
     { to: '/profile/absences', label: t('absence.title') },
     { to: '/profile/notifications', label: t('reminders.title') },

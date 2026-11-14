@@ -479,73 +479,69 @@ if (!process.env.UI_CHECK_SKIP_INTERACTIONS) {
   await settle('/')
   check((await page.locator('main a.maps-button').count()) >= 1, 'maps: the next event on Home has no "Apri in Mappe" button')
 
-  // The certificate: no date field without a file (decision 94); with a file the date field is there.
-  await settle('/profile/documents')
-  check((await page.locator('main input[type=date]').count()) === 0, 'certificate: a date field shows although no file was uploaded')
+  // One person's documents for staff: the cards of what the club asks, pending ones link to the review page.
   await settle(`/members/${member}/documents`)
-  check((await page.locator('main input[type=date]').count()) === 1, 'certificate: no date field although a file was uploaded')
+  check((await page.locator('main .doc-card').count()) >= 3, 'member documents: fewer cards than the requirements for this person')
+  check((await page.locator('main a[href="/members/review"]').count()) === 1, 'member documents: no link to the review page although an answer waits')
+  await settle(`/members/${ME}/documents`)
+  check(new URL(page.url()).pathname === '/profile/documents', 'member documents: the own page does not lead to the player page')
 
-  // Every certificate and consent status in the profile menu and on the Members page, from phone to computer width:
+  // Every status of the certificate and the consent in the profile menu, from phone to computer width:
   // no text overlaps or spills out of its row (decision 128, UI rule 1.10).
   {
-    const days = (n) => new Date(Date.now() - n * 864e5).toISOString().slice(0, 10)
-    const until = (n) => new Date(Date.parse(days(n)) + 365 * 864e5).toISOString().slice(0, 10)
-    const file = `${ME}/medical_certificate-2000000000.jpg`
+    const day = (n) => new Date(Date.now() + n * 864e5).toISOString().slice(0, 10)
+    const cert = (over) => ({ requirement_id: fixtures.ids.reqCert, user_id: ME, version: 1, answers: { file: `${ME}/req-${fixtures.ids.reqCert}-00000000-0000-4000-8000-000000000009.jpg`, issued: day(-20) }, sources: { issued: 'read' }, status: 'complete', submitted_at: day(-20), valid_until: day(300), reviewed_at: null, reviewed_by: null, review_note: '', ...over })
+    const consent = { requirement_id: fixtures.tables.requirements[1].id, user_id: ME, version: 1, answers: { accept: true }, sources: {}, status: 'complete', submitted_at: day(-30), valid_until: null, reviewed_at: null, reviewed_by: null, review_note: '' }
     const certs = {
       'no certificate': null,
-      'file, no date': { issued_on: null, issued_source: null, valid_until: null, file_path: file },
-      'typed date': { issued_on: days(10), issued_source: 'typed', valid_until: until(10), file_path: file },
-      'expired': { issued_on: days(400), issued_source: 'read', valid_until: until(400), file_path: file },
-      'expiring': { issued_on: days(350), issued_source: 'read', valid_until: until(350), file_path: file },
-      'valid': { issued_on: days(20), issued_source: 'read', valid_until: until(20), file_path: file },
+      'waiting for staff': cert({ status: 'pending' }),
+      'rejected': cert({ status: 'rejected', review_note: 'La data non si legge.' }),
+      'expired': cert({ valid_until: day(-10) }),
+      'expiring': cert({ valid_until: day(12) }),
+      'valid': cert({}),
     }
-    const consents = { 'no notice': [null, null], 'not given': ['club/privacy.pdf', null], 'old notice': ['club/privacy.pdf', 'club/old.pdf'], 'given': ['club/privacy.pdf', 'club/privacy.pdf'] }
-    const keepDocs = fixtures.tables.member_documents.slice()
-    const keepNotice = fixtures.tables.club_settings[0].privacy_notice_path
-    const combos = [...Object.keys(certs).map((c) => [c, 'given']), ['valid', 'no notice'], ['valid', 'not given'], ['valid', 'old notice'], ['no certificate', 'not given']]
+    const keep = fixtures.tables.requirement_answers.slice()
+    // Only the certificate and the consent count for this person, so that the line names the one thing to do.
+    const keepReqs = fixtures.tables.requirements.map((r) => r.active)
+    fixtures.tables.requirements.forEach((r, n) => { if (n >= 2) r.active = false })
+    const combos = [...Object.keys(certs).map((c) => [c, true]), ['valid', false], ['no certificate', false]]
     const seenTexts = new Set()
-    for (const [c, k] of combos) {
-      const [notice, given] = consents[k]
-      fixtures.tables.club_settings[0].privacy_notice_path = notice
-      const others = keepDocs.filter((d) => d.user_id !== ME)
-      const mine = []
-      if (certs[c]) mine.push({ user_id: ME, kind: 'medical_certificate', accepted_at: null, verified_at: null, verified_by: null, updated_by: ME, updated_at: new Date().toISOString(), ...certs[c] })
-      if (given) mine.push({ user_id: ME, kind: 'privacy_consent', valid_until: null, file_path: given, accepted_at: days(30), updated_by: ME, updated_at: new Date().toISOString() })
-      fixtures.tables.member_documents = [...others, ...mine]
+    for (const [c, given] of combos) {
+      const others = keep.filter((a) => a.user_id !== ME)
+      fixtures.tables.requirement_answers = [...others, ...(certs[c] ? [certs[c]] : []), ...(given ? [consent] : [])]
       for (const width of [320, 375, 768, 1024, 1280]) {
         await page.setViewportSize({ width, height: 900 })
         await settle(width < 768 ? '/profile' : '/profile/info')
         const m = await page.evaluate(measure)
-        for (const text of m.problems.filter((x) => /overlap|spills/.test(x))) problems.push(`menu rows: ${c} + ${k} at ${width}px: ${text}`)
+        for (const text of m.problems.filter((x) => /overlap|spills/.test(x))) problems.push(`menu rows: ${c}, consent ${given} at ${width}px: ${text}`)
         seenTexts.add(await page.evaluate(() => document.querySelector('.shell-nav .doc-status')?.textContent ?? ''))
       }
     }
-    check(seenTexts.size >= 8, `menu rows: only ${seenTexts.size} different status texts were tried`)
+    check(seenTexts.size >= 5, `menu rows: only ${seenTexts.size} different status texts were tried`)
     await page.setViewportSize({ width: 1280, height: 800 })
-    fixtures.tables.member_documents = keepDocs
-    fixtures.tables.club_settings[0].privacy_notice_path = keepNotice
+    fixtures.tables.requirement_answers = keep
+    fixtures.tables.requirements.forEach((r, n) => { r.active = keepReqs[n] })
   }
 
-  // The certificate review list (decision 129): staff only, one row per certificate waiting, a second list of the ones the
-  // person confirmed themselves; Home and Members link to it; a staff member sees "Conferma la data" on their own page and the
-  // Giocatore view does not.
+  // The review page: staff only, one row for each answer that waits, a second list of the ones the person confirmed
+  // themselves; Home and Members link to it; the old address leads to it; the Giocatore view cannot open it.
+  await settle('/members/review')
+  check((await page.locator('main .review-item').count()) >= 3, 'review page: fewer rows than the waiting and the self confirmed answers')
+  check(/Confermato dal diretto interessato/.test(await page.locator('main').innerText()), 'review page: the self confirmed answer is not marked "Confermato dal diretto interessato"')
+  check((await page.locator('main .review-item button:has-text("Conferma")').count()) >= 2, 'review page: no "Conferma" action')
+  check((await page.locator('main .review-item button:has-text("Chiedi correzione")').count()) >= 2, 'review page: no "Chiedi correzione" action')
+  await page.locator('main .review-item button:has-text("Chiedi correzione")').first().click()
+  check((await page.locator('main .review-item .error').count()) === 1, 'review page: asking for a correction without a note shows no error')
   await settle('/members/certificates')
-  check((await page.locator('main .review-row').count()) >= 2, 'review list: fewer rows than the waiting and the self confirmed certificates')
-  check(/Confermato dal diretto interessato/.test(await page.locator('main').innerText()), 'review list: the self confirmed certificate is not marked "Confermato dal diretto interessato"')
-  check((await page.locator('main .review-row button:has-text("Conferma la data")').count()) >= 1, 'review list: no "Conferma la data" action')
+  check(new URL(page.url()).pathname === '/members/review', 'review page: the old address does not lead to it')
   await settle('/')
-  check((await page.locator('section[aria-labelledby=home-staff] a[href="/members/certificates"]').count()) === 1, 'review list: the Home figure does not link to it')
+  check((await page.locator('section[aria-labelledby=home-staff] a[href="/members/review"]').count()) === 1, 'review page: the Home figure does not link to it')
   await settle('/members')
-  check((await page.locator('main a[href="/members/certificates"]').count()) >= 2, 'review list: Members has no link to it (button and column)')
-  {
-    const keepDocs = fixtures.tables.member_documents.slice()
-    fixtures.tables.member_documents = [...keepDocs, { user_id: ME, kind: 'medical_certificate', issued_on: new Date(Date.now() - 5 * 864e5).toISOString().slice(0, 10), issued_source: 'typed', valid_until: null, file_path: `${ME}/medical_certificate-2000000000.jpg`, accepted_at: null, verified_at: null, verified_by: null, updated_by: ME, updated_at: new Date().toISOString() }]
-    await asViewEarly('player', '/members/certificates')
-    check(new URL(page.url()).pathname === '/', 'review list: the Giocatore view can open it')
-    await page.goto(origin + '/')
-    await page.evaluate(() => localStorage.removeItem('view-as'))
-    fixtures.tables.member_documents = keepDocs
-  }
+  check((await page.locator('main a[href="/members/review"]').count()) >= 1, 'review page: Members has no link to it')
+  await asViewEarly('player', '/members/review')
+  check(new URL(page.url()).pathname === '/', 'review page: the Giocatore view can open it')
+  await page.goto(origin + '/')
+  await page.evaluate(() => localStorage.removeItem('view-as'))
 
   // The two step sign in is optional (decision 130): no "obbligatoria", no deadline when the club set none, an unfinished
   // setup is explained and keeps a field for the code, and a verified one reads as active.

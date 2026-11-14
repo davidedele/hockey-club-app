@@ -15,7 +15,7 @@ export function interfaceRoutes(ids) {
   ['event-new-visibility', '/events/new', 'sub'], ['event-new-pending', '/events/new', 'sub'],
   ['event-new', '/events/new', 'sub'], ['attendance-missing', '/attendance?tab=missing'],
   ['announcements', '/announcements', 'sub'], ['drills', '/drills'],
-  ['certificate-review', '/members/certificates', 'sub'], ['member-edit', `/members/${member}`, 'sub'], ['member-documents', `/members/${member}/documents`, 'sub'],
+  ['review', '/members/review', 'sub'], ['member-edit', `/members/${member}`, 'sub'], ['member-documents', `/members/${member}/documents`, 'sub'],
   ['profile', '/profile'], ['profile-info', '/profile/info', 'sub'], ['profile-documents', '/documents', 'sub'],
   ['profile-absences', '/profile/absences', 'sub'], ['profile-season', '/profile/season', 'sub'], ['profile-club-documents', '/profile/club-documents', 'sub'], ['profile-security', '/profile/security', 'sub'], ['profile-notifications', '/profile/notifications', 'sub'],
   ['profile-calendar', '/profile/calendar', 'sub'], ['offline', '/offline', 'sub'], ['profile-app', '/profile/app', 'sub'],

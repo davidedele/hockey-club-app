@@ -7,7 +7,8 @@ import NextPanel from '../components/NextPanel'
 import PageHeader from '../components/PageHeader'
 import { errorText, t } from '../i18n'
 import { useClub } from '../lib/club'
-import { certificateState } from '../lib/documents'
+import { today } from '../lib/documents'
+import { staffFigures, type Requirement, type RequirementAnswer } from '../lib/requirements'
 import { useGroupFilter } from '../lib/groupfilter'
 import { prettyName } from '../lib/league'
 import { useSession } from '../lib/session'
@@ -15,7 +16,7 @@ import { staffWindow, unanswered } from '../lib/unanswered'
 import { attendancePercent, isEmptySeason, useMySeason } from '../lib/myseason'
 import { supabase } from '../lib/supabase'
 import { formatDay, formatShortDay, formatTime, seasonOf } from '../lib/time'
-import type { Answer, EventRow, Group, LeagueMatch, LeagueStanding, MemberDocument } from '../lib/types'
+import type { Answer, EventRow, Group, LeagueMatch, LeagueStanding } from '../lib/types'
 
 interface Announcement { id: string; title: string; created_at: string }
 const SHOWN = 3
@@ -30,7 +31,7 @@ function greeting(name: string): string {
 // The home: what the person needs at a glance, each part opening the page where it is handled.
 // The next event can be answered here, as on the events page.
 export default function Home() {
-  const { profile, isStaff } = useSession()
+  const { profile, isStaff, isBoard } = useSession()
   // Being present at an event is a player thing: the answer buttons and the list of events to answer are in the Giocatore view only (decision 93).
   const asPlayer = !isStaff
   const club = useClub()
@@ -44,8 +45,10 @@ export default function Home() {
   const [news, setNews] = useState<Announcement[]>([])
   const [matches, setMatches] = useState<LeagueMatch[]>([])
   const [standings, setStandings] = useState<LeagueStanding[]>([])
-  const [docs, setDocs] = useState<MemberDocument[]>([])
-  const [members, setMembers] = useState<number | null>(null)
+  const [requirements, setRequirements] = useState<Requirement[]>([])
+  const [reqAnswers, setReqAnswers] = useState<RequirementAnswer[]>([])
+  const [memberships, setMemberships] = useState<{ group_id: number; user_id: string }[]>([])
+  const [people, setPeople] = useState<string[] | null>(null)
   const [missing, setMissing] = useState<number | null>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
@@ -73,13 +76,17 @@ export default function Home() {
     setMatches((lm.data ?? []) as LeagueMatch[])
     setStandings((ls.data ?? []) as LeagueStanding[])
     if (isStaff) {
-      const [d, p, u] = await Promise.all([
-        supabase.from('member_documents').select('*').eq('kind', 'medical_certificate'),
+      const [r, a, gm, p, u] = await Promise.all([
+        supabase.from('requirements').select('*'),
+        supabase.from('requirement_answers').select('*'),
+        supabase.from('group_members').select('group_id,user_id'),
         supabase.from('profiles').select('id').is('deleted_at', null),
         supabase.rpc('unanswered_people', staffWindow()),
       ])
-      setDocs((d.data ?? []) as MemberDocument[])
-      setMembers(((p.data ?? []) as { id: string }[]).length)
+      setRequirements((r.data ?? []) as Requirement[])
+      setReqAnswers((a.data ?? []) as RequirementAnswer[])
+      setMemberships((gm.data ?? []) as { group_id: number; user_id: string }[])
+      setPeople(((p.data ?? []) as { id: string }[]).map((x) => x.id))
       setMissing(((u.data ?? []) as unknown[]).length)
     }
     setLoaded(true)
@@ -127,11 +134,8 @@ export default function Home() {
     const g = e.event_groups.map((x) => groups.find((y) => y.id === x.group_id)).find((y) => y?.game_dark && y?.game_light)
     return g ? ({ '--team-dark': g.game_dark, '--team-light': g.game_light, '--band-ink': readableInk(g.game_dark) } as CSSProperties) : undefined
   }
-  // The same states as the Members column and the member's own page. A certificate to verify is neither valid nor missing.
-  const certs = isStaff ? [...new Set(docs.map((d) => d.user_id))].map((id) => certificateState(docs.find((d) => d.user_id === id)).state) : []
-  const certSoon = certs.filter((x) => x === 'soon').length
-  const certToVerify = certs.filter((x) => x === 'toVerify').length
-  const certBad = members === null ? null : members - certs.filter((x) => x === 'valid' || x === 'soon' || x === 'toVerify').length
+  // The same states as the Members column and the member's own page, counted in people.
+  const figures = isStaff && people ? staffFigures(people, memberships, requirements, reqAnswers, today(), isBoard) : null
 
   const mine = useMySeason(seasonOf(new Date().toISOString()))
   if (!profile) return null
@@ -249,15 +253,15 @@ export default function Home() {
                 </div>
                 <div>
                   <dt>{t('home.certBad')}</dt>
-                  <dd><Link to="/members">{certBad === null ? dash : t(certBad === 1 ? 'home.peopleOne' : 'home.peopleMany', { n: String(certBad) })}</Link></dd>
+                  <dd><Link to="/members">{figures === null ? dash : t(figures.todo === 1 ? 'home.peopleOne' : 'home.peopleMany', { n: String(figures.todo) })}</Link></dd>
                 </div>
                 <div>
                   <dt>{t('home.certToVerify')}</dt>
-                  <dd><Link to="/members/certificates">{members === null ? dash : t(certToVerify === 1 ? 'home.peopleOne' : 'home.peopleMany', { n: String(certToVerify) })}</Link></dd>
+                  <dd><Link to="/members/review">{figures === null ? dash : t(figures.toVerify === 1 ? 'home.peopleOne' : 'home.peopleMany', { n: String(figures.toVerify) })}</Link></dd>
                 </div>
                 <div>
                   <dt>{t('home.certSoon')}</dt>
-                  <dd><Link to="/members">{members === null ? dash : t(certSoon === 1 ? 'home.peopleOne' : 'home.peopleMany', { n: String(certSoon) })}</Link></dd>
+                  <dd><Link to="/members">{figures === null ? dash : t(figures.expiring === 1 ? 'home.peopleOne' : 'home.peopleMany', { n: String(figures.expiring) })}</Link></dd>
                 </div>
               </dl>
             </section>

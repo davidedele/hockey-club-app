@@ -22,9 +22,9 @@ import Offline from './pages/Offline'
 import Announcements from './pages/Announcements'
 import Attendance from './pages/Attendance'
 import ClubSettings from './pages/ClubSettings'
-import Documents from './pages/Documents'
+import MemberDocuments from './pages/MemberDocuments'
 import MyDocuments from './pages/MyDocuments'
-import CertificateReview from './pages/CertificateReview'
+import RequirementReview from './pages/RequirementReview'
 import ClubDocumentHub from './pages/ClubDocumentHub'
 import RequirementEdit from './pages/RequirementEdit'
 import Championship from './pages/Championship'
@@ -268,9 +268,10 @@ export default function App() {
         <Route path="/events/:id/lineup" element={<Lineup />} />
         <Route path="/events/:id/plan" element={<Plan />} />
         <Route path="/drills" element={<Drills />} />
-        <Route path="/members/certificates" element={<CertificateReview />} />
+        <Route path="/members/review" element={<RequirementReview />} />
+        <Route path="/members/certificates" element={<Navigate to="/members/review" replace />} />
         <Route path="/members/:id" element={<MemberEdit />} />
-        <Route path="/members/:id/documents" element={<Documents />} />
+        <Route path="/members/:id/documents" element={<MemberDocuments />} />
         <Route path="/documents" element={<Navigate to="/profile/documents" replace />} />
         <Route path="/profile" element={<ProfileLayout />}>
           <Route path="info" element={<ProfileInfo />} />

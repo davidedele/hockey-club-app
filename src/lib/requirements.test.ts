@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { appliesTo, canSubmit, requirementStatus, type Requirement, type RequirementAnswer } from './requirements'
+import { appliesTo, canSubmit, itemsFor, personSummary, staffFigures, staffItemsFor, requirementStatus, type Requirement, type RequirementAnswer } from './requirements'
 
 const req = (over: Partial<Requirement> = {}): Requirement => ({
   id: 'r1', slug: null, title: 'Foto', reason: 'Per le foto', group_ids: [], deadline: null, expiry_block: null, expiry_months: null,
@@ -71,5 +71,53 @@ describe('appliesTo', () => {
     expect(appliesTo(req(), [])).toBe(true)
     expect(appliesTo(req({ group_ids: [1, 2] }), [2, 5])).toBe(true)
     expect(appliesTo(req({ group_ids: [1, 2] }), [5])).toBe(false)
+  })
+})
+
+describe('itemsFor and personSummary', () => {
+  const a = req({ id: 'a', title: 'Certificato' })
+  const b = req({ id: 'b', title: 'Foto', group_ids: [2] })
+  it('keeps requirements for the groups of the person and those already answered', () => {
+    const items = itemsFor([a, b, req({ id: 'c', active: false })], [answer({ requirement_id: 'c' })], [1], today)
+    expect(items.map((i) => i.req.id)).toEqual(['a', 'c'])
+  })
+  it('says in order when everything is fine', () => {
+    const items = itemsFor([a], [answer({ requirement_id: 'a' })], [], today)
+    expect(personSummary(items)).toMatchObject({ level: 'ok', todo: 0, waiting: 0, text: 'In regola' })
+  })
+  it('names the one thing to do, or counts several', () => {
+    const one = personSummary(itemsFor([a], [], [], today))
+    expect(one).toMatchObject({ level: 'bad', todo: 1 })
+    expect(one.text).toContain('Certificato')
+    const two = personSummary(itemsFor([a, req({ id: 'd' })], [], [], today))
+    expect(two).toMatchObject({ level: 'bad', todo: 2, text: '2 documenti da completare' })
+  })
+  it('puts what waits for staff after what the person must do', () => {
+    const items = itemsFor([a, req({ id: 'd', title: 'Altro' })], [answer({ requirement_id: 'a', status: 'pending' })], [], today)
+    expect(personSummary(items)).toMatchObject({ level: 'bad', todo: 1, waiting: 1 })
+    const waitingOnly = personSummary(itemsFor([a], [answer({ requirement_id: 'a', status: 'pending' })], [], today))
+    expect(waitingOnly).toMatchObject({ level: 'soon', todo: 0, waiting: 1 })
+  })
+})
+
+describe('staffItemsFor', () => {
+  it('hides what the board keeps to itself from a coach', () => {
+    const rs = [req({ id: 'a' }), req({ id: 'b', visibility: 'board' })]
+    expect(staffItemsFor(rs, [], [], today, false).map((i) => i.req.id)).toEqual(['a'])
+    expect(staffItemsFor(rs, [], [], today, true).map((i) => i.req.id)).toEqual(['a', 'b'])
+  })
+})
+
+describe('staffFigures', () => {
+  it('counts people, not documents, and keeps the three figures apart', () => {
+    const rs = [req({ id: 'a' }), req({ id: 'b', title: 'Altro' })]
+    const answers = [
+      answer({ requirement_id: 'a', user_id: 'u1' }),
+      answer({ requirement_id: 'b', user_id: 'u1', status: 'pending' }),
+      answer({ requirement_id: 'a', user_id: 'u2', valid_until: '2026-11-20' }),
+      answer({ requirement_id: 'b', user_id: 'u2' }),
+    ]
+    // u1 has everything in, one waiting; u2 has one ending soon; u3 answered nothing.
+    expect(staffFigures(['u1', 'u2', 'u3'], [], rs, answers, today, true)).toEqual({ todo: 1, toVerify: 1, expiring: 1 })
   })
 })

@@ -16,23 +16,23 @@ import { downloadCsv, pageOf, sortRows, useSort, type Cell } from '../lib/table'
 import OutputAction from '../components/OutputAction'
 import { useSession } from '../lib/session'
 import { supabase } from '../lib/supabase'
-import type { Contact, Group, MemberDocument, Profile } from '../lib/types'
-import { useClub } from '../lib/club'
-import { summary, toVerify } from '../lib/documents'
+import type { Contact, Group, Profile } from '../lib/types'
+import { today } from '../lib/documents'
+import { personSummary, staffItemsFor, type Requirement, type RequirementAnswer } from '../lib/requirements'
 
 type MemberKey = 'name' | 'number' | 'position' | 'groups' | 'email' | 'phone' | 'docs'
 
 export default function Members() {
-  const { isStaff } = useSession()
+  const { isStaff, isBoard } = useSession()
   const [loaded, setLoaded] = useState(false)
   const [loadError, setLoadError] = useState('')
   const [groups, setGroups] = useState<Group[]>([])
   const [profiles, setProfiles] = useState<Profile[]>([])
   const [memberships, setMemberships] = useState<{ group_id: number; user_id: string }[]>([])
   const [contacts, setContacts] = useState<Contact[]>([])
-  const [docs, setDocs] = useState<MemberDocument[]>([])
+  const [requirements, setRequirements] = useState<Requirement[]>([])
+  const [answers, setAnswers] = useState<RequirementAnswer[]>([])
   useReturnScroll('members.scroll', loaded)
-  const club = useClub()
   const { groupId: filter, scope } = useGroupFilter()
   const [query, setQuery] = useViewState('members.query','',x=>typeof x==='string')
   const [page, setPage] = useViewState('members.page',1,x=>Number.isInteger(x)&&Number(x)>0)
@@ -43,18 +43,20 @@ export default function Members() {
 
   const load = useCallback(async () => {
       setLoaded(false)
-      const [g, p, m, c, d] = await Promise.all([
+      const [g, p, m, c, r, a] = await Promise.all([
         supabase.from('groups').select('*').order('id'),
         supabase.from('profiles').select('*').is('deleted_at', null).order('last_name'),
         supabase.from('group_members').select('group_id, user_id'),
         isStaff ? supabase.from('profile_contacts').select('*') : Promise.resolve({ data: [], error: null }),
-        isStaff ? supabase.from('member_documents').select('*') : Promise.resolve({ data: [], error: null }),
+        isStaff ? supabase.from('requirements').select('*') : Promise.resolve({ data: [], error: null }),
+        isStaff ? supabase.from('requirement_answers').select('*') : Promise.resolve({ data: [], error: null }),
       ])
-      const failure = [g,p,m,c,d].find((result) => result.error)?.error
+      const failure = [g,p,m,c,r,a].find((result) => result.error)?.error
       if (failure) { setLoadError(errorText(failure)); setLoaded(true); return }
       setLoadError('')
       setLoaded(true)
-      setDocs((d.data ?? []) as MemberDocument[])
+      setRequirements((r.data ?? []) as Requirement[])
+      setAnswers((a.data ?? []) as RequirementAnswer[])
       setGroups((g.data ?? []) as Group[])
       setProfiles((p.data ?? []) as Profile[])
       setMemberships((m.data ?? []) as { group_id: number; user_id: string }[])
@@ -63,6 +65,17 @@ export default function Members() {
   useEffect(() => { void load() }, [load])
 
   const codeById = useMemo(() => new Map(groups.map((g) => [g.id, g.name])), [groups])
+  // How each person stands across the requirements staff can see.
+  const standing = useMemo(() => {
+    const now = today()
+    const byPerson = new Map<string, ReturnType<typeof personSummary>>()
+    for (const p of profiles) {
+      const groupIds = memberships.filter((m) => m.user_id === p.id).map((m) => m.group_id)
+      byPerson.set(p.id, personSummary(staffItemsFor(requirements, answers.filter((x) => x.user_id === p.id), groupIds, now, isBoard)))
+    }
+    return byPerson
+  }, [profiles, memberships, requirements, answers, isBoard])
+  const standingOf = (id: string) => standing.get(id) ?? personSummary([])
   const contactById = useMemo(() => new Map(contacts.map((c) => [c.user_id, c])), [contacts])
   const photos = useAvatarUrls(profiles.map((p) => p.avatar_path))
   const q = query.trim().toLowerCase()
@@ -80,10 +93,11 @@ export default function Members() {
       case 'groups': return groupsOf(p.id)
       case 'email': return contactById.get(p.id)?.email ?? ''
       case 'phone': return contactById.get(p.id)?.phone ?? ''
-      case 'docs': return summary(docs.filter((d) => d.user_id === p.id), club.privacyNoticePath).text
+      case 'docs': return standingOf(p.id).text
       default: return `${p.last_name} ${p.first_name}`
     }
   }, sort.dir)
+  const pendingCount = answers.filter((x) => x.status === 'pending' && profiles.some((p) => p.id === x.user_id)).length
   const rows = pageOf(sorted, page, size)
   const resetPage = () => setPage(1)
   function exportCsv() {
@@ -91,18 +105,17 @@ export default function Members() {
       [t('common.lastName'), t('common.firstName'), t('members.colNumber'), t('members.colPosition'), t('members.colGroups'), t('members.colEmail'), t('members.colPhone'), t('members.colDocs')],
       ...sorted.map((p) => {
         const c = contactById.get(p.id)
-        return [p.last_name, p.first_name, p.jersey_number, positionText(p), groupsOf(p.id), c?.email ?? '', formatPhone(c?.phone), summary(docs.filter((d) => d.user_id === p.id), club.privacyNoticePath).text]
+        return [p.last_name, p.first_name, p.jersey_number, positionText(p), groupsOf(p.id), c?.email ?? '', formatPhone(c?.phone), standingOf(p.id).text]
       }),
     ])
   }
   // Staff see each member's paperwork at a glance, linked to their documents page.
   function docCell(id: string) {
-    const mine = docs.filter((d) => d.user_id === id)
-    const state = summary(mine, club.privacyNoticePath)
-    // A certificate that waits for staff opens the review list, where the file and the confirmation are.
-    const waiting = toVerify(mine).length > 0 && state.text === t('docs.sumCertToVerify')
+    const state = standingOf(id)
+    // Something that waits for staff opens the review list, where the files and the confirmation are.
+    const waiting = state.todo === 0 && state.waiting > 0 && answers.some((x) => x.user_id === id && x.status === 'pending')
     return (
-      <Link className={`doc-status ${state.level}`} to={waiting ? '/members/certificates' : `/members/${id}/documents`}>
+      <Link className={`doc-status ${state.level}`} to={waiting ? '/members/review' : `/members/${id}/documents`}>
         <span className="dot" aria-hidden="true" />{state.text}
       </Link>
     )
@@ -115,7 +128,7 @@ export default function Members() {
     <div className="page wide">
       <PageHeader
         title={t('members.title')}
-        actions={isStaff && <Link className="button secondary" to="/members/certificates">{docs.length ? t('certs.linkCount', { n: String(toVerify(docs.filter((d) => profiles.some((p) => p.id === d.user_id))).length) }) : t('certs.link')}</Link>}
+        actions={isStaff && <Link className="button secondary" to="/members/review">{pendingCount ? t('review.linkCount', { n: String(pendingCount) }) : t('review.link')}</Link>}
       />
       <div className="toolbar">
         <label className="search">
