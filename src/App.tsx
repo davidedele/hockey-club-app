@@ -23,6 +23,7 @@ import Announcements from './pages/Announcements'
 import Attendance from './pages/Attendance'
 import ClubSettings from './pages/ClubSettings'
 import Documents from './pages/Documents'
+import MyDocuments from './pages/MyDocuments'
 import CertificateReview from './pages/CertificateReview'
 import ClubDocumentHub from './pages/ClubDocumentHub'
 import Championship from './pages/Championship'
@@ -272,7 +273,7 @@ export default function App() {
         <Route path="/documents" element={<Navigate to="/profile/documents" replace />} />
         <Route path="/profile" element={<ProfileLayout />}>
           <Route path="info" element={<ProfileInfo />} />
-          <Route path="documents" element={<Documents />} />
+          <Route path="documents" element={<MyDocuments />} />
           <Route path="absences" element={<ProfileAbsences />} />
           <Route path="club-documents" element={<Navigate to="/profile/documents" replace />} />
           <Route path="season" element={<MySeason />} />

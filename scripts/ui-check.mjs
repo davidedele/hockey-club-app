@@ -541,10 +541,6 @@ if (!process.env.UI_CHECK_SKIP_INTERACTIONS) {
   {
     const keepDocs = fixtures.tables.member_documents.slice()
     fixtures.tables.member_documents = [...keepDocs, { user_id: ME, kind: 'medical_certificate', issued_on: new Date(Date.now() - 5 * 864e5).toISOString().slice(0, 10), issued_source: 'typed', valid_until: null, file_path: `${ME}/medical_certificate-2000000000.jpg`, accepted_at: null, verified_at: null, verified_by: null, updated_by: ME, updated_at: new Date().toISOString() }]
-    await asViewEarly('board', '/profile/documents')
-    check((await page.locator('main button:has-text("Conferma la data")').count()) === 1, 'own certificate: a staff view shows no "Conferma la data"')
-    await asViewEarly('player', '/profile/documents')
-    check((await page.locator('main button:has-text("Conferma la data")').count()) === 0 && (await page.locator('main button:has-text("Salva la data")').count()) === 1, 'own certificate: the Giocatore view shows the confirm action')
     await asViewEarly('player', '/members/certificates')
     check(new URL(page.url()).pathname === '/', 'review list: the Giocatore view can open it')
     await page.goto(origin + '/')
@@ -750,20 +746,20 @@ if (!process.env.UI_CHECK_SKIP_INTERACTIONS) {
   await page.click('[data-fold=existing] button[type=submit]')
   const rangeMessage = await page.evaluate(() => { const bad = document.querySelector('main input[type=number][aria-invalid=true]'); const id = (bad?.getAttribute('aria-describedby') || '').split(' ').find((x) => x.startsWith('fe-')); return id ? document.getElementById(id)?.textContent?.trim() ?? '' : '' })
   check(/\S/.test(rangeMessage), 'required documents: 40 months is not refused with a message under the field')
-  {
-    const keepNotice = fixtures.tables.club_settings[0].privacy_notice_path
-    fixtures.tables.club_settings[0].privacy_notice_path = 'club/privacy.pdf'
-    fixtures.tables.club_settings[0].consent_mode = 'tick'
-    await asViewEarly('player', '/profile/documents')
-    check((await page.locator('.doc-cards input[type=checkbox]').count()) === 1 && (await page.locator('main button:has-text("Ho letto e accetto")').count()) === 0, 'required documents: the tick box mode shows no tick box or still shows the button')
-    fixtures.tables.club_settings[0].consent_mode = 'button'
-    await asViewEarly('player', '/profile/documents')
-    check((await page.locator('main button:has-text("Ho letto e accetto")').count()) === 1, 'required documents: the button mode shows no button')
-    fixtures.tables.club_settings[0].privacy_notice_path = keepNotice
-    delete fixtures.tables.club_settings[0].consent_mode
-    await page.goto(origin + '/')
-    await page.evaluate(() => localStorage.removeItem('view-as'))
-  }
+  // The player's required documents (decision 168): one card each, the ones for other groups left out, the date of a file
+  // waits for the file, and a document to read must be opened before the answer can be sent.
+  await asViewEarly('player', '/profile/documents')
+  check((await page.locator('main .doc-card').count()) === 5, 'required documents: the player should see five cards (certificate, consent, photos, form, rules)')
+  check((await page.locator('main .doc-card:has-text("Richiesta per un altro gruppo")').count()) === 0, 'required documents: a requirement of another group is shown')
+  check((await page.locator('main .doc-card:has-text("Modulo della federazione") .doc-status.bad').count()) === 1 && /Manca la firma/.test(await page.locator('main .doc-card:has-text("Modulo della federazione")').innerText()), 'required documents: the rejected form does not show its note in red status')
+  check(/Il club ha aggiornato il documento/.test(await page.locator('main .doc-card:has-text("Regolamento interno")').innerText()), 'required documents: the outdated answer is not named as outdated')
+  check((await page.locator('main .doc-card:has-text("Consensi per foto e video") form').count()) === 0 && (await page.locator('main .doc-card:has-text("Consensi per foto e video") .doc-status.ok').count()) === 1, 'required documents: a completed requirement still shows its form')
+  check((await page.locator('main .doc-card:has-text("Certificato medico") input[type=date]').count()) === 0, 'required documents: the date shows before a file was chosen')
+  await page.check('main .doc-card:has-text("Consenso privacy") input[type=checkbox]')
+  await page.click('main .doc-card:has-text("Consenso privacy") button[type=submit]')
+  check(/Apri il documento da leggere prima di inviare/.test(await page.locator('main .doc-card:has-text("Consenso privacy")').innerText()), 'required documents: the consent is sent without opening the document to read')
+  await page.goto(origin + '/')
+  await page.evaluate(() => localStorage.removeItem('view-as'))
 
   // The season card (V12): made on the phone, a canvas of the right proportions and two buttons of 44 pixels.
   await settle('/profile/season')

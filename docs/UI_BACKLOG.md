@@ -4,6 +4,16 @@ Every point Davide raised about the interface, with its status. Newest review fi
 
 Status words: Open, In progress, Done (PR number), Decided (waiting for Davide), Won't do (with the reason).
 
+## Required documents as one model (14 November 2026)
+
+Davide, 14 November: the privacy consent and the medical certificate are treated as special documents, but they should work like every other thing staff can require, and staff should be able to define them easily and freely (photo consents, league consents, files to read, files to upload, several checkboxes, expiry, confirmation by staff). Decision 168. Built on `claude/required-documents`.
+
+1. One card per required document in Profilo, Documenti, with the same status words for all. Status: Done (step 3). The certificate and the consent are two cards like the others.
+2. The staff editor for defining a required document, replacing the club requests management and the certificate and consent settings. Status: In progress (step 4).
+3. The staff review page, the Members column, the Home figures and the banner read the new status. Until then they still read the old tables, so on the test project they do not yet follow an answer given on the new page. Status: Open (step 5).
+4. Reminders for expiry read the new tables. Status: Open (step 6).
+5. Removal of the old tables and the old settings page, after Davide confirms. Status: Open (step 7).
+
 ## Documents, bookings and event navigation (9 November 2026)
 
 Davide approved the proposed scope and separate attendance on 9 November. Signing means checkbox acceptance, or a signed file submitted for staff review. Implemented on `codex/club-requests-bookings` after resuming on 10 November. The local review and SQL handoff instructions are in `docs/CLUB_WORKFLOWS_REVIEW.md`. Hosted test project review and merge are still pending.

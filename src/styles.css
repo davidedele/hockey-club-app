@@ -1396,3 +1396,18 @@ tr.linked-event td { background: var(--surface-2); }
 
 .linked-event-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .75rem; }
 .related-events li > a { display: inline-flex; align-items: center; min-height: 44px; }
+
+/* Required documents (decision 168): grouped by what the person has to do, each card marked by its state. */
+.doc-group-title { margin: 1.75rem 0 .5rem; font-size: 1.15rem; }
+.doc-group-title + .hint { margin-top: 0; }
+.doc-allok { display: flex; align-items: center; gap: .5rem; margin: 1rem 0; padding: .75rem 1rem; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); color: var(--ok); font-weight: 500; }
+.doc-allok .dot { flex: none; width: 10px; height: 10px; border-radius: 50%; background: var(--ok); }
+.req-card { margin: 0; border-left: 4px solid var(--line-strong); }
+.req-card.bad { border-left-color: var(--now); }
+.req-card.soon { border-left-color: var(--warn); }
+.req-card.ok { border-left-color: var(--ok); }
+.req-card h3 { margin: 0; font-family: var(--font-display); font-size: 1.25rem; font-weight: 700; color: var(--ink); }
+.doc-panel { margin: .75rem 0 0; padding: .75rem 1rem 1rem; background: var(--surface-2); border-radius: var(--radius-control); }
+.doc-panel > :last-child { margin-bottom: 0; }
+.doc-panel-title { margin: 0 0 .5rem; font-weight: 600; }
+.fold-body .doc-cards { padding: .25rem 0; }

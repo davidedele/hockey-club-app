@@ -266,6 +266,33 @@ fixtures.tables.club_request_responses = [
  {request_id:requestId(2),user_id:uid(2),file_path:`${uid(2)}/request-${requestId(2)}-abcd.pdf`,submitted_at:at(-1,10),status:'pending',review_note:''},
  {request_id:requestId(3),user_id:ME,file_path:null,submitted_at:at(-1,10),status:'complete',review_note:''},
 ]
+// Required documents (decision 168): the certificate and the consent as they are copied, and three the board made.
+const reqId = (n) => `50000000-0000-4000-8000-${String(n).padStart(12, '0')}`
+const requirement = (n, over) => ({ id: reqId(n), slug: null, title: '', reason: '', group_ids: [], deadline: null, expiry_block: null, expiry_months: null, review: 'none', visibility: 'staff', blocking: true, staff_can_submit: false, active: true, current_version: 1, created_by: null, created_at: at(-30, 9), ...over })
+fixtures.tables.requirements = [
+ requirement(1, { slug: 'medical_certificate', title: 'Certificato medico', reason: 'Serve il certificato medico sportivo in corso di validità.', expiry_block: 'issued', expiry_months: 12, review: 'unless_read', staff_can_submit: true }),
+ requirement(2, { slug: 'privacy_consent', title: 'Consenso privacy', reason: 'Il club tratta i tuoi dati secondo l’informativa privacy.' }),
+ requirement(3, { title: 'Consensi per foto e video', reason: 'Per pubblicare le foto della squadra servono questi consensi.' }),
+ requirement(4, { title: 'Modulo della federazione', reason: 'Il modulo firmato serve per il tesseramento.', review: 'always', deadline: at(-3, 12).slice(0, 10), group_ids: [1] }),
+ requirement(5, { title: 'Regolamento interno', reason: 'Il regolamento è cambiato: serve una nuova conferma.', current_version: 2 }),
+ requirement(6, { title: 'Richiesta per un altro gruppo', reason: 'Non riguarda i tuoi gruppi.', group_ids: [4] }),
+]
+const version = (n, v, blocks, over = {}) => ({ requirement_id: reqId(n), version: v, description: '', reading_path: null, blocks, created_at: at(-30, 9), ...over })
+fixtures.tables.requirement_versions = [
+ version(1, 1, [{ id: 'file', type: 'file', label: 'Certificato medico', required: true }, { id: 'issued', type: 'date', label: 'Data di rilascio', required: true, read_from_file: true }]),
+ version(2, 1, [{ id: 'accept', type: 'checkbox', label: 'Ho letto l’informativa e do il consenso', required: true }], { reading_path: 'club/privacy-1700000000000.pdf' }),
+ version(3, 1, [{ id: 'text', type: 'text', label: 'Le foto restano nel gruppo privato del club.' }, { id: 'photos', type: 'checkbox', label: 'Consento le foto della squadra', required: true }, { id: 'social', type: 'checkbox', label: 'Consento la pubblicazione sui social', required: false }], { description: 'Puoi cambiare idea in qualsiasi momento.' }),
+ version(4, 1, [{ id: 'form', type: 'file', label: 'Modulo firmato', required: true }]),
+ version(5, 1, [{ id: 'ok', type: 'checkbox', label: 'Ho letto il regolamento', required: true }]),
+ version(5, 2, [{ id: 'ok', type: 'checkbox', label: 'Ho letto il nuovo regolamento', required: true }], { reading_path: 'club/doc-1700000000001.pdf' }),
+ version(6, 1, [{ id: 'ok', type: 'checkbox', label: 'Confermo', required: true }]),
+]
+const answerOf = (n, over) => ({ requirement_id: reqId(n), user_id: ME, version: 1, answers: {}, sources: {}, status: 'complete', submitted_at: at(-10, 9), valid_until: null, reviewed_at: null, reviewed_by: null, review_note: '', ...over })
+fixtures.tables.requirement_answers = [
+ answerOf(3, { answers: { photos: true, social: false } }),
+ answerOf(4, { status: 'rejected', answers: { form: `${ME}/req-${reqId(4)}-00000000-0000-4000-8000-000000000001.pdf` }, review_note: 'Manca la firma nella seconda pagina.' }),
+ answerOf(5, { answers: { ok: true } }),
+]
 fixtures.ids.theory = eid(998)
 fixtures.tables.events.push({...fixtures.tables.events.find(e=>e.id===fixtures.ids.training),id:fixtures.ids.theory,type:'theory',title:'Teoria prima dell’allenamento',starts_at:at(1,19),ends_at:at(1,19,30),meetup_at:null,rink_id:null,series_id:null,parent_event_id:fixtures.ids.training})
 fixtures.tables.event_groups.push({event_id:fixtures.ids.theory,group_id:1})
