@@ -9,7 +9,7 @@ Status words: Open, In progress, Done (PR number), Decided (waiting for Davide),
 Davide, 14 November: the privacy consent and the medical certificate are treated as special documents, but they should work like every other thing staff can require, and staff should be able to define them easily and freely (photo consents, league consents, files to read, files to upload, several checkboxes, expiry, confirmation by staff). Decision 168. Built on `claude/required-documents`.
 
 1. One card per required document in Profilo, Documenti, with the same status words for all. Status: Done (step 3). The certificate and the consent are two cards like the others.
-2. The staff editor for defining a required document, replacing the club requests management and the certificate and consent settings. Status: In progress (step 4).
+2. The staff editor for defining a required document, replacing the club requests management and the certificate and consent settings. Status: Done (step 4). Impostazioni club, Documenti e richieste lists the documents; the board adds and changes them on their own pages with starting points, ordered items, groups, deadline, expiry, staff check, visibility and archive. The old months and consent setting is no longer shown there (its code stays until step 7).
 3. The staff review page, the Members column, the Home figures and the banner read the new status. Until then they still read the old tables, so on the test project they do not yet follow an answer given on the new page. Status: Open (step 5).
 4. Reminders for expiry read the new tables. Status: Open (step 6).
 5. Removal of the old tables and the old settings page, after Davide confirms. Status: Open (step 7).

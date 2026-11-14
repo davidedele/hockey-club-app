@@ -26,6 +26,7 @@ import Documents from './pages/Documents'
 import MyDocuments from './pages/MyDocuments'
 import CertificateReview from './pages/CertificateReview'
 import ClubDocumentHub from './pages/ClubDocumentHub'
+import RequirementEdit from './pages/RequirementEdit'
 import Championship from './pages/Championship'
 import DocumentsBanner from './components/DocumentsBanner'
 import UpdateBanner from './components/UpdateBanner'
@@ -286,6 +287,8 @@ export default function App() {
         <Route path="/settings" element={<Settings />}>
           <Route path="club" element={<ClubSettings />} />
           <Route path="documents" element={<ClubDocumentHub />} />
+          <Route path="documents/new" element={<RequirementEdit />} />
+          <Route path="documents/:id" element={<RequirementEdit />} />
           <Route path="groups" element={<GroupSettings />} />
           <Route path="rinks" element={<RinkSettings />} />
           <Route path="ice" element={<IceHours />} />

@@ -269,6 +269,8 @@ fixtures.tables.club_request_responses = [
 // Required documents (decision 168): the certificate and the consent as they are copied, and three the board made.
 const reqId = (n) => `50000000-0000-4000-8000-${String(n).padStart(12, '0')}`
 const requirement = (n, over) => ({ id: reqId(n), slug: null, title: '', reason: '', group_ids: [], deadline: null, expiry_block: null, expiry_months: null, review: 'none', visibility: 'staff', blocking: true, staff_can_submit: false, active: true, current_version: 1, created_by: null, created_at: at(-30, 9), ...over })
+fixtures.ids.reqCert = reqId(1)
+fixtures.ids.reqRules = reqId(5)
 fixtures.tables.requirements = [
  requirement(1, { slug: 'medical_certificate', title: 'Certificato medico', reason: 'Serve il certificato medico sportivo in corso di validità.', expiry_block: 'issued', expiry_months: 12, review: 'unless_read', staff_can_submit: true }),
  requirement(2, { slug: 'privacy_consent', title: 'Consenso privacy', reason: 'Il club tratta i tuoi dati secondo l’informativa privacy.' }),

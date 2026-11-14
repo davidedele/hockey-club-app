@@ -209,7 +209,6 @@ for (const width of WIDTHS) {
     if (name === 'events-month-player' && width >= 1000) await page.getByRole('button', {name:'Mese', exact:true}).click()
     if (name === 'event-new-visibility') await page.locator('.visibility-settings .fold-head').click()
     if (name === 'event-new-pending') { await page.getByLabel('Assegna i gruppi in seguito', {exact:true}).check(); await page.getByLabel('Ripeti ogni settimana', {exact:true}).check() }
-    if(name==='settings-request-new')await page.getByRole('button',{name:'Aggiungi richiesta',exact:true}).click()
     const m = await page.evaluate(measure)
     if (kind === 'player' || kind === 'nogames') await page.evaluate(() => localStorage.removeItem('view-as'))
     if (kind === 'nogames') {
@@ -739,13 +738,23 @@ if (!process.env.UI_CHECK_SKIP_INTERACTIONS) {
     await page.evaluate(() => localStorage.removeItem('view-as'))
   }
 
-  // Required documents (decision 132): the months field is checked by the app, the consent can be a tick box.
+  // The staff editor for required documents (decision 168): the list, a new document from a starting point, the
+  // check of an empty title, and a change of the items that asks everybody to answer again.
   await settle('/settings/documents')
-  await page.locator('[data-fold=existing] .fold-head').click()
-  await page.fill('main input[type=number]', '40')
-  await page.click('[data-fold=existing] button[type=submit]')
-  const rangeMessage = await page.evaluate(() => { const bad = document.querySelector('main input[type=number][aria-invalid=true]'); const id = (bad?.getAttribute('aria-describedby') || '').split(' ').find((x) => x.startsWith('fe-')); return id ? document.getElementById(id)?.textContent?.trim() ?? '' : '' })
-  check(/\S/.test(rangeMessage), 'required documents: 40 months is not refused with a message under the field')
+  check((await page.locator('main .req-row').count()) === 6, 'required documents: the list should show the six sample documents')
+  await settle('/settings/documents/new')
+  check((await page.locator('main .chip').count()) >= 4, 'required documents: a new document offers no starting points')
+  await page.click('main .chip:has-text("Consenso con casella")')
+  await page.click('main button[type=submit]:has-text("Pubblica documento")')
+  check((await page.locator('main input[aria-invalid=true], main textarea[aria-invalid=true]').count()) >= 2, 'required documents: an empty title and reason are not refused with messages under the fields')
+  await settle(`/settings/documents/${fixtures.ids.reqRules}`)
+  await page.click('main button:has-text("Aggiungi casella")')
+  await page.locator('main .req-block').last().locator('input:not([type=checkbox])').fill('Seconda casella')
+  await page.click('main button[type=submit]:has-text("Salva")')
+  check(/Chiedere di nuovo la risposta/.test(await page.locator('dialog[open]').innerText().catch(() => '')), 'required documents: changing the items does not ask for confirmation')
+  await page.keyboard.press('Escape')
+  check((await page.locator('dialog[open]').count()) === 0 && new URL(page.url()).pathname === `/settings/documents/${fixtures.ids.reqRules}`, 'required documents: Escape on the confirmation saved or left the page')
+
   // The player's required documents (decision 168): one card each, the ones for other groups left out, the date of a file
   // waits for the file, and a document to read must be opened before the answer can be sent.
   await asViewEarly('player', '/profile/documents')
